@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mythologia — Codex des Espèces</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bleu-nuit:#0a1520;--violet-ae:#6b3fa0;--eclat-ae:#a78bfa;--or-ae:#c9a84c;--blanc-lune:#e8e4f0;
+  --card-bg:rgba(13,27,42,0.82);--card-border:rgba(167,139,250,0.16);--card-inner:rgba(8,18,30,0.6);
+  --muted:rgba(232,228,240,0.55);--text:rgba(232,228,240,0.85);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bleu-nuit);color:var(--blanc-lune);font-family:'EB Garamond',serif;min-height:100vh;overflow-x:hidden;}
+#starCanvas{position:fixed;inset:0;z-index:0;}
+.overlay{position:fixed;inset:0;background:radial-gradient(ellipse at center,rgba(10,21,32,.3) 0%,rgba(10,21,32,.88) 100%);z-index:1;}
+
+/* PAGE */
+.page{position:relative;z-index:10;min-height:100vh;display:flex;flex-direction:column;}
+
+/* HEADER */
+.page-header{text-align:center;padding:80px 20px 26px;animation:fadeDown .9s ease both;}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+.page-header h1{font-family:'Cinzel Decorative',serif;font-size:clamp(1.6rem,3.5vw,2.7rem);color:var(--blanc-lune);text-shadow:0 0 40px rgba(167,139,250,.5),0 0 80px rgba(167,139,250,.2);letter-spacing:.1em;margin-bottom:8px;}
+.page-header .sous-titre{font-family:'Cinzel',serif;font-size:.72rem;letter-spacing:.5em;color:var(--eclat-ae);text-transform:uppercase;opacity:.7;}
+.ornement{display:flex;align-items:center;gap:16px;margin:16px auto 0;width:min(400px,80vw);}
+.ornement-line{flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--eclat-ae),transparent);}
+.ornement-gem{width:7px;height:7px;background:var(--eclat-ae);transform:rotate(45deg);box-shadow:0 0 10px var(--eclat-ae);flex-shrink:0;}
+.ornement-gem-s{width:4px;height:4px;background:var(--eclat-ae);transform:rotate(45deg);opacity:.5;flex-shrink:0;}
+
+/* MAIN LAYOUT */
+.main-layout{display:grid;grid-template-columns:280px 1fr;gap:0;flex:1;padding:24px 32px 60px;max-width:1460px;margin:0 auto;width:100%;animation:fadeIn 1.1s .3s ease both;}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@media(max-width:900px){.main-layout{grid-template-columns:1fr;}}
+
+/* SIDEBAR */
+.races-sidebar{display:flex;flex-direction:column;gap:14px;padding-right:20px;}
+.constraint-mini{background:rgba(13,27,42,.6);border:1px solid rgba(167,139,250,.12);border-radius:10px;padding:12px 14px;margin-bottom:6px;}
+.constraint-mini-title{font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.3em;text-transform:uppercase;color:var(--or-ae);opacity:.8;margin-bottom:8px;}
+.constraint-mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.constraint-item{background:rgba(8,18,30,.5);border:1px solid rgba(167,139,250,.1);border-radius:6px;padding:6px 8px;}
+.constraint-item strong{display:block;font-family:'Cinzel',serif;font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;color:var(--eclat-ae);opacity:.7;margin-bottom:2px;}
+.constraint-item span{font-size:.77rem;color:var(--muted);}
+
+/* RACE BUTTONS */
+.races-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.race-btn{background:rgba(13,27,42,.65);border:1px solid rgba(167,139,250,.13);border-radius:11px;padding:14px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;transition:all .3s cubic-bezier(.23,1,.32,1);position:relative;overflow:hidden;text-align:center;backdrop-filter:blur(10px);}
+.race-btn:hover,.race-btn.active{transform:translateY(-3px);border-color:rgba(167,139,250,.42);box-shadow:0 8px 28px rgba(107,63,160,.22);}
+.race-btn::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--race-color,var(--eclat-ae)),transparent);opacity:0;transition:opacity .3s;}
+.race-btn:hover::after,.race-btn.active::after{opacity:1;}
+.race-btn.active{background:rgba(20,38,60,.88);border-color:var(--race-color,rgba(167,139,250,.45));box-shadow:0 8px 28px var(--race-glow,rgba(107,63,160,.2));}
+.race-icon{font-size:1.5rem;line-height:1;}
+.race-name{font-family:'Cinzel',serif;font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:var(--blanc-lune);transition:color .3s;}
+.race-btn:hover .race-name,.race-btn.active .race-name{color:var(--race-color,var(--eclat-ae));}
+.race-tag{font-size:.6rem;color:rgba(232,228,240,.35);font-style:italic;line-height:1.2;}
+
+/* INFO PANEL */
+.info-panel{padding:0 0 0 24px;display:flex;flex-direction:column;min-height:0;overflow-y:auto;max-height:calc(100vh - 200px);}
+@media(max-width:900px){.info-panel{padding:20px 0 0;max-height:none;}}
+.info-welcome{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;text-align:center;opacity:.45;gap:14px;padding:80px 0;}
+.info-welcome-icon{font-size:2.2rem;}
+.info-welcome-text{font-family:'Cinzel',serif;font-size:.7rem;letter-spacing:.35em;text-transform:uppercase;color:var(--eclat-ae);line-height:2;}
+
+.info-card{display:none;flex-direction:column;gap:0;animation:slideIn .4s ease;border:1px solid var(--card-border);border-radius:14px;overflow:hidden;background:rgba(10,20,35,.72);backdrop-filter:blur(16px);}
+.info-card.active{display:flex;}
+@keyframes slideIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:translateX(0)}}
+
+/* CARD HEADER */
+.card-header{display:flex;align-items:center;gap:16px;padding:16px 20px;border-bottom:1px solid var(--card-border);background:rgba(8,18,30,.6);}
+.card-icon{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;border:2px solid;}
+.card-header-text{flex:1;}
+.card-name{font-family:'Cinzel Decorative',serif;font-size:1.1rem;color:var(--blanc-lune);margin-bottom:3px;}
+.card-altname{font-size:.83rem;color:var(--muted);font-style:italic;}
+.card-tags{display:flex;flex-wrap:wrap;gap:5px;margin-left:auto;flex-shrink:0;}
+.ctag{font-family:'Inter',sans-serif;font-size:.64rem;font-weight:500;letter-spacing:.06em;text-transform:uppercase;padding:.2rem .55rem;border-radius:3px;border:1px solid;}
+
+/* CARD BODY */
+.card-body{display:grid;grid-template-columns:170px 1fr;gap:0;}
+@media(max-width:1100px){.card-body{grid-template-columns:1fr;}}
+.anatomy-col{padding:14px 12px;border-right:1px solid var(--card-border);display:flex;flex-direction:column;align-items:center;background:rgba(8,18,30,.45);}
+.anatomy-col h3{font-family:'Cinzel',serif;font-size:.62rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;margin-bottom:10px;color:var(--muted);}
+.anatomy-note{font-family:'Inter',sans-serif;font-size:.63rem;color:var(--muted);text-align:center;margin-top:8px;line-height:1.45;}
+.content-cols{display:grid;grid-column:2/-1;grid-template-columns:1fr 1fr;}
+@media(max-width:1100px){.content-cols{grid-column:1;grid-template-columns:1fr;}}
+.card-section{padding:12px 14px;border-bottom:1px solid var(--card-border);}
+.card-section:nth-child(even){border-left:1px solid var(--card-border);}
+.card-section.full-width{grid-column:1/-1;border-left:none;}
+.card-section h3{font-family:'Cinzel',serif;font-size:.67rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px;}
+.card-section p{font-size:.87rem;color:var(--text);line-height:1.7;}
+
+/* STAT ROWS */
+.stat-row{display:flex;justify-content:space-between;align-items:baseline;padding:.22rem 0;border-bottom:1px solid rgba(167,139,250,.07);font-size:.83rem;}
+.stat-row:last-child{border-bottom:none;}
+.stat-label{color:var(--muted);font-style:italic;}
+.stat-value{font-weight:600;color:var(--blanc-lune);font-family:'Inter',sans-serif;font-size:.78rem;}
+
+/* MAGIC BARS */
+.magic-bar{display:flex;align-items:center;gap:.5rem;margin-top:.4rem;margin-bottom:.6rem;}
+.magic-bar-label{font-family:'Inter',sans-serif;font-size:.68rem;color:var(--muted);width:58px;flex-shrink:0;}
+.magic-bar-track{flex:1;height:5px;background:rgba(8,18,30,.6);border-radius:3px;overflow:hidden;border:1px solid rgba(167,139,250,.15);}
+.magic-bar-fill{height:100%;border-radius:3px;}
+.magic-bar-text{font-size:.72rem;color:var(--muted);font-family:Inter,sans-serif;flex-shrink:0;}
+.affinity-list{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.5rem;}
+.affinity-badge{font-family:'Inter',sans-serif;font-size:.66rem;font-weight:500;padding:.15rem .5rem;border-radius:3px;background:rgba(107,63,160,.14);border:1px solid rgba(167,139,250,.22);color:var(--eclat-ae);}
+
+/* LORE QUOTE */
+.card-lore{padding:12px 18px;background:rgba(8,18,30,.55);border-top:1px solid var(--card-border);font-style:italic;font-size:.86rem;color:var(--muted);border-left:3px solid;}
+
+/* SUMMARY */
+.summary-section{padding:0 32px 60px;max-width:1460px;margin:0 auto;width:100%;position:relative;z-index:10;}
+.section-title{font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:.45em;text-transform:uppercase;color:var(--or-ae);margin-bottom:20px;text-align:center;opacity:.8;}
+.summary-table{width:100%;border-collapse:separate;border-spacing:0 5px;}
+.summary-table th{font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.25em;text-transform:uppercase;color:var(--eclat-ae);opacity:.6;padding:8px 12px;text-align:left;font-weight:400;}
+.summary-table td{padding:9px 12px;font-size:.85rem;color:var(--muted);vertical-align:middle;}
+.summary-table tr.race-row td{background:rgba(13,27,42,.55);border-top:1px solid rgba(167,139,250,.07);border-bottom:1px solid rgba(167,139,250,.07);transition:background .2s;}
+.summary-table tr.race-row:hover td{background:rgba(20,38,60,.75);}
+.summary-table tr.race-row td:first-child{border-radius:10px 0 0 10px;border-left:1px solid rgba(167,139,250,.07);}
+.summary-table tr.race-row td:last-child{border-radius:0 10px 10px 0;border-right:1px solid rgba(167,139,250,.07);}
+.tbl-name{font-family:'Cinzel',serif;font-size:.78rem;letter-spacing:.08em;}
+.tbl-tag{display:inline-block;font-family:'Inter',sans-serif;font-size:.65rem;padding:2px 7px;border-radius:3px;background:rgba(107,63,160,.14);border:1px solid rgba(167,139,250,.2);color:var(--eclat-ae);}
+.tbl-tag.gold{background:rgba(201,168,76,.14);border-color:rgba(201,168,76,.35);color:var(--or-ae);}
+.tbl-tag.grey{background:rgba(100,100,120,.12);border-color:rgba(150,150,180,.18);color:rgba(232,228,240,.4);}
+</style>
+</head>
+<body>
+<canvas id="starCanvas"></canvas>
+<div class="overlay"></div>
+
+<div class="page">
+
+<!-- HEADER -->
+<div class="page-header">
+  <h1>Codex des Espèces</h1>
+  <div class="sous-titre">Mythologia · Canon établi · Gravité 1,9g · Aetherium Ae Z=119</div>
+  <div class="ornement">
+    <div class="ornement-line"></div><div class="ornement-gem-s"></div><div class="ornement-gem"></div><div class="ornement-gem-s"></div><div class="ornement-line"></div>
+  </div>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div class="main-layout">
+
+  <!-- SIDEBAR -->
+  <div class="races-sidebar">
+    <div class="constraint-mini">
+      <div class="constraint-mini-title">✦ Contraintes planétaires</div>
+      <div class="constraint-mini-grid">
+        <div class="constraint-item"><strong>Gravité 1,9g</strong><span>Squelettes denses, stature compacte</span></div>
+        <div class="constraint-item"><strong>Double étoile</strong><span>UV élevés · lumière de Séraph rose</span></div>
+        <div class="constraint-item"><strong>Inclinaison 78°</strong><span>Équateur glaciaire · pôles tropicaux</span></div>
+        <div class="constraint-item"><strong>Ae Z=119</strong><span>Alkali métal, magie biologique</span></div>
+      </div>
+    </div>
+
+    <div class="races-grid">
+      <button class="race-btn" data-race="humains" style="--race-color:#c9a84c;--race-glow:rgba(201,168,76,.18);">
+        <span class="race-icon">⚜</span><span class="race-name">Humains</span><span class="race-tag">Homo Mythalis</span>
+      </button>
+      <button class="race-btn" data-race="aelven" style="--race-color:#a47ef5;--race-glow:rgba(164,126,245,.18);">
+        <span class="race-icon">✦</span><span class="race-name">Aelven</span><span class="race-tag">Elfes</span>
+      </button>
+      <button class="race-btn" data-race="durgoth" style="--race-color:#9a9080;--race-glow:rgba(154,144,128,.18);">
+        <span class="race-icon">⛏</span><span class="race-name">Durgoth</span><span class="race-tag">Nains</span>
+      </button>
+      <button class="race-btn" data-race="grauth" style="--race-color:#c0604a;--race-glow:rgba(192,96,74,.18);">
+        <span class="race-icon">⚔</span><span class="race-name">Grauth</span><span class="race-tag">Orques</span>
+      </button>
+      <button class="race-btn" data-race="sauridh" style="--race-color:#3aaa7a;--race-glow:rgba(58,170,122,.18);">
+        <span class="race-icon">◈</span><span class="race-name">Sauridh</span><span class="race-tag">Reptiliens</span>
+      </button>
+      <button class="race-btn" data-race="skoran" style="--race-color:#5a9adc;--race-glow:rgba(90,154,220,.18);">
+        <span class="race-icon">❄</span><span class="race-name">Skoran</span><span class="race-tag">Ours polaires</span>
+      </button>
+      <button class="race-btn" data-race="kethara" style="--race-color:#e09040;--race-glow:rgba(224,144,64,.18);">
+        <span class="race-icon">◉</span><span class="race-name">Kethara</span><span class="race-tag">Lions des sables</span>
+      </button>
+      <button class="race-btn" data-race="vahryn" style="--race-color:#3aaa6a;--race-glow:rgba(58,170,106,.18);">
+        <span class="race-icon">⬡</span><span class="race-name">Vahryn</span><span class="race-tag">Lions de jungle</span>
+      </button>
+      <button class="race-btn" data-race="thyrak" style="--race-color:#8aaa4a;--race-glow:rgba(138,170,74,.18);">
+        <span class="race-icon">⟡</span><span class="race-name">Thyrak</span><span class="race-tag">Cervidés</span>
+      </button>
+      <button class="race-btn" data-race="vethari" style="--race-color:#8a6aaa;--race-glow:rgba(138,106,170,.18);">
+        <span class="race-icon">⬢</span><span class="race-name">Veth'ari</span><span class="race-tag">Insectoïdes</span>
+      </button>
+      <button class="race-btn" data-race="lutharin" style="--race-color:#cc88cc;--race-glow:rgba(204,136,204,.18);">
+        <span class="race-icon">✿</span><span class="race-name">Lutharin</span><span class="race-tag">Lutins hybrides</span>
+      </button>
+      <button class="race-btn" data-race="aevhari" style="--race-color:#5aacdc;--race-glow:rgba(90,172,220,.18);">
+        <span class="race-icon">◎</span><span class="race-name">Aevhari</span><span class="race-tag">Volatiles humanoïdes</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- INFO PANEL -->
+  <div class="info-panel">
+
+    <div class="info-welcome" id="infoWelcome">
+      <div class="info-welcome-icon">✦</div>
+      <div class="info-welcome-text">Sélectionnez une espèce<br>pour consulter sa fiche complète</div>
+    </div>
+
+    <!-- ═══ HUMAINS ═══ -->
+    <div class="info-card" id="card-humains">
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(201,168,76,.12);border-color:#c9a84c;color:#c9a84c;">⚜</div>
+        <div class="card-header-text">
+          <div class="card-name">Humains</div>
+          <div class="card-altname">Homo Mythalis — Race fondatrice des grandes nations</div>
+        </div>
+        <div class="card-tags">
+          <span class="ctag" style="color:#c9a84c;border-color:#c9a84c;background:rgba(201,168,76,.08);">Magie variable</span>
+          <span class="ctag" style="color:var(--muted);border-color:rgba(167,139,250,.2);background:rgba(13,27,42,.4);">Lore · Kamses</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="anatomy-col">
+          <h3>Ossature &amp; Musculature</h3>
+          <svg viewBox="0 0 160 250" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:140px;">
+            <line x1="12" y1="25" x2="12" y2="225" stroke="#445" stroke-width=".6"/><line x1="9" y1="25" x2="15" y2="25" stroke="#445" stroke-width=".6"/><line x1="9" y1="125" x2="15" y2="125" stroke="#445" stroke-width=".6"/><line x1="9" y1="225" x2="15" y2="225" stroke="#445" stroke-width=".6"/>
+            <text x="8" y="23" font-size="7" fill="#778" text-anchor="middle" font-family="Inter,sans-serif">2m</text><text x="8" y="128" font-size="7" fill="#778" text-anchor="middle" font-family="Inter,sans-serif">1m</text>
+            <ellipse cx="83" cy="135" rx="27" ry="30" fill="#c9a22720"/><ellipse cx="70" cy="185" rx="9" ry="22" fill="#c9a22716"/><ellipse cx="96" cy="185" rx="9" ry="22" fill="#c9a22716"/>
+            <ellipse cx="83" cy="57" rx="17" ry="18" fill="#c8bfa0" stroke="#a08060" stroke-width="1.2"/>
+            <rect x="76" y="73" width="14" height="9" rx="2" fill="#c8bfa0" stroke="#a08060" stroke-width="1"/>
+            <path d="M56,82 L110,82 L113,155 L53,155 Z" fill="#c8bfa0" stroke="#a08060" stroke-width="1.1"/>
+            <ellipse cx="83" cy="115" rx="21" ry="21" fill="none" stroke="#8a7050" stroke-width=".7" stroke-dasharray="2,2"/>
+            <line x1="83" y1="75" x2="83" y2="165" stroke="#8a7050" stroke-width=".8" stroke-dasharray="2.5,2"/>
+            <path d="M56,84 Q83,90 110,84" fill="none" stroke="#8a7050" stroke-width=".8"/>
+            <path d="M53,153 Q53,168 83,168 Q113,168 113,153" fill="#b0a880" stroke="#a08060" stroke-width="1"/>
+            <path d="M57,90 L40,138 L35,162" stroke="#a08060" stroke-width="7" stroke-linecap="round" fill="none"/><path d="M57,90 L40,138 L35,162" stroke="#c8bfa0" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+            <path d="M109,90 L126,138 L131,162" stroke="#a08060" stroke-width="7" stroke-linecap="round" fill="none"/><path d="M109,90 L126,138 L131,162" stroke="#c8bfa0" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+            <path d="M68,168 L62,207 L60,225" stroke="#a08060" stroke-width="8" stroke-linecap="round" fill="none"/><path d="M68,168 L62,207 L60,225" stroke="#c8bfa0" stroke-width="5" stroke-linecap="round" fill="none"/>
+            <path d="M98,168 L104,207 L106,225" stroke="#a08060" stroke-width="8" stroke-linecap="round" fill="none"/><path d="M98,168 L104,207 L106,225" stroke="#c8bfa0" stroke-width="5" stroke-linecap="round" fill="none"/>
+            <text x="115" y="55" font-size="6.5" fill="#c9a84c" font-family="Inter,sans-serif">Crâne épais</text>
+            <text x="115" y="112" font-size="6.5" fill="#c9a84c" font-family="Inter,sans-serif">Cage élargie</text>
+            <text x="115" y="192" font-size="6.5" fill="#c9a84c" font-family="Inter,sans-serif">Os +30%</text>
+            <text x="83" y="243" font-size="6.5" fill="#778" text-anchor="middle" font-family="Inter,sans-serif">~1,65 m moy.</text>
+          </svg>
+          <div class="anatomy-note">Cage thoracique élargie · lombaires renforcées · membres courts et denses</div>
+        </div>
+        <div class="content-cols">
+          <div class="card-section"><h3 style="color:#c9a84c;">Physiologie &amp; 1,9g</h3><p>Taille moyenne de 1,60–1,70 m, constitution trapue et os à densité corticale +30 % vs un humain terrestre. La cage thoracique est élargie pour un cœur et des poumons plus performants sous double charge gravitationnelle. Les vertèbres lombaires sont plus larges et courbées, réduisant les fractures de compression. Peau oscillant du cuivré au brun foncé — adaptation aux UV d'Aurys et au spectre de Séraph.</p></div>
+          <div class="card-section"><h3 style="color:#c9a84c;">Données</h3>
+            <div class="stat-row"><span class="stat-label">Taille</span><span class="stat-value">1,58 – 1,72 m</span></div>
+            <div class="stat-row"><span class="stat-label">Masse</span><span class="stat-value">70 – 100 kg</span></div>
+            <div class="stat-row"><span class="stat-label">Longévité</span><span class="stat-value">70 – 95 ans</span></div>
+            <div class="stat-row"><span class="stat-label">Sensibles Ae.</span><span class="stat-value">~1/50</span></div>
+            <div class="stat-row"><span class="stat-label">Densité osseuse</span><span class="stat-value">+30 %</span></div>
+          </div>
+          <div class="card-section"><h3 style="color:#c9a84c;">Aetherium &amp; Magie</h3>
+            <div class="magic-bar"><span class="magic-bar-label">Sensibilité</span><div class="magic-bar-track"><div class="magic-bar-fill" style="width:40%;background:#c9a84c;"></div></div><span class="magic-bar-text">Modérée</span></div>
+            <p style="font-size:.85rem;">Environ 1/50 présente une interface tissu neural–Ae. Diversité d'affinités maximale — aucune prédisposition biologique. Les grandes lignées mages (Elindor, grandes maisons Kamses) ont sélectionné ces traits sur des générations.</p>
+            <div class="affinity-list"><span class="affinity-badge">Ae+O · Feu</span><span class="affinity-badge">Ae+Si · Terre</span><span class="affinity-badge">Ae+P · Illusion</span><span class="affinity-badge">Ae+Fe · Martial</span><span class="affinity-badge">Ae+N · Nécromancie</span><span class="affinity-badge">Ae+C · Vie</span></div>
+          </div>
+          <div class="card-section"><h3 style="color:#c9a84c;">Culture &amp; Distribution</h3><p>Race dominante du <em>Pays de Lore</em> (Trône Elindor) et de l'<em>Empire Kamses</em>. L'Empire pratique une magie plus chamanique fondée sur la minéralisation de l'Ae. dans des artefacts rituels. Le Trône repose sur des familles mages héréditaires à la tête d'une hiérarchie féodale.</p></div>
+        </div>
+      </div>
+      <div class="card-lore" style="border-color:#c9a84c;">"L'homme est la race la plus faible et la plus dangereuse de Mythologia. La faiblesse vient de son corps ; le danger, de son ambition." — proverbe Durgoth</div>
+    </div>
+
+    <!-- ═══ AELVEN ═══ -->
+    <div class="info-card" id="card-aelven">
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(164,126,245,.12);border-color:#a47ef5;color:#a47ef5;">✦</div>
+        <div class="card-header-text">
+          <div class="card-name">Aelven <span style="font-weight:400;font-size:.9rem;">(Elfes)</span></div>
+          <div class="card-altname">Aelven Mythalis — Enfants de l'Aetherium</div>
+        </div>
+        <div class="card-tags">
+          <span class="ctag" style="color:#a47ef5;border-color:#a47ef5;background:rgba(164,126,245,.08);">Magie très haute</span>
+          <span class="ctag" style="color:var(--muted);border-color:rgba(167,139,250,.2);background:rgba(13,27,42,.4);">Forêts profondes · Gorges · Lore</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="anatomy-col">
+          <h3>Ossature &amp; Musculature</h3>
+          <svg viewBox="0 0 160 250" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:140px;">
+            <line x1="12" y1="25" x2="12" y2="225" stroke="#445" stroke-width=".6"/><line x1="9" y1="25" x2="15" y2="25" stroke="#445" stroke-width=".6"/><line x1="9" y1="125" x2="15" y2="125" stroke="#445" stroke-width=".6"/><line x1="9" y1="225" x2="15" y2="225" stroke="#445" stroke-width=".6"/>
+            <text x="8" y="23" font-size="7" fill="#778" text-anchor="middle" font-family="Inter,sans-serif">2m</text><text x="8" y="128" font-size="7" fill="#778" text-anchor="middle" font-family="Inter,sans-serif">1m</text>
+            <ellipse cx="83" cy="125" rx="20" ry="28" fill="#a47ef520"/>
+            <ellipse cx="83" cy="53" rx="15" ry="17" fill="#d0c8f0" stroke="#7058b0" stroke-width="1.2"/>
+            <path d="M68,48 L55,38 L60,50 Z" fill="#d0c8f0" stroke="#7058b0" stroke-width="1"/>
+            <path d="M98,48 L111,38 L106,50 Z" fill="#d0c8f0" stroke="#7058b0" stroke-width="1"/>
+            <rect x="77" y="68" width="12" height="10" rx="2" fill="#d0c8f0" stroke="#7058b0" stroke-width="1"/>
+            <path d="M60,78 L106,78 L108,152 L58,152 Z" fill="#d0c8f0" stroke="#7058b0" stroke-width="1.1"/>
+            <ellipse cx="83" cy="112" rx="18" ry="19" fill="none" stroke="#a47ef5" stroke-width=".6" stroke-dasharray="1.5,1.5"/>
+            <ellipse cx="83" cy="112" rx="15" ry="16" fill="none" stroke="#8a7050" stroke-width=".5" stroke-dasharray="2,2"/>
+            <line x1="83" y1="70" x2="83" y2="160" stroke="#8a7050" stroke-width=".8" stroke-dasharray="2.5,2"/>
+            <path d="M60,80 Q83,86 106,80" fill="none" stroke="#8a7050" stroke-width=".8"/>
+            <path d="M58,150 Q58,165 83,165 Q108,165 108,150" fill="#b0a8d8" stroke="#7058b0" stroke-width="1"/>
+            <path d="M61,86 L44,130 L40,158" stroke="#7058b0" stroke-width="5.5" stroke-linecap="round" fill="none"/><path d="M61,86 L44,130 L40,158" stroke="#d0c8f0" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+            <path d="M105,86 L122,130 L126,158" stroke="#7058b0" stroke-width="5.5" stroke-linecap="round" fill="none"/><path d="M105,86 L122,130 L126,158" stroke="#d0c8f0" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+            <path d="M70,165 L65,203 L63,225" stroke="#7058b0" stroke-width="7" stroke-linecap="round" fill="none"/><path d="M70,165 L65,203 L63,225" stroke="#d0c8f0" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+            <path d="M96,165 L101,203 L103,225" stroke="#7058b0" stroke-width="7" stroke-linecap="round" fill="none"/><path d="M96,165 L101,203 L103,225" stroke="#d0c8f0" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+            <text x="42" y="37" font-size="6.5" fill="#a47ef5" font-family="Inter,sans-serif">Oreilles longues</text>
+            <text x="113" y="112" font-size="6.5" fill="#c9a84c" font-family="Inter,sans-serif">Os double</text>
+            <text x="113" y="120" font-size="6.5" fill="#c9a84c" font-family="Inter,sans-serif">cortex</text>
+            <text x="83" y="243" font-size="6.5" fill="#778" text-anchor="middle" font-family="Inter,sans-serif">~1,68 m moy.</text>
+          </svg>
+          <div class="anatomy-note">Os double-cortex · dense en surface, trabéculaire en interne · oreilles longues (capteurs)</div>
+        </div>
+        <div class="content-cols">
+          <div class="card-section"><h3 style="color:#a47ef5;">Physiologie &amp; 1,9g</h3><p>Constitution non massive mais d'une densité structurelle unique : os à double cortex — dense en surface pour résister à la compression, trabéculaire en interne pour réduire la masse. Les yeux en amande (pupilles rondes) peuvent être violets, ambrés, bleus ou verts. Teint très pâle — ils transpirent facilement et supportent très mal la chaleur intense des zones tropicales.</p></div>
+          <div class="card-section"><h3 style="color:#a47ef5;">Données</h3>
+            <div class="stat-row"><span class="stat-label">Taille</span><span class="stat-value">1,62 – 1,78 m</span></div>
+            <div class="stat-row"><span class="stat-label">Masse</span><span class="stat-value">55 – 78 kg</span></div>
+            <div class="stat-row"><span class="stat-label">Longévité</span><span class="stat-value">200 – 320 ans</span></div>
+            <div class="stat-row"><span class="stat-label">Sensibles Ae.</span><span class="stat-value">~1/3</span></div>
+            <div class="stat-row"><span class="stat-label">Tolérance chaleur</span><span class="stat-value">Très faible</span></div>
+          </div>
+          <div class="card-section"><h3 style="color:#a47ef5;">Aetherium &amp; Magie</h3>
+            <div class="magic-bar"><span class="magic-bar-label">Sensibilité</span><div class="magic-bar-track"><div class="magic-bar-fill" style="width:88%;background:#a47ef5;"></div></div><span class="magic-bar-text">Très haute</span></div>
+            <p style="font-size:.85rem;">Des millénaires d'exposition aux affleurements Ae. ont remodelé leur tissu neural : des réseaux synaptiques supplémentaires baignent en permanence dans l'Ae. La longévité aelvenne est directement liée à la stabilité de ces liaisons. Un Aelven privé d'Ae. dégénère plus vite.</p>
+            <div class="affinity-list"><span class="affinity-badge">Ae+P · Lumière/Illusion ★</span><span class="affinity-badge">Ae+Si · Cristaux ★</span><span class="affinity-badge">Ae+C · Vie</span><span class="affinity-badge">Ae+neural · Télépathie</span></div>
+          </div>
+          <div class="card-section"><h3 style="color:#a47ef5;">Ordre des Mages &amp; Culture</h3><p>Présents dans l'Ordre des Mages mais pas en majorité numérique — l'Ordre maintient délibérément la mixité. Les <em>grands maîtres</em> sont cependant majoritairement des Aelven, leur longévité leur donnant un avantage d'expérience irréductible. Très réfractaires aux zones arides et chaudes.</p></div>
+        </div>
+      </div>
+      <div class="card-lore" style="border-color:#a47ef5;">"Nous ne manions pas l'Aetherium. L'Aetherium nous traverse, et nous choisissons de ne pas résister." — grand maître Aelven de la Tour d'Opale</div>
+    </div>
+
+    <!-- ═══ DURGOTH ═══ -->
+    <div class="info-card" id="card-durgoth">
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(154,144,128,.12);border-color:#9a9080;color:#9a9080;">⛏</div>
+        <div class="card-header-text">
+          <div class="card-name">Durgoth <span style="font-weight:400;font-size:.9rem;">(Nains)</span></div>
+          <div class="card-altname">Durgoth Lapidus — Les plus forts de Mythologia</div>
+        </div>
+        <div class="card-tags">
+          <span class="ctag" style="color:#9a9080;border-color:#9a9080;background:rgba(154,144,128,.08);">Magie artisanale</span>
+          <span class="ctag" style="color:var(--muted);border-color:rgba(167,139,250,.2);background:rgba(13,27,42,.4);">Souterrains · Lore</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="anatomy-col">
+          <h3>Ossature &amp; Musculature</h3>
+          <svg viewBox="0 0 160 250" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:140px;">
+            <line x1="12" y1="25" x2="12" y2="225" stroke="#445" stroke-width=".6"/><line x1="9" y1="25" x2="15" y2="25" stroke="#445" stroke-width=".6"/><line x1="9" y1="125" x2="15" y2="125" stroke="#445" stroke-width=".6"/><line x1="9" y1="225" x2="15" y2="225" stroke="#445" stroke-width=".6"/>
+            <text x="8" y="23" font-size="7" fill="#778" text-anchor="middle" font-family="Inter,sans-serif">2m</text><text x="8" y="128" font-size="7" fill="#778" text-anchor="middle" font-family="Inter,sans-serif">1m</text>
+            <ellipse cx="83" cy="155" rx="36" ry="30" fill="#7a706030"/><ellipse cx="65" cy="198" rx="12" ry="18" fill="#7a706022"/><ellipse cx="101" cy="198" rx="12" ry="18" fill="#7a706022"/>
+            <ellipse cx="83" cy="102" rx="20" ry="19" fill="#c8c0a8" stroke="#807060" stroke-width="1.3"/>
+            <rect x="75" y="119" width="16" height="7" rx="2" fill="#c8c0a8" stroke="#807060" stroke-width="1"/>
+            <path d="M45,126 L121,126 L124,172 L42,172 Z" fill="#c8c0a8" stroke="#807060" stroke-width="1.3"/>
+            <ellipse cx="83" cy="148" rx="28" ry="20" fill="none" stroke="#8a7050" stroke-width=".8" stroke-dasharray="2,2"/>
+            <line x1="83" y1="121" x2="83" y2="180" stroke="#8a7050" stroke-width=".9" stroke-dasharray="2.5,2"/>
+            <path d="M45,128 Q83,135 121,128" fill="none" stroke="#8a7050" stroke-width=".9"/>
+            <path d="M42,170 Q42,183 83,183 Q124,183 124,170" fill="#b0a888" stroke="#807060" stroke-width="1.1"/>
+            <path d="M47,135 L28,168 L24,190" stroke="#807060" stroke-width="11" stroke-linecap="round" fill="none"/><path d="M47,135 L28,168 L24,190" stroke="#c8c0a8" stroke-width="7" stroke-linecap="round" fill="none"/>
+            <path d="M119,135 L138,168 L142,190" stroke="#807060" stroke-width="11" stroke-linecap="round" fill="none"/><path d="M119,135 L138,168 L142,190" stroke="#c8c0a8" stroke-width="7" stroke-linecap="round" fill="none"/>
+            <path d="M65,183 L60,210 L58,225" stroke="#807060" stroke-width="12" stroke-linecap="round" fill="none"/><path d="M65,183 L60,210 L58,225" stroke="#c8c0a8" stroke-width="8" stroke-linecap="round" fill="none"/>
+            <path d="M101,183 L106,210 L108,225" stroke="#807060" stroke-width="12" stroke-linecap="round" fill="none"/><path d="M101,183 L106,210 L108,225" stroke="#c8c0a8" stroke-width="8" stroke-linecap="round" fill="none"/>
+            <text x="110" y="100" font-size="6.5" fill="#c9a84c" font-family="Inter,sans-serif">Crâne large</text>
+            <text x="126" y="148" font-size="6.5" fill="#c9a84c" font-family="Inter,sans-serif">Torso</text>
+            <text x="126" y="156" font-size="6.5" fill="#c9a84c" font-family="Inter,sans-serif">quasi-carré</text>
+            <text x="110" y="205" font-size="6.5" fill="#c9a84c" font-family="Inter,sans-serif">Force max.</text>
+            <text x="83" y="243" font-size="6.5" fill="#778" text-anchor="middle" font-family="Inter,sans-serif">~1,37 m moy.</text>
+          </svg>
+          <div class="anatomy-note">Torso quasi-carré · densité osseuse maximale · musculature courte à force explosive</div>
+        </div>
+        <div class="content-cols">
+          <div class="card-section"><h3 style="color:#9a9080;">Physiologie &amp; 1,9g</h3><p>Les Durgoth semblent avoir évolué <em>pour</em> la haute gravité. Taille 1,30–1,45 m, densité osseuse deux fois supérieure aux humains — la force musculaire naturelle qui en découle est <strong style="color:var(--blanc-lune);">la plus élevée de toute Mythologia</strong>. Torso quasi-carré, centre de gravité extrêmement bas, quasi impossibles à renverser. Pieds larges à six orteils. Yeux larges à dilatation maximale, vision nocturne excellente.</p></div>
+          <div class="card-section"><h3 style="color:#9a9080;">Données</h3>
+            <div class="stat-row"><span class="stat-label">Taille</span><span class="stat-value">1,28 – 1,47 m</span></div>
+            <div class="stat-row"><span class="stat-label">Masse</span><span class="stat-value">90 – 140 kg</span></div>
+            <div class="stat-row"><span class="stat-label">Longévité</span><span class="stat-value">150 – 210 ans</span></div>
+            <div class="stat-row"><span class="stat-label">Force relative</span><span class="stat-value">MAX de Mythologia</span></div>
+            <div class="stat-row"><span class="stat-label">Vision nocturne</span><span class="stat-value">Excellente</span></div>
+          </div>
+          <div class="card-section"><h3 style="color:#9a9080;">Aetherium &amp; Forge</h3>
+            <div class="magic-bar"><span class="magic-bar-label">Bio</span><div class="magic-bar-track"><div class="magic-bar-fill" style="width:12%;background:#9a9080;"></div></div><span class="magic-bar-text">Très faible</span></div>
+            <div class="magic-bar"><span class="magic-bar-label">Forge Ae.</span><div class="magic-bar-track"><div class="magic-bar-fill" style="width:99%;background:#c9a84c;"></div></div><span class="magic-bar-text">Inégalée</span></div>
+            <p style="font-size:.85rem;">Ils traitent, allient et ancrent l'Ae. dans le métal avec une précision sans égal. Un Ae+Fe forgé Durgoth est d'une stabilité plusieurs fois supérieure à une forge mage ordinaire. Ce sont eux qui équipent les armées du Trône Elindor.</p>
+            <div class="affinity-list"><span class="affinity-badge">Forge Ae+Fe ★★</span><span class="affinity-badge">Forge Ae+Si ★★</span><span class="affinity-badge">Stabilisation Ae. ancré</span></div>
+          </div>
+          <div class="card-section"><h3 style="color:#9a9080;">Culture &amp; Distribution</h3><p>Clans souterrains à la frontière méridionale du Pays de Lore. Organisation clanique avec un conseil des Forgemaîtres. Les échanges avec le Trône sont commerciaux et prudents — ils vendent des armes forgées, jamais leurs secrets. Les rares mages biologiques rejoignent souvent l'Ordre des Mages.</p></div>
+        </div>
+      </div>
+      <div class="card-lore" style="border-color:#9a9080;">"Ce que tu appelles magie, nous l'appelons chimie. Ce que tu appelles miracle, nous l'appelons patience." — proverbe Durgoth</div>
+    </div>
+
+    <!-- ═══ GRAUTH ═══ -->
+    <div class="info-card" id="card-grauth">
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(192,96,74,.12);border-color:#c0604a;color:#c0604a;">⚔</div>
+        <div class="card-header-text">
+          <div class="card-name">Grauth <span style="font-weight:400;font-size:.9rem;">(Orques)</span></div>
+          <div class="card-altname">Grauth Feralis — Guerriers des sables brûlants</div>
+        </div>
+        <div class="card-tags">
+          <span class="ctag" style="color:#c0604a;border-color:#c0604a;background:rgba(192,96,74,.08);">Magie quasi-nulle</span>
+          <span class="ctag" style="color:var(--muted);border-color:rgba(167,139,250,.2);background:rgba(13,27,42,.4);">Désert · Pôle Sud · Kamses</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="anatomy-col">
+          <h3>Ossature &amp; Musculature</h3>
+          <svg viewBox="0 0 160 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:140px;">
+            <line x1="12" y1="15" x2="12" y2="235" stroke="#445" stroke-width=".6"/><line x1="9" y1="15" x2="15" y2="15" stroke="#445" stroke-width=".6"/><line x1="9" y1="115" x2="15" y2="115" stroke="#445" stroke-width=".6"/><line x1="9" y1="215" x2="15" y2="215" stroke="#445" stroke-width=".6"/>
+            <text x="8" y="13" font-size="7" fill="#778" text-anchor="middle" font-family="Inter,sans-serif">2m</text><text x="8" y="118" font-size="7" fill="#778" text-anchor="middle" font-family="Inter,sans-serif">1m</text>
+            <ellipse cx="83" cy="115" rx="33" ry="38" fill="#c0604a22"/><ellipse cx="68" cy="185" rx="11" ry="24" fill="#c0604a16"/><ellipse cx="98" cy="185" rx="11" ry="24" fill="#c0604a16"/>
+            <ellipse cx="83" cy="45" rx="18" ry="17" fill="#a08870" stroke="#805840" stroke-width="1.3"/>
+            <path d="M65,37 L101,37" stroke="#805840" stroke-width="2" stroke-linecap="round"/>
+            <path d="M70,55 L96,55 L99,62 L67,62 Z" fill="#a08870" stroke="#805840" stroke-width="1"/>
+            <rect x="74" y="62" width="18" height="10" rx="1" fill="#a08870" stroke="#805840" stroke-width="1.1"/>
+            <path d="M50,72 L116,72 L119,150 L47,150 Z" fill="#a08870" stroke="#805840" stroke-width="1.2"/>
+            <ellipse cx="83" cy="108" rx="24" ry="25" fill="none" stroke="#8a7050" stroke-width=".8" stroke-dasharray="2,2"/>
+            <path d="M83,64 Q80,108 83,158" fill="none" stroke="#8a7050" stroke-width=".9" stroke-dasharray="2.5,2"/>
+            <path d="M50,74 Q83,80 116,74" fill="none" stroke="#8a7050" stroke-width=".9"/>
+            <path d="M47,148 Q47,163 83,163 Q119,163 119,148" fill="#907060" stroke="#805840" stroke-width="1.1"/>
+            <path d="M51,82 L30,130 L24,162" stroke="#805840" stroke-width="9" stroke-linecap="round" fill="none"/><path d="M51,82 L30,130 L24,162" stroke="#a08870" stroke-width="6" stroke-linecap="round" fill="none"/>
+            <path d="M115,82 L136,130 L142,162" stroke="#805840" stroke-width="9" stroke-linecap="round" fill="none"/><path d="M115,82 L136,130 L142,162" stroke="#a08870" stroke-width="6" stroke-linecap="round" fill="none"/>
+            <path d="M68,163 L62,200 L60,225" stroke="#805840" stroke-width="9.5" stroke-linecap="round" fill="none"/><path d="M68,163 L62,200 L60,225" stroke="#a08870" stroke-width="6" stroke-linecap="round" fill="none"/>
+            <path d="M98,163 L104,200 L106,225" stroke="#805840" stroke-width="9.5" stroke-linecap="round" fill="none"/><path d="M98,163 L104,200 L106,225" stroke="#a08870" stroke-width="6" stroke-linecap="round" fill="none"/>
+            <text x="108" y="37" font-size="6.5" fill="#c0604a" font-family="Inter,sans-serif">Arc sourcilier</text>
+            <text x="120" y="108" font-size="6.5" fill="#c9a84c" font-family="Inter,sans-serif">Cage en</text>
+            <text x="120" y="116" font-size="6.5" fill="#c9a84c" font-family="Inter,sans-serif">tonneau</text>
+            <text x="83" y="244" font-size="6.5" fill="#778" text-anchor="middle" font-family="Inter,sans-serif">~1,93 m moy.</text>
+          </svg>
+          <div class="anatomy-note">Posture légèrement voûtée · bras longs · peau épaisse thermorégulatrice</div>
+        </div>
+        <div class="content-cols">
+          <div class="card-section"><h3 style="color:#c0604a;">Physiologie &amp; 1,9g</h3><p>Apparente contradiction avec la haute gravité : les Grauth sont les plus grands humanoïdes. Leur solution : musculature à fibres courtes d'une densité extrême, squelette massif, posture légèrement voûtée qui abaisse le centre de gravité. La peau vert-grise (3–4 mm) est un régulateur thermique remarquable — ils résistent à la chaleur extrême des zones polaires tropicales de Kamses.</p></div>
+          <div class="card-section"><h3 style="color:#c0604a;">Données</h3>
+            <div class="stat-row"><span class="stat-label">Taille</span><span class="stat-value">1,80 – 2,05 m</span></div>
+            <div class="stat-row"><span class="stat-label">Masse</span><span class="stat-value">120 – 185 kg</span></div>
+            <div class="stat-row"><span class="stat-label">Longévité</span><span class="stat-value">55 – 80 ans</span></div>
+            <div class="stat-row"><span class="stat-label">Résistance chaleur</span><span class="stat-value">Très haute</span></div>
+            <div class="stat-row"><span class="stat-label">Régénération</span><span class="stat-value">Rapide (tissus mous)</span></div>
+          </div>
+          <div class="card-section"><h3 style="color:#c0604a;">Aetherium &amp; Magie</h3>
+            <div class="magic-bar"><span class="magic-bar-label">Sensibilité</span><div class="magic-bar-track"><div class="magic-bar-fill" style="width:7%;background:#c0604a;"></div></div><span class="magic-bar-text">Quasi-nulle</span></div>
+            <p style="font-size:.85rem;">Le système nerveux Grauth est optimisé pour la réactivité physique, pas la subtilité synaptique de l'interface Ae. Les rares mages grauth (1/500) rejoignent l'Ordre ou errent seuls. Porteurs d'armes Durgoth Ae+Fe, ils deviennent des combattants d'élite même sans magie propre.</p>
+            <div class="affinity-list"><span class="affinity-badge">Aucune affinité naturelle</span><span class="affinity-badge">Résistance passive Ae.</span></div>
+          </div>
+          <div class="card-section"><h3 style="color:#c0604a;">Culture &amp; Distribution</h3><p>Présents quasi-exclusivement sur le <em>continent désertique</em>, particulièrement vers le pôle sud. Tribus nomades adaptées aux grandes chaleurs. Certains clans ont été intégrés à l'Empire Kamses comme troupes d'élite — d'autres résistent à toute allégeance. Maturation rapide (adultes à 12 ans), espérance de vie courte pour leur taille.</p></div>
+        </div>
+      </div>
+      <div class="card-lore" style="border-color:#c0604a;">"Un mage peut déplacer une montagne. Un Grauth l'escalade, tue ce qui est au sommet, et redescend avant midi." — centurion Grauth de l'Empire Kamses</div>
+    </div>
+
+    <!-- ═══ SAURIDH ═══ -->
+    <div class="info-card" id="card-sauridh">
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(58,170,122,.12);border-color:#3aaa7a;color:#3aaa7a;">◈</div>
+        <div class="card-header-text">
+          <div class="card-name">Sauridh <span style="font-weight:400;font-size:.9rem;">(Reptiliens)</span></div>
+          <div class="card-altname">Sauridh Thermalis — Guerriers des sables et chamans des morts</div>
+        </div>
+        <div class="card-tags">
+          <span class="ctag" style="color:#3aaa7a;border-color:#3aaa7a;background:rgba(58,170,122,.08);">Magie modérée–haute</span>
+          <span class="ctag" style="color:var(--muted);border-color:rgba(167,139,250,.2);background:rgba(13,27,42,.4);">Désert · Kamses · Nomades</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="anatomy-col">
+          <h3>Ossature &amp; Musculature</h3>
+          <svg viewBox="0 0 160 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:140px;">
+            <line x1="12" y1="15" x2="12" y2="215" stroke="#445" stroke-width=".6"/><line x1="9" y1="15" x2="15" y2="15" stroke="#445" stroke-width=".6"/><line x1="9" y1="115" x2="15" y2="115" stroke="#445" stroke-width=".6"/><line x1="9" y1="215" x2="15" y2="215" stroke="#445" stroke-width=".6"/>
+            <text x="8" y="13" font-size="7" fill="#778" text-anchor="middle" font-family="Inter,sans-serif">2m</text><text x="8" y="118" font-size="7" fill="#778" text-anchor="middle" font-family="Inter,sans-serif">1m</text>
+            <ellipse cx="80" cy="118" rx="24" ry="28" fill="#3aaa7a1a"/><ellipse cx="66" cy="180" rx="10" ry="22" fill="#3aaa7a14"/><ellipse cx="94" cy="180" rx="10" ry="22" fill="#3aaa7a14"/>
+            <path d="M68,42 Q80,25 92,42 L95,55 L65,55 Z" fill="#8ab898" stroke="#4a8060" stroke-width="1.2"/>
+            <rect x="74" y="55" width="12" height="10" rx="1" fill="#8ab898" stroke="#4a8060" stroke-width="1"/>
+            <path d="M58,65 L102,65 L105,148 L55,148 Z" fill="#8ab898" stroke="#4a8060" stroke-width="1.1"/>
+            <ellipse cx="80" cy="105" rx="20" ry="22" fill="none" stroke="#8a7050" stroke-width=".7" stroke-dasharray="2,2"/>
+            <line x1="80" y1="57" x2="80" y2="156" stroke="#8a7050" stroke-width=".8" stroke-dasharray="2.5,2"/>
+            <path d="M55,146 Q55,160 80,160 Q105,160 105,146" fill="#70a880" stroke="#4a8060" stroke-width="1"/>
+            <path d="M59,74 L42,118 L38,145" stroke="#4a8060" stroke-width="7" stroke-linecap="round" fill="none"/><path d="M59,74 L42,118 L38,145" stroke="#8ab898" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+            <path d="M101,74 L118,118 L122,145" stroke="#4a8060" stroke-width="7" stroke-linecap="round" fill="none"/><path d="M101,74 L118,118 L122,145" stroke="#8ab898" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+            <path d="M67,160 L62,198 L60,215" stroke="#4a8060" stroke-width="8" stroke-linecap="round" fill="none"/><path d="M67,160 L62,198 L60,215" stroke="#8ab898" stroke-width="5" stroke-linecap="round" fill="none"/>
+            <path d="M93,160 L98,198 L100,215" stroke="#4a8060" stroke-width="8" stroke-linecap="round" fill="none"/><path d="M93,160 L98,198 L100,215" stroke="#8ab898" stroke-width="5" stroke-linecap="round" fill="none"/>
+            <path d="M80,155 Q60,175 45,195 Q40,205 42,215" stroke="#4a8060" stroke-width="5" stroke-linecap="round" fill="none"/><path d="M80,155 Q60,175 45,195 Q40,205 42,215" stroke="#8ab898" stroke-width="3" stroke-linecap="round" fill="none"/>
+            <text x="104" y="35" font-size="6.5" fill="#3aaa7a" font-family="Inter,sans-serif">Crâne reptilien</text>
+            <text x="105" y="105" font-size="6.5" fill="#c9a84c" font-family="Inter,sans-serif">Écailles</text>
+            <text x="25" y="195" font-size="6.5" fill="#3aaa7a" font-family="Inter,sans-serif">Queue</text>
+            <text x="80" y="243" font-size="6.5" fill="#778" text-anchor="middle" font-family="Inter,sans-serif">~1,80 m + queue 45 cm</text>
+          </svg>
+          <div class="anatomy-note">Queue contrepoids · écailles protectrices · vision UV pour détecter l'Ae.</div>
+        </div>
+        <div class="content-cols">
+          <div class="card-section"><h3 style="color:#3aaa7a;">Physiologie &amp; 1,9g</h3><p>La queue de contrepoids (40–55 cm) redistribue le centre de masse et stabilise la bipédie en haute gravité. Leur force physique brute est comparable à celle des Durgoth — les écailles kératinisées (2–4 mm) servent d'armure naturelle. Ectothermes, leurs capacités explosent sous la chaleur tropicale. Leur vision UV leur permet de percevoir les veines d'Ae. comme une lueur bleue pulsatile.</p></div>
+          <div class="card-section"><h3 style="color:#3aaa7a;">Données</h3>
+            <div class="stat-row"><span class="stat-label">Taille</span><span class="stat-value">1,70 – 1,90 m (+queue)</span></div>
+            <div class="stat-row"><span class="stat-label">Masse</span><span class="stat-value">85 – 125 kg</span></div>
+            <div class="stat-row"><span class="stat-label">Longévité</span><span class="stat-value">120 – 160 ans</span></div>
+            <div class="stat-row"><span class="stat-label">Mue</span><span class="stat-value">Tous les ~5 ans</span></div>
+            <div class="stat-row"><span class="stat-label">Vision UV</span><span class="stat-value">Détection Ae. naturelle</span></div>
+          </div>
+          <div class="card-section"><h3 style="color:#3aaa7a;">Aetherium &amp; Magie</h3>
+            <div class="magic-bar"><span class="magic-bar-label">Sensibilité</span><div class="magic-bar-track"><div class="magic-bar-fill" style="width:68%;background:#3aaa7a;"></div></div><span class="magic-bar-text">Modérée–haute</span></div>
+            <p style="font-size:.85rem;">Deux lignées : les <em>guerriers-chamans</em> (Ae+Fe) et les <em>nécromanciens du culte des ancêtres</em> (Ae+N — réactivation des Ae. résiduels dans les momies du désert). Ces derniers sont respectés même à la cour de Kamses.</p>
+            <div class="affinity-list"><span class="affinity-badge">Ae+Fe · Guerrier ★</span><span class="affinity-badge">Ae+N · Nécromancie ★</span><span class="affinity-badge">Ae+Si · Désert</span></div>
+          </div>
+          <div class="card-section"><h3 style="color:#3aaa7a;">Culture &amp; Distribution</h3><p>Majoritairement <em>nomades</em> dans les zones désertiques de Kamses et les côtes du continent 3. Quelques communautés quasi-sectaires maintiennent un culte des ancêtres millénaire basé sur la réactivation en Ae. des corps momifiés de leurs aïeux. L'organisation sociale repose sur les lignages de sang.</p></div>
+        </div>
+      </div>
+      <div class="card-lore" style="border-color:#3aaa7a;">"Nos ancêtres ne meurent pas. Ils changent d'état." — chaman Sauridh, lors d'un rite de réactivation</div>
+    </div>
+
+    <!-- ═══ SKORAN ═══ -->
+    <div class="info-card" id="card-skoran">
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(90,154,220,.12);border-color:#5a9adc;color:#5a9adc;">❄</div>
+        <div class="card-header-text">
+          <div class="card-name">Skoran <span style="font-weight:400;font-size:.9rem;">(Ours polaires)</span></div>
+          <div class="card-altname">Skoran Glacialis — Chamans de l'équateur de glace</div>
+        </div>
+        <div class="card-tags">
+          <span class="ctag" style="color:#5a9adc;border-color:#5a9adc;background:rgba(90,154,220,.08);">Magie chamanique</span>
+          <span class="ctag" style="color:var(--muted);border-color:rgba(167,139,250,.2);background:rgba(13,27,42,.4);">Montagnes équatoriales glaciaires</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="anatomy-col">
+          <h3>Ossature &amp; Musculature</h3>
+          <svg viewBox="0 0 160 270" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:140px;">
+            <line x1="12" y1="10" x2="12" y2="230" stroke="#445" stroke-width=".6"/><line x1="9" y1="10" x2="15" y2="10" stroke="#445" stroke-width=".6"/><line x1="9" y1="115" x2="15" y2="115" stroke="#445" stroke-width=".6"/><line x1="9" y1="220" x2="15" y2="220" stroke="#445" stroke-width=".6"/>
+            <text x="8" y="8" font-size="7" fill="#778" text-anchor="middle" font-family="Inter,sans-serif">2m</text><text x="8" y="118" font-size="7" fill="#778" text-anchor="middle" font-family="Inter,sans-serif">1m</text>
+            <ellipse cx="80" cy="105" rx="38" ry="45" fill="#5a9adc18"/><ellipse cx="63" cy="183" rx="13" ry="26" fill="#5a9adc14"/><ellipse cx="97" cy="183" rx="13" ry="26" fill="#5a9adc14"/>
+            <ellipse cx="80" cy="35" rx="22" ry="20" fill="#c0d8f0" stroke="#4070a0" stroke-width="1.3"/>
+            <circle cx="60" cy="18" r="8" fill="#c0d8f0" stroke="#4070a0" stroke-width="1.1"/><circle cx="100" cy="18" r="8" fill="#c0d8f0" stroke="#4070a0" stroke-width="1.1"/>
+            <ellipse cx="80" cy="46" rx="10" ry="7" fill="#c0d8f0" stroke="#4070a0" stroke-width="1"/>
+            <rect x="70" y="54" width="20" height="11" rx="1" fill="#c0d8f0" stroke="#4070a0" stroke-width="1.1"/>
+            <path d="M38,65 L122,65 L126,155 L34,155 Z" fill="#c0d8f0" stroke="#4070a0" stroke-width="1.3"/>
+            <ellipse cx="80" cy="108" rx="30" ry="28" fill="none" stroke="#8a7050" stroke-width=".8" stroke-dasharray="2,2"/>
+            <line x1="80" y1="57" x2="80" y2="164" stroke="#8a7050" stroke-width=".9" stroke-dasharray="2.5,2"/>
+            <path d="M34,153 Q34,170 80,170 Q126,170 126,153" fill="#90b8d8" stroke="#4070a0" stroke-width="1.1"/>
+            <path d="M39,78 L16,135 L12,172" stroke="#4070a0" stroke-width="11" stroke-linecap="round" fill="none"/><path d="M39,78 L16,135 L12,172" stroke="#c0d8f0" stroke-width="7.5" stroke-linecap="round" fill="none"/>
+            <path d="M121,78 L144,135 L148,172" stroke="#4070a0" stroke-width="11" stroke-linecap="round" fill="none"/><path d="M121,78 L144,135 L148,172" stroke="#c0d8f0" stroke-width="7.5" stroke-linecap="round" fill="none"/>
+            <path d="M60,170 L52,205 L50,225" stroke="#4070a0" stroke-width="13" stroke-linecap="round" fill="none"/><path d="M60,170 L52,205 L50,225" stroke="#c0d8f0" stroke-width="9" stroke-linecap="round" fill="none"/>
+            <path d="M100,170 L108,205 L110,225" stroke="#4070a0" stroke-width="13" stroke-linecap="round" fill="none"/><path d="M100,170 L108,205 L110,225" stroke="#c0d8f0" stroke-width="9" stroke-linecap="round" fill="none"/>
+            <text x="106" y="18" font-size="6.5" fill="#c9a84c" font-family="Inter,sans-serif">Oreilles rondes</text>
+            <text x="127" y="108" font-size="6.5" fill="#c9a84c" font-family="Inter,sans-serif">Couche</text>
+            <text x="127" y="116" font-size="6.5" fill="#c9a84c" font-family="Inter,sans-serif">graisseuse</text>
+            <text x="80" y="248" font-size="6.5" fill="#778" text-anchor="middle" font-family="Inter,sans-serif">~2,35 m · quadrupède préféré</text>
+          </svg>
+          <div class="anatomy-note">Quadrupédie naturelle · couche adipeuse et fourrure massives · bras quasi touchant le sol debout</div>
+        </div>
+        <div class="content-cols">
+          <div class="card-section"><h3 style="color:#5a9adc;">Physiologie &amp; 1,9g</h3><p>Les Skoran se déplacent instinctivement à quatre pattes sur longue distance — la posture la plus stable sous 1,9g pour leur masse — et se redressent à 2,2–2,5 m pour les rituels, combats ou communications. Fourrure blanche (10–12 cm) et couche adipeuse les isolent des températures équatoriales glaciaires. Plasticité mémorielle exceptionnelle pour la cartographie territoriale tridimensionnelle.</p></div>
+          <div class="card-section"><h3 style="color:#5a9adc;">Données</h3>
+            <div class="stat-row"><span class="stat-label">Taille (debout)</span><span class="stat-value">2,15 – 2,55 m</span></div>
+            <div class="stat-row"><span class="stat-label">Masse</span><span class="stat-value">290 – 430 kg</span></div>
+            <div class="stat-row"><span class="stat-label">Longévité</span><span class="stat-value">100 – 140 ans</span></div>
+            <div class="stat-row"><span class="stat-label">Population</span><span class="stat-value">Très faible (~8 000)</span></div>
+            <div class="stat-row"><span class="stat-label">Locomotion</span><span class="stat-value">Quadrupède (distance)</span></div>
+          </div>
+          <div class="card-section"><h3 style="color:#5a9adc;">Aetherium &amp; Magie</h3>
+            <div class="magic-bar"><span class="magic-bar-label">Chamanique</span><div class="magic-bar-track"><div class="magic-bar-fill" style="width:60%;background:#5a9adc;"></div></div><span class="magic-bar-text">Modérée–haute</span></div>
+            <p style="font-size:.85rem;">Magie chamanique ancestrale : ils canalisent l'Ae. via des rites de concentration, des instruments gravés en Ae. ancré (os, pierre glaciaire) et une méditation prolongée. Affinités : <em>Ae+N glace</em> (gel, armures de glace), <em>Ae+Si terre</em> (avalanches contrôlées) et <em>Ae+N vent</em> (blizzards).</p>
+            <div class="affinity-list"><span class="affinity-badge">Ae Glace ★★ (rite)</span><span class="affinity-badge">Ae+Si · Terre/Roc</span><span class="affinity-badge">Ae+N · Vent/Blizzard</span></div>
+          </div>
+          <div class="card-section"><h3 style="color:#5a9adc;">Culture &amp; Distribution</h3><p>Petits groupes familiaux (5–15 individus) dans les vallées glaciaires de la chaîne équatoriale. Reproduction très lente (gestation 18 mois, 1–2 petits). Troquent cristaux Ae. contre outils Durgoth. Leurs chamans permettent à un mage Aelven de "lire" le territoire dans leur Ae. accumulé. Implacables si leurs jeunes sont menacés.</p></div>
+        </div>
+      </div>
+      <div class="card-lore" style="border-color:#5a9adc;">"La montagne parle à ceux qui savent se taire. Nous nous taisons depuis des siècles." — chaman Skoran, au seuil de son glacier</div>
+    </div>
+
+    <!-- ═══ KETHARA ═══ -->
+    <div class="info-card" id="card-kethara">
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(224,144,64,.12);border-color:#e09040;color:#e09040;">◉</div>
+        <div class="card-header-text">
+          <div class="card-name">Kethara <span style="font-weight:400;font-size:.9rem;">(Félidés — Lions des sables)</span></div>
+          <div class="card-altname">Kethara Solaris — Illusionnistes stratèges</div>
+        </div>
+        <div class="card-tags">
+          <span class="ctag" style="color:#e09040;border-color:#e09040;background:rgba(224,144,64,.08);">Magie modérée</span>
+          <span class="ctag" style="color:var(--muted);border-color:rgba(167,139,250,.2);background:rgba(13,27,42,.4);">Désert Kamses · Lore (minorité)</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="anatomy-col">
+          <h3>Ossature &amp; Musculature</h3>
+          <svg viewBox="0 0 160 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:140px;">
+            <line x1="12" y1="15" x2="12" y2="220" stroke="#445" stroke-width=".6"/><line x1="9" y1="15" x2="15" y2="15" stroke="#445" stroke-width=".6"/><line x1="9" y1="115" x2="15" y2="115" stroke="#445" stroke-width=".6"/><line x1="9" y1="215" x2="15" y2="215" stroke="#445" stroke-width=".6"/>
+            <text x="8" y="13" font-size="7" fill="#778" text-anchor="middle" font-family="Inter,sans-serif">2m</text><text x="8" y="118" font-size="7" fill="#778" text-anchor="middle" font-family="Inter,sans-serif">1m</text>
+            <ellipse cx="80" cy="108" rx="22" ry="27" fill="#e0904018"/><ellipse cx="68" cy="178" rx="11" ry="27" fill="#e0904018"/><ellipse cx="92" cy="178" rx="11" ry="27" fill="#e0904018"/>
+            <ellipse cx="80" cy="38" rx="17" ry="16" fill="#d0c080" stroke="#a08030" stroke-width="1.2"/>
+            <path d="M65,28 L60,14 L74,26 Z" fill="#d0c080" stroke="#a08030" stroke-width="1"/>
+            <path d="M95,28 L100,14 L86,26 Z" fill="#d0c080" stroke="#a08030" stroke-width="1"/>
+            <ellipse cx="80" cy="48" rx="22" ry="12" fill="#e09040" style="opacity:0.15;" stroke="#e09040" stroke-width=".6" stroke-dasharray="1.5,1.5"/>
+            <rect x="73" y="52" width="14" height="10" rx="1" fill="#d0c080" stroke="#a08030" stroke-width="1"/>
+            <path d="M58,62 L102,62 L104,145 L56,145 Z" fill="#d0c080" stroke="#a08030" stroke-width="1.1"/>
+            <ellipse cx="80" cy="102" rx="19" ry="21" fill="none" stroke="#8a7050" stroke-width=".7" stroke-dasharray="2,2"/>
+            <line x1="80" y1="54" x2="80" y2="154" stroke="#8a7050" stroke-width=".8" stroke-dasharray="2.5,2"/>
+            <path d="M56,143 Q56,157 80,157 Q104,157 104,143" fill="#b0a060" stroke="#a08030" stroke-width="1"/>
+            <path d="M59,70 L42,112 L38,138" stroke="#a08030" stroke-width="7" stroke-linecap="round" fill="none"/><path d="M59,70 L42,112 L38,138" stroke="#d0c080" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+            <path d="M101,70 L118,112 L122,138" stroke="#a08030" stroke-width="7" stroke-linecap="round" fill="none"/><path d="M101,70 L118,112 L122,138" stroke="#d0c080" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+            <path d="M67,157 L60,196 L57,215" stroke="#a08030" stroke-width="9" stroke-linecap="round" fill="none"/><path d="M67,157 L60,196 L57,215" stroke="#d0c080" stroke-width="6" stroke-linecap="round" fill="none"/>
+            <path d="M93,157 L100,196 L103,215" stroke="#a08030" stroke-width="9" stroke-linecap="round" fill="none"/><path d="M93,157 L100,196 L103,215" stroke="#d0c080" stroke-width="6" stroke-linecap="round" fill="none"/>
+            <path d="M80,152 Q100,170 112,195 Q116,208 110,218" stroke="#a08030" stroke-width="4.5" stroke-linecap="round" fill="none"/><path d="M80,152 Q100,170 112,195 Q116,208 110,218" stroke="#d0c080" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+            <text x="104" y="16" font-size="6.5" fill="#e09040" font-family="Inter,sans-serif">Oreilles pointues</text>
+            <text x="104" y="102" font-size="6.5" fill="#c9a84c" font-family="Inter,sans-serif">Jambes à</text>
+            <text x="104" y="110" font-size="6.5" fill="#c9a84c" font-family="Inter,sans-serif">ressorts</text>
+            <text x="80" y="244" font-size="6.5" fill="#778" text-anchor="middle" font-family="Inter,sans-serif">~1,88 m moy.</text>
+          </svg>
+          <div class="anatomy-note">Membres postérieurs explosifs · queue d'équilibre · crinière thermorégulatrice fine (mâles)</div>
+        </div>
+        <div class="content-cols">
+          <div class="card-section"><h3 style="color:#e09040;">Physiologie &amp; 1,9g</h3><p>Densité musculaire explosive plutôt que pure masse : membres postérieurs disproportionnés, véritables ressorts capables de bonds de 3–4 m horizontaux en 1,9g. La queue (55–70 cm) assure l'équilibre en course. Les mâles portent une crinière fine (thermorégulation). Tapetum lucidum renforcé, vision nocturne quasi parfaite. Griffes rétractables à kératine renforcée.</p></div>
+          <div class="card-section"><h3 style="color:#e09040;">Données</h3>
+            <div class="stat-row"><span class="stat-label">Taille</span><span class="stat-value">1,78 – 1,98 m</span></div>
+            <div class="stat-row"><span class="stat-label">Masse</span><span class="stat-value">90 – 135 kg</span></div>
+            <div class="stat-row"><span class="stat-label">Longévité</span><span class="stat-value">80 – 105 ans</span></div>
+            <div class="stat-row"><span class="stat-label">Vitesse (rafale)</span><span class="stat-value">~38 km/h</span></div>
+            <div class="stat-row"><span class="stat-label">Griffes</span><span class="stat-value">Rétractables, kératine++</span></div>
+          </div>
+          <div class="card-section"><h3 style="color:#e09040;">Aetherium &amp; Magie</h3>
+            <div class="magic-bar"><span class="magic-bar-label">Sensibilité</span><div class="magic-bar-track"><div class="magic-bar-fill" style="width:55%;background:#e09040;"></div></div><span class="magic-bar-text">Modérée</span></div>
+            <p style="font-size:.85rem;">Affinité naturelle vers Ae+P (illusion, mirage, éblouissement ciblé). Leurs mages masquent des dizaines de guerriers sous des voiles de chaleur simulés. Les mages kethara sont quasi-exclusivement des <em>femelles</em> — les mâles ont une densité musculaire trop élevée pour la finesse synaptique d'Ae+P.</p>
+            <div class="affinity-list"><span class="affinity-badge">Ae+P · Illusion ★★</span><span class="affinity-badge">Ae+O · Chaleur</span><span class="affinity-badge">Ae+neural · Empathie</span></div>
+          </div>
+          <div class="card-section"><h3 style="color:#e09040;">Culture &amp; Distribution</h3><p>Prides de 20–60 individus dans les zones arides de Kamses et en minorité dans des régions semi-arides du <em>Pays de Lore</em>. Structure sociale <em>matrilinéaire</em> — la lionne Alpha décide, les mâles combattent. Réputés comme éclaireurs et assassins furtifs ; certains prides ont conclu des accords avec l'Empire Kamses.</p></div>
+        </div>
+      </div>
+      <div class="card-lore" style="border-color:#e09040;">"Le désert n'a pas de secrets pour nous. Il n'a que des reflets — et nous choisissons lesquels vous montrer." — lionne Alpha Kethara</div>
+    </div>
+
+    <!-- ═══ VAHRYN ═══ -->
+    <div class="info-card" id="card-vahryn">
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(58,170,106,.12);border-color:#3aaa6a;color:#3aaa6a;">⬡</div>
+        <div class="card-header-text">
+          <div class="card-name">Vahryn <span style="font-weight:400;font-size:.9rem;">(Félidés — Lions de jungle)</span></div>
+          <div class="card-altname">Vahryn Ferox — Prédateurs instinctifs des terres inexplorées</div>
+        </div>
+        <div class="card-tags">
+          <span class="ctag" style="color:#3aaa6a;border-color:#3aaa6a;background:rgba(58,170,106,.08);">Magie modérée–haute</span>
+          <span class="ctag" style="color:var(--muted);border-color:rgba(167,139,250,.2);background:rgba(13,27,42,.4);">Jungle C3 · Désert Kamses</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="anatomy-col">
+          <h3>Ossature &amp; Musculature</h3>
+          <svg viewBox="0 0 160 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:140px;">
+            <line x1="12" y1="15" x2="12" y2="220" stroke="#445" stroke-width=".6"/><line x1="9" y1="15" x2="15" y2="15" stroke="#445" stroke-width=".6"/><line x1="9" y1="115" x2="15" y2="115" stroke="#445" stroke-width=".6"/><line x1="9" y1="215" x2="15" y2="215" stroke="#445" stroke-width=".6"/>
+            <text x="8" y="13" font-size="7" fill="#778" text-anchor="middle" font-family="Inter,sans-serif">2m</text><text x="8" y="118" font-size="7" fill="#778" text-anchor="middle" font-family="Inter,sans-serif">1m</text>
+            <ellipse cx="80" cy="105" rx="26" ry="30" fill="#3aaa6a20"/><ellipse cx="38" cy="118" rx="9" ry="25" fill="#3aaa6a14"/><ellipse cx="122" cy="118" rx="9" ry="25" fill="#3aaa6a14"/><ellipse cx="68" cy="180" rx="12" ry="27" fill="#3aaa6a14"/><ellipse cx="92" cy="180" rx="12" ry="27" fill="#3aaa6a14"/>
+            <ellipse cx="80" cy="38" rx="18" ry="17" fill="#a0c8a0" stroke="#408050" stroke-width="1.3"/>
+            <path d="M64,27 L58,13 L73,26 Z" fill="#a0c8a0" stroke="#408050" stroke-width="1"/>
+            <path d="M96,27 L102,13 L87,26 Z" fill="#a0c8a0" stroke="#408050" stroke-width="1"/>
+            <rect x="71" y="53" width="18" height="11" rx="1" fill="#a0c8a0" stroke="#408050" stroke-width="1.1"/>
+            <path d="M54,64 L106,64 L108,148 L52,148 Z" fill="#a0c8a0" stroke="#408050" stroke-width="1.2"/>
+            <ellipse cx="80" cy="105" rx="22" ry="23" fill="none" stroke="#8a7050" stroke-width=".7" stroke-dasharray="2,2"/>
+            <line x1="80" y1="56" x2="80" y2="156" stroke="#8a7050" stroke-width=".8" stroke-dasharray="2.5,2"/>
+            <path d="M52,146 Q52,160 80,160 Q108,160 108,146" fill="#80a880" stroke="#408050" stroke-width="1"/>
+            <path d="M55,74 L34,125 L28,155" stroke="#408050" stroke-width="8.5" stroke-linecap="round" fill="none"/><path d="M55,74 L34,125 L28,155" stroke="#a0c8a0" stroke-width="5.5" stroke-linecap="round" fill="none"/>
+            <path d="M105,74 L126,125 L132,155" stroke="#408050" stroke-width="8.5" stroke-linecap="round" fill="none"/><path d="M105,74 L126,125 L132,155" stroke="#a0c8a0" stroke-width="5.5" stroke-linecap="round" fill="none"/>
+            <path d="M66,160 L58,200 L55,215" stroke="#408050" stroke-width="10" stroke-linecap="round" fill="none"/><path d="M66,160 L58,200 L55,215" stroke="#a0c8a0" stroke-width="6.5" stroke-linecap="round" fill="none"/>
+            <path d="M94,160 L102,200 L105,215" stroke="#408050" stroke-width="10" stroke-linecap="round" fill="none"/><path d="M94,160 L102,200 L105,215" stroke="#a0c8a0" stroke-width="6.5" stroke-linecap="round" fill="none"/>
+            <path d="M80,155 Q102,173 114,198 Q118,210 112,218" stroke="#408050" stroke-width="4.5" stroke-linecap="round" fill="none"/><path d="M80,155 Q102,173 114,198 Q118,210 112,218" stroke="#a0c8a0" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+            <text x="110" y="15" font-size="6.5" fill="#3aaa6a" font-family="Inter,sans-serif">Oreilles lion</text>
+            <text x="17" y="130" font-size="6.5" fill="#3aaa6a" font-family="Inter,sans-serif">Bras longs</text>
+            <text x="17" y="138" font-size="6.5" fill="#3aaa6a" font-family="Inter,sans-serif">(arboricole)</text>
+            <text x="80" y="244" font-size="6.5" fill="#778" text-anchor="middle" font-family="Inter,sans-serif">~1,84 m moy.</text>
+          </svg>
+          <div class="anatomy-note">Bras plus longs (prise arboricole) · masse musculaire supérieure aux Kethara · penchant naturel à la violence</div>
+        </div>
+        <div class="content-cols">
+          <div class="card-section"><h3 style="color:#3aaa6a;">Physiologie &amp; 1,9g</h3><p>Proches des Kethara mais adaptés à la jungle dense : membres antérieurs plus longs à articulation dorsale renforcée pour saisir les branches sous 1,9g. Masse musculaire globale supérieure aux Kethara — morphologie offensive : épaules larges, mâchoire plus puissante, réflexes orientés vers l'attaque. Pelage à taches ou rosettes individuelles.</p></div>
+          <div class="card-section"><h3 style="color:#3aaa6a;">Données</h3>
+            <div class="stat-row"><span class="stat-label">Taille</span><span class="stat-value">1,74 – 1,95 m</span></div>
+            <div class="stat-row"><span class="stat-label">Masse</span><span class="stat-value">95 – 140 kg</span></div>
+            <div class="stat-row"><span class="stat-label">Longévité</span><span class="stat-value">90 – 120 ans</span></div>
+            <div class="stat-row"><span class="stat-label">Agilité 3D</span><span class="stat-value">Excellente</span></div>
+            <div class="stat-row"><span class="stat-label">Tempérament</span><span class="stat-value">Agressif / Territorial</span></div>
+          </div>
+          <div class="card-section"><h3 style="color:#3aaa6a;">Aetherium &amp; Magie</h3>
+            <div class="magic-bar"><span class="magic-bar-label">Sensibilité</span><div class="magic-bar-track"><div class="magic-bar-fill" style="width:70%;background:#3aaa6a;"></div></div><span class="magic-bar-text">Modérée–haute</span></div>
+            <p style="font-size:.85rem;">Affinité naturelle vers Ae+C (vie, biologie) et Ae+P (camouflage). Leurs chamans communiquent avec la faune via des résonances Ae. partagées et, pour les plus avancés, fusionnent temporairement avec des animaux. Cette magie douce contraste avec leur violence naturelle — les chamans sont souvent les seuls à refuser la guerre ouverte.</p>
+            <div class="affinity-list"><span class="affinity-badge">Ae+C · Vie ★★</span><span class="affinity-badge">Ae+C+neural · Lien animal</span><span class="affinity-badge">Ae+P · Camouflage</span></div>
+          </div>
+          <div class="card-section"><h3 style="color:#3aaa6a;">Culture &amp; Distribution</h3><p>Présents dans les <em>jungles tropicales du continent 3</em> et en nombre secondaire sur le <em>continent désertique</em>. Solitaires ou petits groupes de 2–6. Très territoriaux et méfiants. Rituels d'initiation longs (3–5 ans) pour accéder aux savoirs chamaniques. Peu quittent leur territoire.</p></div>
+        </div>
+      </div>
+      <div class="card-lore" style="border-color:#3aaa6a;">"Nous ne cherchons pas la guerre. Mais nous ne la fuyons jamais." — chasseur Vahryn, aux confins du continent 3</div>
+    </div>
+
+    <!-- ═══ THYRAK ═══ -->
+    <div class="info-card" id="card-thyrak">
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(138,170,74,.12);border-color:#8aaa4a;color:#8aaa4a;">⟡</div>
+        <div class="card-header-text">
+          <div class="card-name">Thyrak <span style="font-weight:400;font-size:.9rem;">(Cervidés)</span></div>
+          <div class="card-altname">Thyrak Silvanus — Druides de la grande forêt</div>
+        </div>
+        <div class="card-tags">
+          <span class="ctag" style="color:#8aaa4a;border-color:#8aaa4a;background:rgba(138,170,74,.08);">Magie modérée</span>
+          <span class="ctag" style="color:var(--muted);border-color:rgba(167,139,250,.2);background:rgba(13,27,42,.4);">Forêts · Lore nord</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="anatomy-col">
+          <h3>Ossature &amp; Musculature</h3>
+          <svg viewBox="0 0 160 265" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:140px;">
+            <line x1="12" y1="15" x2="12" y2="220" stroke="#445" stroke-width=".6"/><line x1="9" y1="15" x2="15" y2="15" stroke="#445" stroke-width=".6"/><line x1="9" y1="115" x2="15" y2="115" stroke="#445" stroke-width=".6"/><line x1="9" y1="215" x2="15" y2="215" stroke="#445" stroke-width=".6"/>
+            <text x="8" y="13" font-size="7" fill="#778" text-anchor="middle" font-family="Inter,sans-serif">2m</text><text x="8" y="118" font-size="7" fill="#778" text-anchor="middle" font-family="Inter,sans-serif">1m</text>
+            <ellipse cx="80" cy="115" rx="21" ry="27" fill="#8aaa4a16"/><ellipse cx="68" cy="182" rx="9" ry="24" fill="#8aaa4a14"/><ellipse cx="92" cy="182" rx="9" ry="24" fill="#8aaa4a14"/>
+            <ellipse cx="80" cy="45" rx="14" ry="16" fill="#b8d090" stroke="#5a7830" stroke-width="1.1"/>
+            <path d="M67,38 L55,28 L63,42 Z" fill="#b8d090" stroke="#5a7830" stroke-width="1"/>
+            <path d="M93,38 L105,28 L97,42 Z" fill="#b8d090" stroke="#5a7830" stroke-width="1"/>
+            <path d="M75,31 L72,14 L77,22" stroke="#8aaa4a" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+            <path d="M72,20 L67,14" stroke="#8aaa4a" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+            <path d="M85,31 L88,14 L83,22" stroke="#8aaa4a" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+            <path d="M88,20 L93,14" stroke="#8aaa4a" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+            <path d="M75,31 L72,14" stroke="#6aaa2a" stroke-width=".8" stroke-linecap="round" stroke-dasharray="1.5,1" fill="none"/>
+            <path d="M85,31 L88,14" stroke="#6aaa2a" stroke-width=".8" stroke-linecap="round" stroke-dasharray="1.5,1" fill="none"/>
+            <rect x="74" y="59" width="12" height="14" rx="1" fill="#b8d090" stroke="#5a7830" stroke-width="1"/>
+            <path d="M60,73 L100,73 L103,150 L57,150 Z" fill="#b8d090" stroke="#5a7830" stroke-width="1.1"/>
+            <ellipse cx="80" cy="110" rx="18" ry="20" fill="none" stroke="#8a7050" stroke-width=".7" stroke-dasharray="2,2"/>
+            <line x1="80" y1="65" x2="80" y2="158" stroke="#8a7050" stroke-width=".8" stroke-dasharray="2.5,2"/>
+            <path d="M57,148 Q57,162 80,162 Q103,162 103,148" fill="#90b060" stroke="#5a7830" stroke-width="1"/>
+            <path d="M61,81 L44,120 L40,146" stroke="#5a7830" stroke-width="6.5" stroke-linecap="round" fill="none"/><path d="M61,81 L44,120 L40,146" stroke="#b8d090" stroke-width="4" stroke-linecap="round" fill="none"/>
+            <path d="M99,81 L116,120 L120,146" stroke="#5a7830" stroke-width="6.5" stroke-linecap="round" fill="none"/><path d="M99,81 L116,120 L120,146" stroke="#b8d090" stroke-width="4" stroke-linecap="round" fill="none"/>
+            <path d="M68,162 L62,200 L60,215" stroke="#5a7830" stroke-width="7.5" stroke-linecap="round" fill="none"/><path d="M68,162 L62,200 L60,215" stroke="#b8d090" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+            <path d="M92,162 L98,200 L100,215" stroke="#5a7830" stroke-width="7.5" stroke-linecap="round" fill="none"/><path d="M92,162 L98,200 L100,215" stroke="#b8d090" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+            <ellipse cx="60" cy="217" rx="6" ry="3" fill="#4a3818" stroke="#5a7830" stroke-width=".8"/>
+            <ellipse cx="100" cy="217" rx="6" ry="3" fill="#4a3818" stroke="#5a7830" stroke-width=".8"/>
+            <text x="34" y="11" font-size="6.5" fill="#8aaa4a" font-family="Inter,sans-serif">Bois petits + Ae.</text>
+            <text x="104" y="110" font-size="6.5" fill="#c9a84c" font-family="Inter,sans-serif">Antennes</text>
+            <text x="104" y="118" font-size="6.5" fill="#c9a84c" font-family="Inter,sans-serif">Ae. (bois)</text>
+            <text x="104" y="200" font-size="6.5" fill="#c9a84c" font-family="Inter,sans-serif">Sabots</text>
+            <text x="80" y="244" font-size="6.5" fill="#778" text-anchor="middle" font-family="Inter,sans-serif">~1,82 m moy.</text>
+          </svg>
+          <div class="anatomy-note">Bois creux chargés en Ae. organique (petits) · sabots adaptés bipédie · genoux renforcés</div>
+        </div>
+        <div class="content-cols">
+          <div class="card-section"><h3 style="color:#8aaa4a;">Physiologie &amp; 1,9g</h3><p>Seule espèce mixte native du Pays de Lore. Leurs bois — présents chez mâles et femelles mais <em>sensiblement plus petits que ceux des cervidés terrestres</em> — sont creux et remplis d'Ae. organique, fonctionnant comme des antennes qui amplifient la résonance magique. Les sabots sont adaptés à la bipédie obligatoire, ossature des membres très renforcée pour les impacts sous 1,9g.</p></div>
+          <div class="card-section"><h3 style="color:#8aaa4a;">Données</h3>
+            <div class="stat-row"><span class="stat-label">Taille</span><span class="stat-value">1,72 – 1,92 m</span></div>
+            <div class="stat-row"><span class="stat-label">Masse</span><span class="stat-value">85 – 120 kg</span></div>
+            <div class="stat-row"><span class="stat-label">Longévité</span><span class="stat-value">110 – 150 ans</span></div>
+            <div class="stat-row"><span class="stat-label">Bois (mue)</span><span class="stat-value">Annuelle · ritualisée</span></div>
+            <div class="stat-row"><span class="stat-label">Magie hors mue</span><span class="stat-value">-70 % sans bois</span></div>
+          </div>
+          <div class="card-section"><h3 style="color:#8aaa4a;">Aetherium &amp; Magie</h3>
+            <div class="magic-bar"><span class="magic-bar-label">Sensibilité</span><div class="magic-bar-track"><div class="magic-bar-fill" style="width:62%;background:#8aaa4a;"></div></div><span class="magic-bar-text">Modérée</span></div>
+            <p style="font-size:.85rem;">Magie druidique fondamentale : croissance, régénération, symbiose forestière (Ae+C et Ae+Si). Les bois amplifient la résonance et réduisent la déperdition Ae. — sans eux (période de mue), les capacités chutent de 70%. Les druides avancés lient des clairières entières à leur réseau Ae.</p>
+            <div class="affinity-list"><span class="affinity-badge">Ae+C · Croissance ★</span><span class="affinity-badge">Ae+Si · Forêt/Terre ★</span><span class="affinity-badge">Bois = antenne Ae.</span></div>
+          </div>
+          <div class="card-section"><h3 style="color:#8aaa4a;">Culture &amp; Distribution</h3><p>Communautés de 30–80 individus autour de clairières sacrées dans les forêts du nord du Pays de Lore. Officiellement neutres vis-à-vis du Trône Elindor, en accord tacite avec l'Ordre des Mages. Attaquer un Thyrak sans bois est le crime ultime reconnu par toutes les espèces mixtes du continent 1.</p></div>
+        </div>
+      </div>
+      <div class="card-lore" style="border-color:#8aaa4a;">"Nous ne possédons pas la forêt. Nous lui appartenons — et elle le sait." — druide Thyrak des Bois de l'Aube</div>
+    </div>
+
+    <!-- ═══ VETH'ARI ═══ -->
+    <div class="info-card" id="card-vethari">
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(138,106,170,.12);border-color:#8a6aaa;color:#8a6aaa;">⬢</div>
+        <div class="card-header-text">
+          <div class="card-name">Veth'ari &amp; Castes</div>
+          <div class="card-altname">Civilisation hermétique des profondeurs — Zone frontalière désert/continent 3</div>
+        </div>
+        <div class="card-tags">
+          <span class="ctag" style="color:#8a6aaa;border-color:#8a6aaa;background:rgba(138,106,170,.08);">Magie technologique</span>
+          <span class="ctag" style="color:var(--muted);border-color:rgba(167,139,250,.2);background:rgba(13,27,42,.4);">Souterrain hermétique</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="anatomy-col">
+          <h3>Ossature &amp; Musculature</h3>
+          <svg viewBox="0 0 160 265" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:140px;">
+            <line x1="12" y1="25" x2="12" y2="215" stroke="#445" stroke-width=".6"/><line x1="9" y1="25" x2="15" y2="25" stroke="#445" stroke-width=".6"/><line x1="9" y1="125" x2="15" y2="125" stroke="#445" stroke-width=".6"/><line x1="9" y1="215" x2="15" y2="215" stroke="#445" stroke-width=".6"/>
+            <text x="8" y="23" font-size="7" fill="#778" text-anchor="middle" font-family="Inter,sans-serif">2m</text><text x="8" y="128" font-size="7" fill="#778" text-anchor="middle" font-family="Inter,sans-serif">1m</text>
+            <ellipse cx="80" cy="122" rx="22" ry="28" fill="#8a6aaa18"/>
+            <ellipse cx="80" cy="72" rx="16" ry="15" fill="#6050a0" stroke="#4a3880" stroke-width="1.2"/>
+            <ellipse cx="70" cy="70" rx="7" ry="8" fill="#1a0a3a" stroke="#6050a0" stroke-width=".8"/>
+            <ellipse cx="90" cy="70" rx="7" ry="8" fill="#1a0a3a" stroke="#6050a0" stroke-width=".8"/>
+            <path d="M74,58 Q68,40 60,30" stroke="#4a3880" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+            <path d="M86,58 Q92,40 100,30" stroke="#4a3880" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+            <circle cx="60" cy="30" r="2" fill="#4a3880"/><circle cx="100" cy="30" r="2" fill="#4a3880"/>
+            <rect x="75" y="86" width="10" height="8" rx="1" fill="#6050a0" stroke="#4a3880" stroke-width="1"/>
+            <path d="M58,94 L102,94 L104,155 L56,155 Z" fill="#6050a0" stroke="#4a3880" stroke-width="1.1"/>
+            <line x1="57" y1="112" x2="103" y2="112" stroke="#8a6aaa" stroke-width=".5" stroke-dasharray="1.5,1.5"/>
+            <line x1="57" y1="130" x2="103" y2="130" stroke="#8a6aaa" stroke-width=".5" stroke-dasharray="1.5,1.5"/>
+            <line x1="80" y1="88" x2="80" y2="163" stroke="#8a7050" stroke-width=".7" stroke-dasharray="2,2"/>
+            <path d="M56,153 Q56,168 80,168 Q104,168 104,153" fill="#5040a0" stroke="#4a3880" stroke-width="1"/>
+            <path d="M59,100 L38,120 L32,140" stroke="#4a3880" stroke-width="4" stroke-linecap="round" fill="none"/><path d="M59,100 L38,120 L32,140" stroke="#6050a0" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+            <path d="M59,115 L36,130 L30,148" stroke="#4a3880" stroke-width="3.5" stroke-linecap="round" fill="none"/><path d="M59,115 L36,130 L30,148" stroke="#6050a0" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <path d="M101,100 L122,120 L128,140" stroke="#4a3880" stroke-width="4" stroke-linecap="round" fill="none"/><path d="M101,100 L122,120 L128,140" stroke="#6050a0" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+            <path d="M101,115 L124,130 L130,148" stroke="#4a3880" stroke-width="3.5" stroke-linecap="round" fill="none"/><path d="M101,115 L124,130 L130,148" stroke="#6050a0" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <path d="M65,168 L60,200 L58,215" stroke="#4a3880" stroke-width="6.5" stroke-linecap="round" fill="none"/><path d="M65,168 L60,200 L58,215" stroke="#6050a0" stroke-width="4" stroke-linecap="round" fill="none"/>
+            <path d="M95,168 L100,200 L102,215" stroke="#4a3880" stroke-width="6.5" stroke-linecap="round" fill="none"/><path d="M95,168 L100,200 L102,215" stroke="#6050a0" stroke-width="4" stroke-linecap="round" fill="none"/>
+            <text x="25" y="27" font-size="6.5" fill="#8a6aaa" font-family="Inter,sans-serif">Antennes</text>
+            <text x="25" y="72" font-size="6.5" fill="#8a6aaa" font-family="Inter,sans-serif">Yeux composés</text>
+            <text x="108" y="112" font-size="6.5" fill="#c9a84c" font-family="Inter,sans-serif">Exosquelette</text>
+            <text x="20" y="140" font-size="6.5" fill="#8a6aaa" font-family="Inter,sans-serif">4 bras</text>
+            <text x="80" y="244" font-size="6.5" fill="#778" text-anchor="middle" font-family="Inter,sans-serif">~1,15 m moy. (Veth'ari)</text>
+          </svg>
+          <div class="anatomy-note">Exosquelette chitineux · 6 membres (4 bras + 2 jambes) · yeux composés 320° · antennes Ae.</div>
+        </div>
+        <div class="content-cols">
+          <div class="card-section full-width"><h3 style="color:#8a6aaa;">Castes &amp; Organisation</h3>
+            <p><strong style="color:var(--blanc-lune);">Veth'ari (dirigeants) :</strong> 1,05–1,25 m, six membres (4 bras articulés à 270°, 2 jambes), exosquelette chitineux brun-violet. Yeux composés 320°, antennes (phéromones + détection Ae.). Communication collective par phéromones et vibrations — quasi-instantanée à l'échelle du réseau.</p>
+            <p style="margin-top:.5rem;"><strong style="color:var(--blanc-lune);">Terrassiers (Veth'kol) :</strong> 0,6–0,9 m, mandibules broieuses de roche, travaillent en essaims (50–200). Intelligence minimale, pure exécution.</p>
+            <p style="margin-top:.5rem;"><strong style="color:var(--blanc-lune);">Soldats (Veth'kar) :</strong> 1,0–1,3 m, exosquelette renforcé, venin paralysant mandibulaire. Déployés uniquement en cas d'intrusion absolue.</p>
+            <p style="margin-top:.5rem;"><strong style="color:var(--blanc-lune);">Reproducteurs (Veth'mara) :</strong> 2,5–3,5 m (immobiles), conscience diffuse, génèrent toutes les castes selon les besoins.</p>
+          </div>
+          <div class="card-section"><h3 style="color:#8a6aaa;">Aetherium Technologique</h3>
+            <div class="magic-bar"><span class="magic-bar-label">Bio</span><div class="magic-bar-track"><div class="magic-bar-fill" style="width:18%;background:#8a6aaa;"></div></div><span class="magic-bar-text">Faible</span></div>
+            <div class="magic-bar"><span class="magic-bar-label">Techno</span><div class="magic-bar-track"><div class="magic-bar-fill" style="width:98%;background:#c9a84c;"></div></div><span class="magic-bar-text">Inégalée</span></div>
+            <p style="font-size:.85rem;">Leur civilisation exploite l'Ae. comme matériau physique : cristaux de stockage d'énergie, circuits conducteurs gravés dans la roche, outils de précision exploitant la résonance Ae. — sans mage, sans Flux biologique. Cette approche technologique est sans équivalent en surface.</p>
+            <div class="affinity-list"><span class="affinity-badge">Ae. matériau ★★</span><span class="affinity-badge">Cristaux Ae. énergie</span></div>
+          </div>
+          <div class="card-section"><h3 style="color:#8a6aaa;">Données (Veth'ari)</h3>
+            <div class="stat-row"><span class="stat-label">Taille</span><span class="stat-value">1,05 – 1,25 m</span></div>
+            <div class="stat-row"><span class="stat-label">Longévité dirigeants</span><span class="stat-value">200 – 500 ans</span></div>
+            <div class="stat-row"><span class="stat-label">Contact surface</span><span class="stat-value">Délibérément nul</span></div>
+            <div class="stat-row"><span class="stat-label">Population</span><span class="stat-value">Inconnue (&gt;100 000 ?)</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-lore" style="border-color:#8a6aaa;">[Aucune citation. Les Veth'ari n'ont jamais adressé la parole à une race de surface. Toutes les tentatives de contact ont été ignorées.]</div>
+    </div>
+
+    <!-- ═══ LUTHARIN ═══ -->
+    <div class="info-card" id="card-lutharin">
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(204,136,204,.12);border-color:#cc88cc;color:#cc88cc;">✿</div>
+        <div class="card-header-text">
+          <div class="card-name">Lutharin <span style="font-weight:400;font-size:.9rem;">(Lutins)</span></div>
+          <div class="card-altname">Lutharin Faelis — Petits résonateurs de l'Aetherium</div>
+        </div>
+        <div class="card-tags">
+          <span class="ctag" style="color:#cc88cc;border-color:#cc88cc;background:rgba(204,136,204,.08);">Magie très haute</span>
+          <span class="ctag" style="color:var(--muted);border-color:rgba(167,139,250,.2);background:rgba(13,27,42,.4);">Lore · Zones à Ae. élevé</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="anatomy-col">
+          <h3>Ossature &amp; Musculature</h3>
+          <svg viewBox="0 0 160 265" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:140px;">
+            <line x1="12" y1="25" x2="12" y2="215" stroke="#445" stroke-width=".6"/><line x1="9" y1="25" x2="15" y2="25" stroke="#445" stroke-width=".6"/><line x1="9" y1="125" x2="15" y2="125" stroke="#445" stroke-width=".6"/><line x1="9" y1="215" x2="15" y2="215" stroke="#445" stroke-width=".6"/>
+            <text x="8" y="23" font-size="7" fill="#778" text-anchor="middle" font-family="Inter,sans-serif">2m</text><text x="8" y="128" font-size="7" fill="#778" text-anchor="middle" font-family="Inter,sans-serif">1m</text>
+            <ellipse cx="80" cy="158" rx="21" ry="22" fill="#cc88cc18"/><ellipse cx="67" cy="196" rx="9" ry="16" fill="#cc88cc12"/><ellipse cx="93" cy="196" rx="9" ry="16" fill="#cc88cc12"/>
+            <ellipse cx="80" cy="138" rx="18" ry="17" fill="#e0b8e0" stroke="#9050a0" stroke-width="1.2"/>
+            <path d="M63,131 L52,122 L60,134 Z" fill="#e0b8e0" stroke="#9050a0" stroke-width="1"/>
+            <path d="M97,131 L108,122 L100,134 Z" fill="#e0b8e0" stroke="#9050a0" stroke-width="1"/>
+            <ellipse cx="80" cy="138" rx="23" ry="22" fill="none" stroke="#cc88cc" stroke-width=".6" stroke-dasharray="1.5,2"/>
+            <rect x="74" y="153" width="12" height="8" rx="2" fill="#e0b8e0" stroke="#9050a0" stroke-width=".9"/>
+            <path d="M59,161 L101,161 L103,197 L57,197 Z" fill="#e0b8e0" stroke="#9050a0" stroke-width="1.1"/>
+            <ellipse cx="80" cy="178" rx="18" ry="15" fill="none" stroke="#8a7050" stroke-width=".7" stroke-dasharray="2,2"/>
+            <line x1="80" y1="153" x2="80" y2="203" stroke="#8a7050" stroke-width=".8" stroke-dasharray="2.5,2"/>
+            <path d="M57,195 Q57,205 80,205 Q103,205 103,195" fill="#c090c0" stroke="#9050a0" stroke-width="1"/>
+            <path d="M60,168 L44,190 L41,207" stroke="#9050a0" stroke-width="6.5" stroke-linecap="round" fill="none"/><path d="M60,168 L44,190 L41,207" stroke="#e0b8e0" stroke-width="4" stroke-linecap="round" fill="none"/>
+            <path d="M100,168 L116,190 L119,207" stroke="#9050a0" stroke-width="6.5" stroke-linecap="round" fill="none"/><path d="M100,168 L116,190 L119,207" stroke="#e0b8e0" stroke-width="4" stroke-linecap="round" fill="none"/>
+            <path d="M68,205 L64,226 L62,240" stroke="#9050a0" stroke-width="8" stroke-linecap="round" fill="none"/><path d="M68,205 L64,226 L62,240" stroke="#e0b8e0" stroke-width="5" stroke-linecap="round" fill="none"/>
+            <path d="M92,205 L96,226 L98,240" stroke="#9050a0" stroke-width="8" stroke-linecap="round" fill="none"/><path d="M92,205 L96,226 L98,240" stroke="#e0b8e0" stroke-width="5" stroke-linecap="round" fill="none"/>
+            <text x="38" y="119" font-size="6.5" fill="#cc88cc" font-family="Inter,sans-serif">Oreilles mi-longues</text>
+            <text x="104" y="138" font-size="6.5" fill="#cc88cc" font-family="Inter,sans-serif">Halo Ae.</text>
+            <text x="104" y="180" font-size="6.5" fill="#c9a84c" font-family="Inter,sans-serif">Torso dense</text>
+            <text x="104" y="188" font-size="6.5" fill="#c9a84c" font-family="Inter,sans-serif">(Durgoth)</text>
+            <text x="80" y="256" font-size="6.5" fill="#778" text-anchor="middle" font-family="Inter,sans-serif">~0,95 – 1,05 m moy.</text>
+          </svg>
+          <div class="anatomy-note">Corps compact de densité Durgoth · tête légèrement grande (Ae.) · oreilles mi-longues Aelven</div>
+        </div>
+        <div class="content-cols">
+          <div class="card-section"><h3 style="color:#cc88cc;">Origine &amp; Physiologie</h3><p>Hybridation ancienne et stabilisée entre lignées <em>Aelven</em> et <em>Durgoth</em> — rendue viable par l'Aetherium dans les zones à très forte concentration Ae. Ils héritent de la stature compacte et densité osseuse Durgoth (adaptés à 1,9g) combinées à la finesse neurale Aelven. Oreilles de longueur intermédiaire. Teint pâle à légèrement doré selon l'exposition aux deux étoiles.</p></div>
+          <div class="card-section"><h3 style="color:#cc88cc;">Données</h3>
+            <div class="stat-row"><span class="stat-label">Taille</span><span class="stat-value">0,90 – 1,10 m</span></div>
+            <div class="stat-row"><span class="stat-label">Masse</span><span class="stat-value">22 – 38 kg</span></div>
+            <div class="stat-row"><span class="stat-label">Longévité</span><span class="stat-value">120 – 200 ans</span></div>
+            <div class="stat-row"><span class="stat-label">Sensibles Ae.</span><span class="stat-value">~3/4</span></div>
+            <div class="stat-row"><span class="stat-label">Densité osseuse</span><span class="stat-value">Élevée (héritage Durgoth)</span></div>
+          </div>
+          <div class="card-section"><h3 style="color:#cc88cc;">Aetherium &amp; Magie</h3>
+            <div class="magic-bar"><span class="magic-bar-label">Sensibilité</span><div class="magic-bar-track"><div class="magic-bar-fill" style="width:85%;background:#cc88cc;"></div></div><span class="magic-bar-text">Très haute</span></div>
+            <p style="font-size:.85rem;">Le réseau neural Aelven dans un corps compact crée une densité synaptique Ae. exceptionnelle, presque comparable aux grands maîtres Aelven. Ils perçoivent les fluctuations Ae. de façon quasi-instinctive, comme un sens à part entière. Affinités très variées, souvent <em>multiples chez un même individu</em> — ce qui est rare.</p>
+            <div class="affinity-list"><span class="affinity-badge">Ae+P · Illusion ★</span><span class="affinity-badge">Ae+C · Vie</span><span class="affinity-badge">Ae+Si · Cristaux</span><span class="affinity-badge">Multi-résonance possible</span></div>
+          </div>
+          <div class="card-section"><h3 style="color:#cc88cc;">Culture &amp; Distribution</h3><p>Vivent dans les mêmes zones à forte concentration Ae. que les Aelven — forêts et gorges du Pays de Lore. Naturellement curieux et sociaux, les plus enclins à la cohabitation avec les humains. L'Ordre des Mages les recrute activement ; les grands maîtres Aelven les considèrent avec une admiration teintée de méfiance devant leur polyvalence.</p></div>
+        </div>
+      </div>
+      <div class="card-lore" style="border-color:#cc88cc;">"Leur corps est petit. Leur résonance est immense. Ce paradoxe n'a pas fini de nous déranger." — grand maître Aelven de la Tour d'Opale</div>
+    </div>
+
+    <!-- ═══ AEVHARI ═══ -->
+    <div class="info-card" id="card-aevhari">
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(90,172,220,.12);border-color:#5aacdc;color:#5aacdc;">◎</div>
+        <div class="card-header-text">
+          <div class="card-name">Aevhari <span style="font-weight:400;font-size:.9rem;">(Volatiles humanoïdes)</span></div>
+          <div class="card-altname">Aevhari Ventis — Maîtres des courants et lecteurs de pensées</div>
+        </div>
+        <div class="card-tags">
+          <span class="ctag" style="color:#5aacdc;border-color:#5aacdc;background:rgba(90,172,220,.08);">Magie modérée–haute</span>
+          <span class="ctag" style="color:var(--muted);border-color:rgba(167,139,250,.2);background:rgba(13,27,42,.4);">Falaises · steppes · zones venteuses</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="anatomy-col">
+          <h3>Ossature &amp; Musculature</h3>
+          <svg viewBox="0 0 160 265" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:140px;">
+            <line x1="12" y1="15" x2="12" y2="220" stroke="#445" stroke-width=".6"/><line x1="9" y1="15" x2="15" y2="15" stroke="#445" stroke-width=".6"/><line x1="9" y1="115" x2="15" y2="115" stroke="#445" stroke-width=".6"/><line x1="9" y1="215" x2="15" y2="215" stroke="#445" stroke-width=".6"/>
+            <text x="8" y="13" font-size="7" fill="#778" text-anchor="middle" font-family="Inter,sans-serif">2m</text><text x="8" y="118" font-size="7" fill="#778" text-anchor="middle" font-family="Inter,sans-serif">1m</text>
+            <ellipse cx="80" cy="108" rx="16" ry="24" fill="#5aacdc14"/><ellipse cx="68" cy="180" rx="7" ry="20" fill="#5aacdc10"/><ellipse cx="92" cy="180" rx="7" ry="20" fill="#5aacdc10"/>
+            <ellipse cx="80" cy="40" rx="15" ry="16" fill="#a0c8e8" stroke="#3878a0" stroke-width="1.2"/>
+            <path d="M65,34 L95,34" stroke="#3878a0" stroke-width="2" stroke-linecap="round"/>
+            <ellipse cx="73" cy="40" rx="4" ry="3.5" fill="#0a1824" stroke="#3878a0" stroke-width=".6"/>
+            <ellipse cx="87" cy="40" rx="4" ry="3.5" fill="#0a1824" stroke="#3878a0" stroke-width=".6"/>
+            <path d="M77,47 L80,53 L83,47" fill="#c9a227" stroke="#a08020" stroke-width=".8"/>
+            <rect x="74" y="54" width="12" height="10" rx="1" fill="#a0c8e8" stroke="#3878a0" stroke-width="1"/>
+            <path d="M62,64 L98,64 L100,148 L60,148 Z" fill="#a0c8e8" stroke="#3878a0" stroke-width="1.1"/>
+            <ellipse cx="80" cy="103" rx="16" ry="20" fill="none" stroke="#5aacdc" stroke-width=".6" stroke-dasharray="1.5,1.5"/>
+            <line x1="80" y1="56" x2="80" y2="156" stroke="#8a7050" stroke-width=".7" stroke-dasharray="2.5,2"/>
+            <path d="M60,146 Q60,160 80,160 Q100,160 100,146" fill="#7aace0" stroke="#3878a0" stroke-width="1"/>
+            <path d="M63,72 L44,112 L40,140" stroke="#3878a0" stroke-width="6" stroke-linecap="round" fill="none"/><path d="M63,72 L44,112 L40,140" stroke="#a0c8e8" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+            <path d="M44,112 L36,115" stroke="#3878a0" stroke-width=".8"/><path d="M46,118 L37,122" stroke="#3878a0" stroke-width=".8"/><path d="M42,108 L34,110" stroke="#3878a0" stroke-width=".8"/>
+            <path d="M97,72 L116,112 L120,140" stroke="#3878a0" stroke-width="6" stroke-linecap="round" fill="none"/><path d="M97,72 L116,112 L120,140" stroke="#a0c8e8" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+            <path d="M116,112 L124,115" stroke="#3878a0" stroke-width=".8"/><path d="M114,118 L123,122" stroke="#3878a0" stroke-width=".8"/>
+            <path d="M68,160 L63,198 L61,215" stroke="#3878a0" stroke-width="6" stroke-linecap="round" fill="none"/><path d="M68,160 L63,198 L61,215" stroke="#a0c8e8" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+            <path d="M92,160 L97,198 L99,215" stroke="#3878a0" stroke-width="6" stroke-linecap="round" fill="none"/><path d="M92,160 L97,198 L99,215" stroke="#a0c8e8" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+            <text x="102" y="34" font-size="6.5" fill="#5aacdc" font-family="Inter,sans-serif">Arc sourcilier</text>
+            <text x="102" y="103" font-size="6.5" fill="#c9a84c" font-family="Inter,sans-serif">Os creux</text>
+            <text x="22" y="122" font-size="6.5" fill="#5aacdc" font-family="Inter,sans-serif">Avant-bras</text>
+            <text x="22" y="130" font-size="6.5" fill="#5aacdc" font-family="Inter,sans-serif">plumés</text>
+            <text x="80" y="244" font-size="6.5" fill="#778" text-anchor="middle" font-family="Inter,sans-serif">~1,78 m moy. · sans ailes</text>
+          </svg>
+          <div class="anatomy-note">Os creux pneumatiques · avant-bras couverts de plumes · vision télescopique · arc sourcilier proéminent</div>
+        </div>
+        <div class="content-cols">
+          <div class="card-section"><h3 style="color:#5aacdc;">Origine &amp; Physiologie</h3><p>Les Aevhari prouvent que la 1,9g peut sélectionner en faveur de la <em>légèreté</em> plutôt que de la masse. Leurs os sont pneumatiques — creux avec des travées internes — réduisant leur poids de 25–30 % à volume identique. Sans ailes fonctionnelles, ils portent des <em>avant-bras et épaules couverts de plumes</em> (vestige évolutif d'une proto-aile). Vision télescopique (×4), arc sourcilier proéminent (protection en zone de falaise), bec corné discret.</p></div>
+          <div class="card-section"><h3 style="color:#5aacdc;">Données</h3>
+            <div class="stat-row"><span class="stat-label">Taille</span><span class="stat-value">1,70 – 1,88 m</span></div>
+            <div class="stat-row"><span class="stat-label">Masse</span><span class="stat-value">52 – 72 kg (os creux)</span></div>
+            <div class="stat-row"><span class="stat-label">Longévité</span><span class="stat-value">90 – 130 ans</span></div>
+            <div class="stat-row"><span class="stat-label">Vision</span><span class="stat-value">Télescopique (×4)</span></div>
+            <div class="stat-row"><span class="stat-label">Ailes</span><span class="stat-value">Absentes (vestige plumeux)</span></div>
+          </div>
+          <div class="card-section"><h3 style="color:#5aacdc;">Aetherium &amp; Magie</h3>
+            <div class="magic-bar"><span class="magic-bar-label">Sensibilité</span><div class="magic-bar-track"><div class="magic-bar-fill" style="width:65%;background:#5aacdc;"></div></div><span class="magic-bar-text">Modérée–haute</span></div>
+            <p style="font-size:.85rem;">Deux affinités : <em>Ae+N vent</em> (manipulation des courants, rafales directionnelles, tourbillons) et <em>Ae+tissu neural contrôle mental</em> — suggestions, empathie forcée, confusion sensorielle légère. Leur pratique du contrôle mental n'est pas une intrusion brutale mais une résonance fine.</p>
+            <div class="affinity-list"><span class="affinity-badge">Ae+N · Vent ★★</span><span class="affinity-badge">Ae+neural · Contrôle mental ★</span><span class="affinity-badge">Ae+P · Perception</span></div>
+          </div>
+          <div class="card-section"><h3 style="color:#5aacdc;">Culture &amp; Distribution</h3><p>Occupent les zones venteuses : falaises côtières, hauts plateaux, steppes ouvertes des deux continents habités. Leur capacité de contrôle mental leur a valu une réputation ambiguë — <em>respectés et craints simultanément</em>. Leur code d'honneur interdit formellement l'usage sans accord préalable. Présence discrète mais notable dans l'Ordre des Mages.</p></div>
+        </div>
+      </div>
+      <div class="card-lore" style="border-color:#5aacdc;">"Nous ne lisons pas vos pensées. Nous lisons l'espace entre elles — là où vous ne pensez pas encore à mentir." — archiviste Aevhari de la Tour d'Opale</div>
+    </div>
+
+  </div><!-- fin info-panel -->
+</div><!-- fin main-layout -->
+
+<!-- TABLE RÉCAPITULATIVE -->
+<div class="summary-section">
+  <div class="section-title">— Tableau Comparatif des Races —</div>
+  <table class="summary-table">
+    <thead>
+      <tr>
+        <th>Race</th><th>Taille</th><th>Masse</th><th>Longévité</th><th>Sensibilité Ae.</th><th>Affinité principale</th><th>Habitat</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="race-row"><td><span class="tbl-name" style="color:#c9a84c;">Humains</span></td><td>1,58–1,72 m</td><td>70–100 kg</td><td>70–95 ans</td><td><span class="tbl-tag">Modérée (1/50)</span></td><td>Toutes (variable)</td><td>Lore · Kamses</td></tr>
+      <tr class="race-row"><td><span class="tbl-name" style="color:#a47ef5;">Aelven</span></td><td>1,62–1,78 m</td><td>55–78 kg</td><td>200–320 ans</td><td><span class="tbl-tag gold">Très haute (1/3)</span></td><td>Ae+P · Ae+Si · Télépathie</td><td>Forêts · Gorges · Lore</td></tr>
+      <tr class="race-row"><td><span class="tbl-name" style="color:#9a9080;">Durgoth</span></td><td>1,28–1,47 m</td><td>90–140 kg</td><td>150–210 ans</td><td><span class="tbl-tag grey">Très faible (bio)</span></td><td>Forge Ae+Fe ★★</td><td>Souterrain · Lore</td></tr>
+      <tr class="race-row"><td><span class="tbl-name" style="color:#c0604a;">Grauth</span></td><td>1,80–2,05 m</td><td>120–185 kg</td><td>55–80 ans</td><td><span class="tbl-tag grey">Quasi-nulle</span></td><td>Aucune</td><td>Désert · Pôle Sud · Kamses</td></tr>
+      <tr class="race-row"><td><span class="tbl-name" style="color:#3aaa7a;">Sauridh</span></td><td>1,70–1,90 m (+queue)</td><td>85–125 kg</td><td>120–160 ans</td><td><span class="tbl-tag">Modérée–haute</span></td><td>Ae+Fe · Ae+N</td><td>Désert · Kamses · Nomades</td></tr>
+      <tr class="race-row"><td><span class="tbl-name" style="color:#5a9adc;">Skoran</span></td><td>2,15–2,55 m</td><td>290–430 kg</td><td>100–140 ans</td><td><span class="tbl-tag">Modérée (chamanique)</span></td><td>Ae Glace · Vent · Terre</td><td>Montagnes équatoriales</td></tr>
+      <tr class="race-row"><td><span class="tbl-name" style="color:#e09040;">Kethara</span></td><td>1,78–1,98 m</td><td>90–135 kg</td><td>80–105 ans</td><td><span class="tbl-tag">Modérée</span></td><td>Ae+P Illusion ★★</td><td>Désert Kamses · Lore (min.)</td></tr>
+      <tr class="race-row"><td><span class="tbl-name" style="color:#3aaa6a;">Vahryn</span></td><td>1,74–1,95 m</td><td>95–140 kg</td><td>90–120 ans</td><td><span class="tbl-tag">Modérée–haute</span></td><td>Ae+C · Lien animal</td><td>Jungle C3 · Désert Kamses</td></tr>
+      <tr class="race-row"><td><span class="tbl-name" style="color:#8aaa4a;">Thyrak</span></td><td>1,72–1,92 m</td><td>85–120 kg</td><td>110–150 ans</td><td><span class="tbl-tag">Modérée (bois)</span></td><td>Ae+C · Ae+Si Druides</td><td>Forêts · Lore nord</td></tr>
+      <tr class="race-row"><td><span class="tbl-name" style="color:#8a6aaa;">Veth'ari</span></td><td>1,05–1,25 m</td><td>—</td><td>200–500 ans</td><td><span class="tbl-tag grey">Faible (bio)</span></td><td>Ae. technologique ★★</td><td>Souterrain hermétique</td></tr>
+      <tr class="race-row"><td><span class="tbl-name" style="color:#cc88cc;">Lutharin</span></td><td>0,90–1,10 m</td><td>22–38 kg</td><td>120–200 ans</td><td><span class="tbl-tag gold">Très haute (3/4)</span></td><td>Multi-résonance Ae.</td><td>Forêts à Ae. élevé · Lore</td></tr>
+      <tr class="race-row"><td><span class="tbl-name" style="color:#5aacdc;">Aevhari</span></td><td>1,70–1,88 m</td><td>52–72 kg</td><td>90–130 ans</td><td><span class="tbl-tag">Modérée–haute</span></td><td>Ae Vent · Contrôle mental</td><td>Falaises · Steppes · Lore/Kamses</td></tr>
+    </tbody>
+  </table>
+</div>
+
+</div><!-- fin page -->
+
+<script>
+// Stars
+const starCanvas = document.getElementById('starCanvas');
+const sCtx = starCanvas.getContext('2d');
+function resizeStarCanvas(){starCanvas.width=window.innerWidth;starCanvas.height=window.innerHeight;}
+const stars=[];
+function initStars(){stars.length=0;for(let i=0;i<260;i++)stars.push({x:Math.random(),y:Math.random(),r:Math.random()*1.4+0.2,a:Math.random()*0.7+0.1,speed:Math.random()*0.003+0.001,phase:Math.random()*Math.PI*2});}
+function drawStars(){sCtx.clearRect(0,0,starCanvas.width,starCanvas.height);const now=Date.now()*.001;stars.forEach(s=>{const alpha=s.a*(0.5+0.5*Math.sin(now*s.speed*10+s.phase));sCtx.beginPath();sCtx.arc(s.x*starCanvas.width,s.y*starCanvas.height,s.r,0,Math.PI*2);sCtx.fillStyle=`rgba(200,210,255,${alpha})`;sCtx.fill();});}
+initStars();resizeStarCanvas();
+window.addEventListener('resize',resizeStarCanvas);
+setInterval(drawStars,50);
+
+// Race interactivity
+const btns=document.querySelectorAll('.race-btn');
+const cards=document.querySelectorAll('.info-card');
+const welcome=document.getElementById('infoWelcome');
+btns.forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    btns.forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const race=btn.dataset.race;
+    cards.forEach(c=>c.classList.remove('active'));
+    welcome.style.display='none';
+    const card=document.getElementById('card-'+race);
+    if(card){card.classList.add('active');}
+  });
+});
+</script>
+</body>
+</html>
