@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mythologia — Géographie</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bleu-nuit: #0a1520;
+    --violet-ae: #6b3fa0;
+    --eclat-ae: #a78bfa;
+    --or-ae: #c9a84c;
+    --blanc-lune: #e8e4f0;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bleu-nuit); color:var(--blanc-lune); font-family:"EB Garamond",serif; min-height:100vh; overflow-x:hidden; }
+  #starCanvas { position:fixed; inset:0; z-index:0; }
+  .overlay { position:fixed; inset:0; background:radial-gradient(ellipse at center, rgba(10,21,32,0.3) 0%, rgba(10,21,32,0.85) 100%); z-index:1; }
+  nav { position:fixed; top:0; left:0; right:0; z-index:100; display:flex; align-items:center; gap:20px; padding:18px 36px; background:linear-gradient(180deg, rgba(10,21,32,0.95) 0%, transparent 100%); }
+  .nav-back { font-family:"Cinzel",serif; font-size:0.7rem; letter-spacing:0.3em; color:var(--eclat-ae); text-decoration:none; text-transform:uppercase; opacity:0.7; transition:opacity 0.2s; }
+  .nav-back:hover { opacity:1; }
+  .nav-sep { color:rgba(167,139,250,0.3); }
+  .nav-current { font-family:"Cinzel",serif; font-size:0.7rem; letter-spacing:0.3em; text-transform:uppercase; color:var(--blanc-lune); }
+  .page { position:relative; z-index:10; min-height:100vh; display:flex; flex-direction:column; }
+  .page-header { text-align:center; padding:100px 20px 30px; animation:fadeDown 1s ease both; }
+  @keyframes fadeDown { from{opacity:0;transform:translateY(-20px)} to{opacity:1;transform:translateY(0)} }
+  .page-header h1 { font-family:"Cinzel Decorative",serif; font-size:clamp(1.8rem,4vw,3rem); color:var(--blanc-lune); text-shadow:0 0 40px rgba(167,139,250,0.5),0 0 80px rgba(167,139,250,0.2); letter-spacing:0.1em; margin-bottom:10px; }
+  .page-header .sous-titre { font-family:"Cinzel",serif; font-size:0.75rem; letter-spacing:0.5em; color:var(--eclat-ae); text-transform:uppercase; opacity:0.7; }
+  .ornement { display:flex; align-items:center; gap:16px; margin:18px auto 0; width:min(400px,80vw); }
+  .ornement-line { flex:1; height:1px; background:linear-gradient(90deg,transparent,var(--eclat-ae),transparent); }
+  .ornement-gem { width:7px; height:7px; background:var(--eclat-ae); transform:rotate(45deg); box-shadow:0 0 10px var(--eclat-ae); flex-shrink:0; }
+  .ornement-gem-s { width:4px; height:4px; background:var(--eclat-ae); transform:rotate(45deg); opacity:0.5; flex-shrink:0; }
+  .main-layout { display:grid; grid-template-columns:1fr 380px; gap:0; flex:1; padding:30px 36px 60px; max-width:1400px; margin:0 auto; width:100%; animation:fadeIn 1.2s 0.3s ease both; }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+  @media(max-width:900px){.main-layout{grid-template-columns:1fr}}
+  .map-container { position:relative; display:flex; flex-direction:column; align-items:center; gap:12px; }
+  #worldMap { border-radius:12px; border:1px solid rgba(167,139,250,0.15); box-shadow:0 0 50px rgba(107,63,160,0.15),0 0 0 1px rgba(167,139,250,0.06) inset; width:100%; max-width:720px; display:block; }
+  #worldMap .map-region { transition:opacity 0.2s; }
+  #worldMap .map-region:hover ~ .map-hover-glow { display:block; }
+  .map-hint { font-size:0.7rem; font-family:"Cinzel",serif; letter-spacing:0.2em; color:rgba(167,139,250,0.45); text-align:center; font-style:italic; }
+  /* Highlight overlay */
+  .region-highlight { position:absolute; pointer-events:none; opacity:0; transition:opacity 0.25s; border-radius:4px; }
+
+  /* INFO PANEL */
+  .info-panel { padding:30px 28px; display:flex; flex-direction:column; }
+  .info-welcome { display:flex; flex-direction:column; align-items:center; justify-content:center; flex:1; text-align:center; opacity:0.5; gap:14px; padding:40px 0; }
+  .info-welcome-icon { font-size:2.5rem; }
+  .info-welcome-text { font-family:"Cinzel",serif; font-size:0.72rem; letter-spacing:0.3em; text-transform:uppercase; color:var(--eclat-ae); line-height:2; }
+  .info-card { display:none; flex-direction:column; animation:slideIn 0.4s ease; }
+  .info-card.active { display:flex; }
+  @keyframes slideIn { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:translateX(0)} }
+  .info-card-header { display:flex; align-items:center; gap:16px; margin-bottom:20px; }
+  .info-card-icon { width:50px; height:50px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.4rem; flex-shrink:0; }
+  .info-card-name { font-family:"Cinzel Decorative",serif; font-size:1.15rem; }
+  .info-card-type { font-family:"Cinzel",serif; font-size:0.65rem; letter-spacing:0.35em; text-transform:uppercase; color:var(--eclat-ae); opacity:0.7; margin-top:4px; }
+  .info-divider { height:1px; background:linear-gradient(90deg,transparent,rgba(167,139,250,0.3),transparent); margin:16px 0; }
+  .info-desc { font-size:0.95rem; line-height:1.8; color:rgba(232,228,240,0.82); margin-bottom:20px; font-style:italic; }
+  .stats-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .stat-box { background:rgba(13,27,42,0.6); border:1px solid rgba(167,139,250,0.12); border-radius:10px; padding:12px 14px; }
+  .stat-box.full { grid-column:1/-1; }
+  .stat-label { font-family:"Cinzel",serif; font-size:0.58rem; letter-spacing:0.3em; text-transform:uppercase; color:var(--eclat-ae); opacity:0.65; margin-bottom:5px; }
+  .stat-value { font-size:0.9rem; color:var(--blanc-lune); font-weight:500; }
+  .info-lore { margin-top:18px; padding:16px; background:rgba(107,63,160,0.08); border-left:2px solid rgba(167,139,250,0.35); border-radius:0 8px 8px 0; }
+  .info-lore-label { font-family:"Cinzel",serif; font-size:0.6rem; letter-spacing:0.35em; text-transform:uppercase; color:var(--eclat-ae); margin-bottom:8px; opacity:0.7; }
+  .info-lore-text { font-size:0.88rem; line-height:1.75; color:rgba(232,228,240,0.7); font-style:italic; }
+
+  /* CLIMATE SECTION */
+  .climate-section { padding:0 36px 60px; max-width:1400px; margin:0 auto; width:100%; position:relative; z-index:10; }
+  .section-title { font-family:"Cinzel",serif; font-size:0.68rem; letter-spacing:0.45em; text-transform:uppercase; color:var(--or-ae); margin-bottom:24px; text-align:center; opacity:0.8; }
+  .climate-bar { display:flex; width:100%; border-radius:12px; overflow:hidden; height:56px; border:1px solid rgba(167,139,250,0.15); margin-bottom:12px; }
+  .climate-zone { display:flex; align-items:center; justify-content:center; font-family:"Cinzel",serif; font-size:0.62rem; letter-spacing:0.1em; text-transform:uppercase; color:rgba(232,228,240,0.8); text-align:center; padding:4px; transition:filter 0.2s; }
+  .climate-zone:hover { filter:brightness(1.2); }
+  .climate-labels { display:flex; width:100%; justify-content:space-between; padding:0 4px; }
+  .climate-label { font-family:"Cinzel",serif; font-size:0.58rem; letter-spacing:0.15em; color:rgba(167,139,250,0.5); }
+  .detail-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:14px; margin-top:28px; }
+  .detail-card { background:rgba(13,27,42,0.65); border:1px solid rgba(167,139,250,0.12); border-radius:14px; padding:22px; backdrop-filter:blur(10px); transition:border-color 0.3s,transform 0.3s; }
+  .detail-card:hover { border-color:rgba(167,139,250,0.35); transform:translateY(-3px); }
+  .detail-card-icon { font-size:1.4rem; margin-bottom:12px; }
+  .detail-card-title { font-family:"Cinzel",serif; font-size:0.73rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--eclat-ae); margin-bottom:10px; }
+  .detail-card-content { font-size:0.88rem; line-height:1.8; color:rgba(232,228,240,0.72); }
+  .detail-card-content strong { color:var(--blanc-lune); font-weight:500; }
+</style>
+</head>
+<body>
+<canvas id="starCanvas"></canvas>
+<div class="overlay"></div>
+<nav>
+  <a class="nav-back" href="mythologia_accueil.html">← Mythologia</a>
+  <span class="nav-sep">✦</span>
+  <span class="nav-current">Géographie</span>
+</nav>
+
+<div class="page">
+  <div class="page-header">
+    <h1>GÉOGRAPHIE</h1>
+    <p class="sous-titre">Continents, Zones & Reliefs</p>
+    <div class="ornement">
+      <div class="ornement-line"></div><div class="ornement-gem-s"></div>
+      <div class="ornement-gem"></div><div class="ornement-gem-s"></div>
+      <div class="ornement-line"></div>
+    </div>
+  </div>
+
+  <div class="main-layout">
+    <div class="map-container">
+      <svg id="worldMap" viewBox="0 0 680 452" xmlns="http://www.w3.org/2000/svg">
+
+<title style="fill:rgb(0, 0, 0);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto">Mythologia V3</title>
+<desc style="fill:rgb(0, 0, 0);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto">Planisphère de Mythologia avec Passage Impossible, factions, système planétaire.</desc>
+<defs>
+  <linearGradient id="ocn" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1a6e8e"/><stop offset="50%" stop-color="#0e4a66"/><stop offset="100%" stop-color="#0a2e4a"/></linearGradient>
+  <linearGradient id="mtg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#eef2f8"/><stop offset="100%" stop-color="#aabcce"/></linearGradient>
+  <clipPath id="mc"><rect x="20" y="20" width="640" height="380"/></clipPath>
+<mask id="imagine-text-gaps-7twqsp" maskUnits="userSpaceOnUse"><rect x="0" y="0" width="680" height="452" fill="white"/><rect x="361.52117919921875" y="181.44427490234375" width="17.4446439743042" height="13.4446439743042" fill="black" rx="2"/><rect x="352.8586730957031" y="204.27767944335938" width="35.30285453796387" height="9.666786193847656" fill="black" rx="2"/><rect x="330.3907470703125" y="229.27767944335938" width="79.66832733154297" height="10.611250877380371" fill="black" rx="2"/><rect x="413.9460754394531" y="250.33322143554688" width="59.31815719604492" height="10.611250877380371" fill="black" rx="2"/><rect x="412.34490966796875" y="262.2776794433594" width="64.02396392822266" height="9.666786193847656" fill="black" rx="2"/><rect x="618.7328491210938" y="66.27767944335938" width="29.805747985839844" height="9.666786193847656" fill="black" rx="2"/><rect x="552.1239013671875" y="46.222145080566406" width="30.073741912841797" height="8.7223219871521" fill="black" rx="2"/><rect x="202.97325134277344" y="22.388750076293945" width="74.05347442626953" height="12.500179290771484" fill="black" rx="2"/><rect x="191.89793395996094" y="41.38875198364258" width="96.20411682128906" height="12.500179290771484" fill="black" rx="2"/><rect x="308.32275390625" y="347.3887634277344" width="63.35446548461914" height="12.500179290771484" fill="black" rx="2"/><rect x="294.7239685058594" y="375.3887634277344" width="90.55209350585938" height="12.500179290771484" fill="black" rx="2"/><rect x="84.25871276855469" y="288.55535888671875" width="87.48258209228516" height="15.333572387695312" fill="black" rx="2"/><rect x="14.564693450927734" y="191.3887481689453" width="47.6094856262207" height="12.500179290771484" fill="black" rx="2"/><rect x="471.3184814453125" y="111.38874816894531" width="56.64729309082031" height="12.500179290771484" fill="black" rx="2"/><rect x="104" y="71.49981689453125" width="47.761695861816406" height="14.389108657836914" fill="black" rx="2"/><rect x="104" y="85.33321380615234" width="77.75316619873047" height="10.611250877380371" fill="black" rx="2"/><rect x="192.0555419921875" y="104.44428253173828" width="55.0461311340332" height="13.4446439743042" fill="black" rx="2"/><rect x="193" y="116.33322143554688" width="58.72901916503906" height="10.611250877380371" fill="black" rx="2"/><rect x="363" y="279.49981689453125" width="82.05854034423828" height="14.389108657836914" fill="black" rx="2"/><rect x="363" y="293.3332214355469" width="58.87177658081055" height="10.611250877380371" fill="black" rx="2"/><rect x="96.8489990234375" y="54.66642761230469" width="86.99089050292969" height="18.16696548461914" fill="black" rx="2"/><rect x="468.64471435546875" y="41.555355072021484" width="73.59969329833984" height="15.333572387695312" fill="black" rx="2"/><rect x="471.138671875" y="55.38874816894531" width="67.30998992919922" height="12.500179290771484" fill="black" rx="2"/><rect x="282.8525085449219" y="261.6108703613281" width="122.64713287353516" height="17.222501754760742" fill="black" rx="2"/><rect x="-6.530869483947754" y="-26.611251831054688" width="13.061738967895508" height="12.500179290771484" fill="black" rx="2"/><rect x="-6.339025020599365" y="18.388748168945312" width="12.7223219871521" height="12.500179290771484" fill="black" rx="2"/><rect x="-28.722713470458984" y="-4.611250638961792" width="13.666786193847656" height="12.500179290771484" fill="black" rx="2"/><rect x="15.660974502563477" y="-4.611250638961792" width="12.7223219871521" height="12.500179290771484" fill="black" rx="2"/><rect x="258.33990478515625" y="403.8330383300781" width="163.3201141357422" height="21.00035858154297" fill="black" rx="2"/><rect x="171.75909423828125" y="423.44427490234375" width="335.53729248046875" height="13.4446439743042" fill="black" rx="2"/></mask></defs>
+<rect x="20" y="20" width="640" height="380" fill="url(#ocn)" style="stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<rect x="20" y="20" width="640" height="15" fill="#9a9060" opacity="0.55" clip-path="url(#mc)" style="fill:rgb(154, 144, 96);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.55;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<rect x="20" y="35" width="640" height="26" fill="#165018" opacity="0.30" clip-path="url(#mc)" style="fill:rgb(22, 80, 24);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.3;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<rect x="20" y="348" width="640" height="22" fill="#886010" opacity="0.28" clip-path="url(#mc)" style="fill:rgb(136, 96, 16);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.28;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<rect x="20" y="370" width="640" height="30" fill="#706848" opacity="0.48" clip-path="url(#mc)" style="fill:rgb(112, 104, 72);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.48;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<g stroke="#3a6880" stroke-width="0.3" opacity="0.38" stroke-dasharray="4 8" style="fill:rgb(0, 0, 0);stroke:rgb(58, 104, 128);color:rgb(255, 255, 255);stroke-width:0.3px;stroke-dasharray:4px, 8px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.38;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto">
+  <line x1="20" y1="62" x2="660" y2="62" mask="url(#imagine-text-gaps-7twqsp)" style="fill:rgb(0, 0, 0);stroke:rgb(58, 104, 128);color:rgb(255, 255, 255);stroke-width:0.3px;stroke-dasharray:4px, 8px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/><line x1="20" y1="125" x2="660" y2="125" mask="url(#imagine-text-gaps-7twqsp)" style="fill:rgb(0, 0, 0);stroke:rgb(58, 104, 128);color:rgb(255, 255, 255);stroke-width:0.3px;stroke-dasharray:4px, 8px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+  <line x1="20" y1="278" x2="660" y2="278" mask="url(#imagine-text-gaps-7twqsp)" style="fill:rgb(0, 0, 0);stroke:rgb(58, 104, 128);color:rgb(255, 255, 255);stroke-width:0.3px;stroke-dasharray:4px, 8px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/><line x1="20" y1="340" x2="660" y2="340" style="fill:rgb(0, 0, 0);stroke:rgb(58, 104, 128);color:rgb(255, 255, 255);stroke-width:0.3px;stroke-dasharray:4px, 8px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+  <line x1="182" y1="20" x2="182" y2="400" mask="url(#imagine-text-gaps-7twqsp)" style="fill:rgb(0, 0, 0);stroke:rgb(58, 104, 128);color:rgb(255, 255, 255);stroke-width:0.3px;stroke-dasharray:4px, 8px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/><line x1="344" y1="20" x2="344" y2="400" mask="url(#imagine-text-gaps-7twqsp)" style="fill:rgb(0, 0, 0);stroke:rgb(58, 104, 128);color:rgb(255, 255, 255);stroke-width:0.3px;stroke-dasharray:4px, 8px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/><line x1="506" y1="20" x2="506" y2="400" mask="url(#imagine-text-gaps-7twqsp)" style="fill:rgb(0, 0, 0);stroke:rgb(58, 104, 128);color:rgb(255, 255, 255);stroke-width:0.3px;stroke-dasharray:4px, 8px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+</g>
+
+<path d="M62 108 C72 52,162 24,232 30 C288 34,320 60,320 90 C320 116,304 142,274 160 C250 174,224 184,204 196 C190 204,180 214,172 218 L150 216 C124 214,100 203,80 192 C54 178,40 158,40 136 C40 116,56 112,62 108Z" fill="#3a6828" stroke="#285020" stroke-width="0.8" style="fill:rgb(58, 104, 40);stroke:rgb(40, 80, 32);color:rgb(255, 255, 255);stroke-width:0.8px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<path d="M115 65 C163 52,226 62,264 90 C294 112,300 146,280 165 C258 182,224 192,193 185 C162 178,136 158,126 130 C115 102,115 80,115 65Z" fill="#4e7e3e" opacity="0.45" style="fill:rgb(78, 126, 62);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.45;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<path d="M274 160 C290 166,308 175,313 188 C315 196,309 200,300 200 L290 200 C280 198,272 192,271 183 C270 173,272 162,274 160Z" fill="#3a6828" stroke="#285020" stroke-width="0.5" style="fill:rgb(58, 104, 40);stroke:rgb(40, 80, 32);color:rgb(255, 255, 255);stroke-width:0.5px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<path d="M62 108 C72 52,162 24,232 30 C288 34,320 60,320 90 C320 116,304 142,274 160 C250 174,224 184,204 196 C190 204,180 214,172 218 L150 216 C124 214,100 203,80 192 C54 178,40 158,40 136 C40 116,56 112,62 108Z" fill="#3060d0" opacity="0.15" clip-path="url(#mc)" style="fill:rgb(48, 96, 208);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.15;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<ellipse cx="50" cy="76" rx="20" ry="12" fill="#285020" opacity="0.42" style="fill:rgb(40, 80, 32);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.42;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<ellipse cx="154" cy="44" rx="16" ry="10" fill="#285020" opacity="0.36" style="fill:rgb(40, 80, 32);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.36;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<ellipse cx="40" cy="140" rx="9" ry="14" fill="#285020" opacity="0.36" style="fill:rgb(40, 80, 32);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.36;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+<path d="M426 104 C422 126,418 148,414 166 C412 178,414 190,420 196 L430 198 C440 195,446 190,448 180 C450 170,446 152,442 132 C438 116,428 106,426 104Z" fill="#1a5838" stroke="#104028" stroke-width="0.5" style="fill:rgb(26, 88, 56);stroke:rgb(16, 64, 40);color:rgb(255, 255, 255);stroke-width:0.5px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<path d="M444 24 C470 10,516 6,556 20 C590 32,606 62,604 98 C602 130,588 158,566 172 C546 184,524 190,502 192 C480 194,460 182,444 170 C426 156,420 132,422 104 C424 78,438 46,444 24Z" fill="#1a5838" stroke="#104028" stroke-width="0.8" style="fill:rgb(26, 88, 56);stroke:rgb(16, 64, 40);color:rgb(255, 255, 255);stroke-width:0.8px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<path d="M554 20 C580 14,604 44,602 78 C600 112,588 142,566 158 C550 170,536 168,526 154 C514 138,510 112,513 86 C516 60,536 24,554 20Z" fill="#104030" opacity="0.85" style="fill:rgb(16, 64, 48);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.85;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<path d="M446 35 C478 18,518 20,548 46 C572 66,578 100,562 128 C545 154,512 164,482 162 C452 160,428 140,418 112 C408 86,420 52,446 35Z" fill="#247848" opacity="0.42" style="fill:rgb(36, 120, 72);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.42;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<path d="M444 170 C452 186,448 210,436 222 C424 232,408 228,402 214 C395 200,402 184,416 176 C426 170,438 168,444 170Z" fill="#1a5838" stroke="#104028" stroke-width="0.5" style="fill:rgb(26, 88, 56);stroke:rgb(16, 64, 40);color:rgb(255, 255, 255);stroke-width:0.5px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+<path d="M298 196 C314 184,340 180,360 183 C366 184,370 192,372 198 L378 198 C380 192,384 184,390 183 C408 180,424 184,432 192 C438 198,437 210,428 215 L412 218 C396 215,380 212,374 212 L362 212 C346 215,328 218,314 216 L300 213 C294 208,294 202,298 196Z" fill="#4a5a68" opacity="0.90" stroke="#3a4a58" stroke-width="0.5" style="fill:rgb(74, 90, 104);stroke:rgb(58, 74, 88);color:rgb(255, 255, 255);stroke-width:0.5px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.9;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<g fill="#7a8a98" opacity="0.85" style="fill:rgb(122, 138, 152);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.85;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto">
+  <path d="M312 200 L316 192 L320 200Z" style="fill:rgb(122, 138, 152);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/><path d="M328 195 L332 187 L336 195Z" style="fill:rgb(122, 138, 152);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+  <path d="M396 187 L400 179 L404 187Z" style="fill:rgb(122, 138, 152);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/><path d="M412 193 L416 185 L420 193Z" style="fill:rgb(122, 138, 152);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+  <path d="M424 200 L428 192 L432 200Z" style="fill:rgb(122, 138, 152);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+</g>
+<g fill="#b0c0cc" opacity="0.65" style="fill:rgb(176, 192, 204);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.65;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto">
+  <path d="M316 192 L320 185 L324 192Z" style="fill:rgb(176, 192, 204);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/><path d="M332 187 L336 180 L340 187Z" style="fill:rgb(176, 192, 204);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+  <path d="M400 179 L404 173 L408 179Z" style="fill:rgb(176, 192, 204);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/><path d="M416 185 L420 178 L424 185Z" style="fill:rgb(176, 192, 204);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+</g>
+
+<path d="M356 198 L358 188 L354 178 L358 168 L354 160 L358 152 L362 146 L366 143 L370 141 L374 143 L378 146 L382 152 L386 160 L382 168 L386 178 L382 188 L384 198Z" fill="#a8c0d0" stroke="#88a8bc" stroke-width="0.4" style="fill:rgb(168, 192, 208);stroke:rgb(136, 168, 188);color:rgb(255, 255, 255);stroke-width:0.4px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<path d="M360 149 L366 143 L370 141 L374 143 L380 149Z" fill="white" opacity="0.92" style="fill:rgb(255, 255, 255);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.92;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<path d="M352 170 L356 162 L360 170Z" fill="white" opacity="0.68" style="fill:rgb(255, 255, 255);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.68;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/><path d="M380 162 L384 170 L387 170Z" fill="white" opacity="0.68" style="fill:rgb(255, 255, 255);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.68;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<path d="M353 183 L357 175 L361 183Z" fill="white" opacity="0.52" style="fill:rgb(255, 255, 255);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.52;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/><path d="M381 175 L385 183 L388 183Z" fill="white" opacity="0.52" style="fill:rgb(255, 255, 255);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.52;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+<polygon points="366,200 370,192 374,200" fill="#1a0a30" stroke="#7040b8" stroke-width="0.7" style="fill:rgb(26, 10, 48);stroke:rgb(112, 64, 184);color:rgb(255, 255, 255);stroke-width:0.7px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<text x="370" y="191" text-anchor="middle" font-family="serif" font-size="9" fill="#9060d0" opacity="0.82" style="fill:rgb(144, 96, 208);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.82;font-family:serif;font-size:9px;font-weight:400;text-anchor:middle;dominant-baseline:auto">⊗</text>
+<text x="370" y="211" text-anchor="middle" font-family="sans-serif" font-size="5.5" fill="#a070d0" font-style="italic" style="fill:rgb(160, 112, 208);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:sans-serif;font-size:5.5px;font-weight:400;font-style:italic;text-anchor:middle;dominant-baseline:auto">Chasseurs</text>
+<text x="370" y="236" text-anchor="middle" font-family="Georgia,serif" font-size="5.5" fill="#9ab8c4" font-style="italic" letter-spacing="0.5" style="fill:rgb(154, 184, 196);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:Georgia, serif;font-size:5.5px;font-weight:400;font-style:italic;text-anchor:middle;dominant-baseline:auto">— Passage Impossible —</text>
+
+<path d="M20 228 L26 218 L32 207 L38 218 L44 200 L50 214 L56 196 L62 212 L68 194 L74 210 L80 192 L86 208 L92 190 L98 207 L104 188 L110 206 L116 186 L122 204 L128 184 L134 202 L138 222 L165 225 L205 226 L245 225 L280 226 L294 223 L300 207 L306 196 L312 208 L318 194 L324 207 L330 193 L334 220 L352 222 L372 222 L392 221 L412 222 L432 221 L452 222 L472 221 L492 222 L512 221 L516 205 L522 192 L528 202 L534 188 L540 202 L546 190 L552 202 L558 190 L564 202 L570 192 L576 204 L582 192 L588 204 L594 194 L600 204 L606 196 L612 206 L618 198 L624 208 L630 200 L636 210 L642 202 L648 212 L654 218 L660 228 L20 228Z" fill="url(#mtg)" stroke="#8aa8c0" stroke-width="0.4" style="stroke:rgb(138, 168, 192);color:rgb(255, 255, 255);stroke-width:0.4px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<g fill="white" opacity="0.80" style="fill:rgb(255, 255, 255);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.8;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto">
+  <path d="M44 200 L49 213 L39 213Z" style="fill:rgb(255, 255, 255);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/><path d="M68 194 L73 207 L63 207Z" style="fill:rgb(255, 255, 255);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+  <path d="M92 190 L97 204 L87 204Z" style="fill:rgb(255, 255, 255);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/><path d="M116 186 L121 200 L111 200Z" style="fill:rgb(255, 255, 255);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+  <path d="M306 196 L311 207 L301 207Z" opacity="0.6" style="fill:rgb(255, 255, 255);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.6;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/><path d="M318 194 L323 207 L313 207Z" opacity="0.6" style="fill:rgb(255, 255, 255);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.6;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+  <path d="M516 205 L521 192 L511 192 Z" style="fill:rgb(255, 255, 255);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/><path d="M534 188 L539 201 L529 201Z" style="fill:rgb(255, 255, 255);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+  <path d="M558 190 L563 203 L553 203Z" style="fill:rgb(255, 255, 255);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/><path d="M582 192 L587 204 L577 204Z" style="fill:rgb(255, 255, 255);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+  <path d="M606 196 L611 207 L601 207Z" style="fill:rgb(255, 255, 255);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/><path d="M630 200 L635 211 L625 211Z" style="fill:rgb(255, 255, 255);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+</g>
+
+<path d="M226 250 C260 232,316 226,370 238 C420 248,458 274,462 312 C466 350,446 382,418 398 C392 414,358 418,325 410 C293 402,266 382,248 354 C226 322,218 286,224 262 C226 255,226 250,226 250Z" fill="#c09038" stroke="#a07828" stroke-width="0.8" style="fill:rgb(192, 144, 56);stroke:rgb(160, 120, 40);color:rgb(255, 255, 255);stroke-width:0.8px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<path d="M226 250 C260 232,316 226,370 238 C420 248,458 274,462 312 C466 350,446 382,418 398 C392 414,358 418,325 410 C293 402,266 382,248 354 C226 322,218 286,224 262 C226 255,226 250,226 250Z" fill="#c08810" opacity="0.20" clip-path="url(#mc)" style="fill:rgb(192, 136, 16);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.2;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<path d="M254 260 C290 242,344 236,384 248 C418 260,440 284,440 318 C440 350,420 378,392 392 C363 406,329 406,302 392 C274 376,256 348,248 314 C238 280,242 264,254 260Z" fill="#d4a848" opacity="0.40" style="fill:rgb(212, 168, 72);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.4;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<ellipse cx="344" cy="312" rx="9" ry="6" fill="#287830" opacity="0.85" style="fill:rgb(40, 120, 48);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.85;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<ellipse cx="344" cy="312" rx="5" ry="3" fill="#3ca848" opacity="0.7" style="fill:rgb(60, 168, 72);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.7;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<path d="M348 396 C346 368,342 340,337 312 C331 286,324 264,316 248" fill="none" stroke="#2878b0" stroke-width="1.8" stroke-linecap="round" opacity="0.6" mask="url(#imagine-text-gaps-7twqsp)" style="fill:none;stroke:rgb(40, 120, 176);color:rgb(255, 255, 255);stroke-width:1.8px;stroke-linecap:round;stroke-linejoin:miter;opacity:0.6;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+<ellipse cx="444" cy="255" rx="22" ry="10" fill="#1e0c38" stroke="#6030a0" stroke-width="1.2" opacity="0.92" style="fill:rgb(30, 12, 56);stroke:rgb(96, 48, 160);color:rgb(255, 255, 255);stroke-width:1.2px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.92;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<text x="444" y="258" text-anchor="middle" font-family="sans-serif" font-size="6.5" fill="#9a68d8" style="fill:rgb(154, 104, 216);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:sans-serif;font-size:6.5px;font-weight:400;text-anchor:middle;dominant-baseline:auto">Zone Souterraine</text>
+<text x="444" y="269" text-anchor="middle" font-family="sans-serif" font-size="5.5" fill="#6840a0" font-style="italic" style="fill:rgb(104, 64, 160);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:sans-serif;font-size:5.5px;font-weight:400;font-style:italic;text-anchor:middle;dominant-baseline:auto">Espèce Isolée · Ruche</text>
+
+<rect x="545" y="22" width="113" height="66" rx="5" fill="#04010d" opacity="0.82" style="fill:rgb(4, 1, 13);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.82;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<ellipse cx="588" cy="46" rx="28" ry="11" fill="none" stroke="#505060" stroke-width="0.5" stroke-dasharray="2 3" style="fill:none;stroke:rgb(80, 80, 96);color:rgb(255, 255, 255);stroke-width:0.5px;stroke-dasharray:2px, 3px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<ellipse cx="634" cy="54" rx="24" ry="16" fill="none" stroke="#503060" stroke-width="0.5" stroke-dasharray="3 4" style="fill:none;stroke:rgb(80, 48, 96);color:rgb(255, 255, 255);stroke-width:0.5px;stroke-dasharray:3px, 4px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<circle cx="634" cy="54" r="9" fill="#07010c" style="fill:rgb(7, 1, 12);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<circle cx="634" cy="54" r="12" fill="none" stroke="#c050e0" stroke-width="2" opacity="0.85" style="fill:none;stroke:rgb(192, 80, 224);color:rgb(255, 255, 255);stroke-width:2px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.85;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<circle cx="607" cy="44" r="5.5" fill="#fdd84a" style="fill:rgb(253, 216, 74);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<circle cx="607" cy="44" r="7.5" fill="#fdd84a" opacity="0.20" style="fill:rgb(253, 216, 74);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.2;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<circle cx="596" cy="62" r="3.5" fill="#f090b8" style="fill:rgb(240, 144, 184);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<circle cx="596" cy="62" r="5" fill="#f090b8" opacity="0.20" style="fill:rgb(240, 144, 184);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.2;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<circle cx="566" cy="42" r="4" fill="#3890b0" style="fill:rgb(56, 144, 176);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<circle cx="566" cy="42" r="2" fill="#6ab8d0" opacity="0.6" style="fill:rgb(106, 184, 208);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.6;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<text x="634" y="73" text-anchor="middle" font-family="sans-serif" font-size="5" fill="#c070e8" style="fill:rgb(192, 112, 232);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:sans-serif;font-size:5px;font-weight:400;text-anchor:middle;dominant-baseline:auto">Trou Noir</text>
+<text x="567" y="52" text-anchor="middle" font-family="sans-serif" font-size="4.5" fill="#78c0d8" style="fill:rgb(120, 192, 216);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:sans-serif;font-size:4.5px;font-weight:400;text-anchor:middle;dominant-baseline:auto">Mythologia</text>
+
+<text x="240" y="31" text-anchor="middle" font-family="Georgia,serif" font-size="7" fill="#b0a85a" opacity="0.85" font-style="italic" style="fill:rgb(176, 168, 90);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.85;font-family:Georgia, serif;font-size:7px;font-weight:400;font-style:italic;text-anchor:middle;dominant-baseline:auto">▲ Désert Rocheux ▲</text>
+<text x="240" y="50" text-anchor="middle" font-family="Georgia,serif" font-size="7.5" fill="#80c850" opacity="0.85" font-style="italic" style="fill:rgb(128, 200, 80);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.85;font-family:Georgia, serif;font-size:7.5px;font-weight:400;font-style:italic;text-anchor:middle;dominant-baseline:auto">▲ Zone Tropicale Nord ▲</text>
+<text x="340" y="356" text-anchor="middle" font-family="Georgia,serif" font-size="7.5" fill="#d4a030" opacity="0.82" font-style="italic" style="fill:rgb(212, 160, 48);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.82;font-family:Georgia, serif;font-size:7.5px;font-weight:400;font-style:italic;text-anchor:middle;dominant-baseline:auto">▼ Zone Aride ▼</text>
+<text x="340" y="384" text-anchor="middle" font-family="Georgia,serif" font-size="7" fill="#969070" opacity="0.82" font-style="italic" style="fill:rgb(150, 144, 112);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.82;font-family:Georgia, serif;font-size:7px;font-weight:400;font-style:italic;text-anchor:middle;dominant-baseline:auto">▼ Rocaille Méridionale ▼</text>
+
+<text x="128" y="300" text-anchor="middle" font-family="Georgia,serif" font-size="10" fill="#4888b8" font-style="italic" opacity="0.65" letter-spacing="2" style="fill:rgb(72, 136, 184);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.65;font-family:Georgia, serif;font-size:10px;font-weight:400;font-style:italic;text-anchor:middle;dominant-baseline:auto">Océan Infini</text>
+<text x="38" y="200" text-anchor="middle" font-family="Georgia,serif" font-size="7" fill="#4888b8" font-style="italic" opacity="0.42" transform="rotate(-90 38 200)" style="fill:rgb(72, 136, 184);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.42;font-family:Georgia, serif;font-size:7px;font-weight:400;font-style:italic;text-anchor:middle;dominant-baseline:auto">Océan Infini</text>
+<text x="500" y="120" text-anchor="middle" font-family="Georgia,serif" font-size="7.5" fill="#5898b8" font-style="italic" opacity="0.60" style="fill:rgb(88, 152, 184);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.6;font-family:Georgia, serif;font-size:7.5px;font-weight:400;font-style:italic;text-anchor:middle;dominant-baseline:auto">Mer Orientale</text>
+
+<circle cx="98" cy="86" r="5" fill="#f8d840" stroke="#b89020" stroke-width="0.9" style="fill:rgb(248, 216, 64);stroke:rgb(184, 144, 32);color:rgb(255, 255, 255);stroke-width:0.9px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<circle cx="98" cy="86" r="2" fill="#b89020" style="fill:rgb(184, 144, 32);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<text x="108" y="82" font-family="Georgia,serif" font-size="9" fill="#f8e870" font-weight="bold" style="fill:rgb(248, 232, 112);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:Georgia, serif;font-size:9px;font-weight:700;text-anchor:start;dominant-baseline:auto">Eryndor</text>
+<text x="108" y="93" font-family="sans-serif" font-size="6.5" fill="#d0c860" font-style="italic" style="fill:rgb(208, 200, 96);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:sans-serif;font-size:6.5px;font-weight:400;font-style:italic;text-anchor:start;dominant-baseline:auto">Capitale · Trône Elindor</text>
+<rect x="182" y="113" width="7" height="7" fill="#d0a0f0" stroke="#8050c0" stroke-width="0.8" transform="rotate(45 185 116)" style="fill:rgb(208, 160, 240);stroke:rgb(128, 80, 192);color:rgb(255, 255, 255);stroke-width:0.8px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<text x="197" y="114" font-family="Georgia,serif" font-size="8" fill="#d8b8f8" style="fill:rgb(216, 184, 248);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:Georgia, serif;font-size:8px;font-weight:400;text-anchor:start;dominant-baseline:auto">Tour d'Opale</text>
+<text x="197" y="124" font-family="sans-serif" font-size="6.5" fill="#b090d8" font-style="italic" style="fill:rgb(176, 144, 216);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:sans-serif;font-size:6.5px;font-weight:400;font-style:italic;text-anchor:start;dominant-baseline:auto">Ordre des Mages</text>
+<circle cx="357" cy="294" r="5" fill="#f8d840" stroke="#b89020" stroke-width="0.9" style="fill:rgb(248, 216, 64);stroke:rgb(184, 144, 32);color:rgb(255, 255, 255);stroke-width:0.9px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<circle cx="357" cy="294" r="2" fill="#b89020" style="fill:rgb(184, 144, 32);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<text x="367" y="290" font-family="Georgia,serif" font-size="9" fill="#f8e870" font-weight="bold" style="fill:rgb(248, 232, 112);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:Georgia, serif;font-size:9px;font-weight:700;text-anchor:start;dominant-baseline:auto">Empire Kamses</text>
+<text x="367" y="301" font-family="sans-serif" font-size="6.5" fill="#d0c860" font-style="italic" style="fill:rgb(208, 200, 96);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:sans-serif;font-size:6.5px;font-weight:400;font-style:italic;text-anchor:start;dominant-baseline:auto">Cœur de l'Empire</text>
+
+<text x="140" y="68" text-anchor="middle" font-family="Georgia,serif" font-size="12" fill="#90d060" font-weight="bold" opacity="0.92" style="fill:rgb(144, 208, 96);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.92;font-family:Georgia, serif;font-size:12px;font-weight:700;text-anchor:middle;dominant-baseline:auto">Pays de Lore</text>
+<text x="505" y="53" text-anchor="middle" font-family="Georgia,serif" font-size="10" fill="#58e888" font-weight="bold" opacity="0.88" style="fill:rgb(88, 232, 136);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.88;font-family:Georgia, serif;font-size:10px;font-weight:700;text-anchor:middle;dominant-baseline:auto">Cont. Jungle</text>
+<text x="505" y="64" text-anchor="middle" font-family="Georgia,serif" font-size="7.5" fill="#40c060" font-style="italic" opacity="0.75" style="fill:rgb(64, 192, 96);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.75;font-family:Georgia, serif;font-size:7.5px;font-weight:400;font-style:italic;text-anchor:middle;dominant-baseline:auto">&amp; des Montagnes</text>
+<text x="344" y="274" text-anchor="middle" font-family="Georgia,serif" font-size="11" fill="#f8d870" font-weight="bold" opacity="0.9" style="fill:rgb(248, 216, 112);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.9;font-family:Georgia, serif;font-size:11px;font-weight:700;text-anchor:middle;dominant-baseline:auto">Continent du Désert</text>
+
+<g transform="translate(54 362)" style="fill:rgb(0, 0, 0);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto">
+  <circle cx="0" cy="0" r="16" fill="#06101a" stroke="#3a6080" stroke-width="0.7" opacity="0.93" style="fill:rgb(6, 16, 26);stroke:rgb(58, 96, 128);color:rgb(255, 255, 255);stroke-width:0.7px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.93;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+  <line x1="0" y1="-10" x2="0" y2="10" stroke="#8ab0c8" stroke-width="0.6" style="fill:rgb(0, 0, 0);stroke:rgb(138, 176, 200);color:rgb(255, 255, 255);stroke-width:0.6px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/><line x1="-10" y1="0" x2="10" y2="0" stroke="#8ab0c8" stroke-width="0.6" style="fill:rgb(0, 0, 0);stroke:rgb(138, 176, 200);color:rgb(255, 255, 255);stroke-width:0.6px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+  <polygon points="0,-12 -2.5,-3 0,0 2.5,-3" fill="#f8d840" style="fill:rgb(248, 216, 64);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+  <polygon points="0,12 -2.5,3 0,0 2.5,3" fill="#8ab0c8" opacity="0.75" style="fill:rgb(138, 176, 200);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.75;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+  <text x="0" y="-18" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#d0e8f8" font-weight="bold" style="fill:rgb(208, 232, 248);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:sans-serif;font-size:7px;font-weight:700;text-anchor:middle;dominant-baseline:auto">N</text>
+  <text x="0" y="27" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#7090b0" style="fill:rgb(112, 144, 176);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:sans-serif;font-size:7px;font-weight:400;text-anchor:middle;dominant-baseline:auto">S</text>
+  <text x="-22" y="4" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#7090b0" style="fill:rgb(112, 144, 176);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:sans-serif;font-size:7px;font-weight:400;text-anchor:middle;dominant-baseline:auto">O</text>
+  <text x="22" y="4" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#7090b0" style="fill:rgb(112, 144, 176);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:sans-serif;font-size:7px;font-weight:400;text-anchor:middle;dominant-baseline:auto">E</text>
+</g>
+
+
+<!-- ═══ ZONES DE CLIC TRANSPARENTES ═══ -->
+<!-- Lore -->
+<path data-region="lore" class="map-region"
+  d="M62 108 C72 52,162 24,232 30 C288 34,320 60,320 90 C320 116,304 142,274 160 C250 174,224 184,204 196 C190 204,180 214,172 218 L150 216 C124 214,100 203,80 192 C54 178,40 158,40 136 C40 116,56 112,62 108Z"
+  fill="transparent" stroke="none" pointer-events="all" cursor="pointer"/>
+<!-- Jungle -->
+<path data-region="jungle" class="map-region"
+  d="M444 24 C470 10,516 6,556 20 C590 32,606 62,604 98 C602 130,588 158,566 172 C546 184,524 190,502 192 C480 194,460 182,444 170 C426 156,420 132,422 104 C424 78,438 46,444 24Z"
+  fill="transparent" stroke="none" pointer-events="all" cursor="pointer"/>
+<!-- Kamses -->
+<path data-region="kamses" class="map-region"
+  d="M226 250 C260 232,316 226,370 238 C420 248,458 274,462 312 C466 350,446 382,418 398 C392 414,358 418,325 410 C293 402,266 382,248 354 C226 322,218 286,224 262 C226 255,226 250,226 250Z"
+  fill="transparent" stroke="none" pointer-events="all" cursor="pointer"/>
+<!-- Banquise -->
+<path data-region="banquise" class="map-region"
+  d="M20 228 L26 218 L32 207 L38 218 L44 200 L50 214 L56 196 L62 212 L68 194 L74 210 L80 192 L86 208 L92 190 L98 207 L104 188 L110 206 L116 186 L122 204 L128 184 L134 202 L138 222 L165 225 L205 226 L245 225 L280 226 L294 223 L300 207 L306 196 L312 208 L318 194 L324 207 L330 193 L334 220 L352 222 L372 222 L392 221 L412 222 L432 221 L452 222 L472 221 L492 222 L512 221 L516 205 L522 192 L528 202 L534 188 L540 202 L546 190 L552 202 L558 190 L564 202 L570 192 L576 204 L582 192 L588 204 L594 194 L600 204 L606 196 L612 206 L618 198 L624 208 L630 200 L636 210 L642 202 L648 212 L654 218 L660 228 L20 228Z"
+  fill="transparent" stroke="none" pointer-events="all" cursor="pointer"/>
+<!-- Passage Impossible + Chasseurs (zone cliquable autour) -->
+<rect data-region="passage" class="map-region"
+  x="345" y="138" width="50" height="65"
+  fill="transparent" stroke="none" pointer-events="all" cursor="pointer"/>
+<!-- Zone Veth'ari -->
+<ellipse data-region="vethiari" class="map-region"
+  cx="444" cy="255" rx="32" ry="18"
+  fill="transparent" stroke="none" pointer-events="all" cursor="pointer"/>
+<!-- Pôle Nord -->
+<rect data-region="pole-n" class="map-region"
+  x="20" y="20" width="640" height="42"
+  fill="transparent" stroke="none" pointer-events="all" cursor="pointer"/>
+<!-- Pôle Sud -->
+<rect data-region="pole-s" class="map-region"
+  x="20" y="340" width="640" height="60"
+  fill="transparent" stroke="none" pointer-events="all" cursor="pointer"/>
+<rect x="20" y="402" width="640" height="36" fill="#06101a" opacity="0.93" style="fill:rgb(6, 16, 26);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.93;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<text x="340" y="420" text-anchor="middle" font-family="Georgia,serif" font-size="15" fill="#b0d8f0" letter-spacing="4" font-weight="bold" style="fill:rgb(176, 216, 240);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:Georgia, serif;font-size:15px;font-weight:700;text-anchor:middle;dominant-baseline:auto">MYTHOLOGIA</text>
+<text x="340" y="433" text-anchor="middle" font-family="Georgia,serif" font-size="7.5" fill="#6898b8" font-style="italic" letter-spacing="2" style="fill:rgb(104, 152, 184);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:Georgia, serif;font-size:7.5px;font-weight:400;font-style:italic;text-anchor:middle;dominant-baseline:auto">Planisphère · Ère des Factions · Projection Équirectangulaire</text>
+<rect x="20" y="20" width="640" height="380" fill="none" stroke="#3a6888" stroke-width="1.5" style="fill:none;stroke:rgb(58, 104, 136);color:rgb(255, 255, 255);stroke-width:1.5px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<rect x="12" y="12" width="656" height="430" rx="3" fill="none" stroke="#1e3a52" stroke-width="1" style="fill:none;stroke:rgb(30, 58, 82);color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+      </svg>
+      <p class="map-hint">↑ Cliquez sur une région pour en savoir plus</p>
+    </div>
+
+    <div class="info-panel">
+      <div class="info-welcome" id="infoWelcome">
+        <div class="info-welcome-icon">🗺️</div>
+        <div class="info-welcome-text">Sélectionnez une région<br>sur la carte</div>
+      </div>
+
+      <!-- LORE -->
+      <div class="info-card" id="card-lore">
+        <div class="info-card-header">
+          <div class="info-card-icon" style="background:linear-gradient(135deg,#1e3a20,#3a7a4a);border:1.5px solid rgba(74,154,94,0.5);box-shadow:0 0 18px rgba(58,122,74,0.3);">🌲</div>
+          <div>
+            <div class="info-card-name" style="color:#80d0a0;">Pays de Lore</div>
+            <div class="info-card-type">Continent — Trône Elindor</div>
+          </div>
+        </div>
+        <div class="info-divider"></div>
+        <p class="info-desc">Vaste continent d'inspiration européenne médiévale. Ses forêts denses, gorges profondes et cités fortifiées sont le berceau du Trône Elindor — empire unifié par la force et la diplomatie.</p>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Latitudes</div><div class="stat-value">12°N – 72°N</div></div>
+          <div class="stat-box"><div class="stat-label">Position</div><div class="stat-value">Nord-Ouest</div></div>
+          <div class="stat-box"><div class="stat-label">Gouvernement</div><div class="stat-value">Trône Elindor</div></div>
+          <div class="stat-box"><div class="stat-label">Capitale</div><div class="stat-value">Eryndor (NW)</div></div>
+          <div class="stat-box full"><div class="stat-label">Lieux notables</div><div class="stat-value">Tour d'Opale (Ordre des Mages) · Forêts Aelven · Cités-forteresses · Mines Durgoth</div></div>
+        </div>
+        <div class="info-lore">
+          <div class="info-lore-label">✦ Géopolitique</div>
+          <div class="info-lore-text">Le Trône Elindor a unifié Lore par siècles de conquête et de diplomatie. La Tour d'Opale, siège de l'Ordre des Mages, est officiellement neutre. Le clan secret des Chasseurs opère depuis la frontière montagnarde, invisible mais omniprésent.</div>
+        </div>
+      </div>
+
+      <!-- KAMSES -->
+      <div class="info-card" id="card-kamses">
+        <div class="info-card-header">
+          <div class="info-card-icon" style="background:linear-gradient(135deg,#5a4010,#c9a840);border:1.5px solid rgba(201,168,64,0.5);box-shadow:0 0 18px rgba(201,168,64,0.3);">🏜️</div>
+          <div>
+            <div class="info-card-name" style="color:#e0c060;">Continent du Désert</div>
+            <div class="info-card-type">Empire Kamses</div>
+          </div>
+        </div>
+        <div class="info-divider"></div>
+        <p class="info-desc">Continent centré et aride, dominé par l'Empire Kamses. Un grand fleuve nord-sud structure toute sa civilisation, jalonnée d'oasis fertiles au milieu des étendues désertiques.</p>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Latitudes</div><div class="stat-value">3°S – 58°S</div></div>
+          <div class="stat-box"><div class="stat-label">Position</div><div class="stat-value">Centre mondial</div></div>
+          <div class="stat-box"><div class="stat-label">Gouvernement</div><div class="stat-value">Empire Kamses</div></div>
+          <div class="stat-box"><div class="stat-label">Races</div><div class="stat-value">Humains, Grauth, Kethara</div></div>
+          <div class="stat-box full"><div class="stat-label">Relief</div><div class="stat-value">Grand Fleuve N-S · Oasis · Déserts intérieurs · Côte nord (corridor banquise)</div></div>
+        </div>
+        <div class="info-lore">
+          <div class="info-lore-label">✦ Commerce & Stratégie</div>
+          <div class="info-lore-text">La bordure nord de Kamses borde le corridor navigable de la banquise — seul passage maritime direct vers Lore. Ce monopole géographique est l'une des principales sources de puissance de l'Empire. Les ports nordiques sont les joyaux stratégiques du continent.</div>
+        </div>
+      </div>
+
+      <!-- JUNGLE -->
+      <div class="info-card" id="card-jungle">
+        <div class="info-card-header">
+          <div class="info-card-icon" style="background:linear-gradient(135deg,#1a4010,#5a9030);border:1.5px solid rgba(90,144,48,0.5);box-shadow:0 0 18px rgba(90,144,48,0.3);">🌿</div>
+          <div>
+            <div class="info-card-name" style="color:#90d060;">Cont. Jungle & Montagnes</div>
+            <div class="info-card-type">C3 — Peu Développé</div>
+          </div>
+        </div>
+        <div class="info-divider"></div>
+        <p class="info-desc">Plus petit des trois continents, C3 est recouvert de jungles épaisses et traversé de chaînes montagneuses. D'inspiration asiatique et latino-américaine, il reste largement mystérieux pour les autres nations.</p>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Latitudes</div><div class="stat-value">8°S – 62°S</div></div>
+          <div class="stat-box"><div class="stat-label">Position</div><div class="stat-value">Nord-Est</div></div>
+          <div class="stat-box"><div class="stat-label">Développement</div><div class="stat-value">Peu exploré</div></div>
+          <div class="stat-box"><div class="stat-label">Races</div><div class="stat-value">Vahryn, Sauridh</div></div>
+        </div>
+        <div class="info-lore">
+          <div class="info-lore-label">✦ Isolement</div>
+          <div class="info-lore-text">Les communautés de C3 maintiennent peu de contacts avec Lore et Kamses. Les Vahryn dominent les zones forestières, les Sauridh nomades parcourent les déserts côtiers sud. La frontière souterraine avec Kamses cache la zone des Veth'ari.</div>
+        </div>
+      </div>
+
+      <!-- BANQUISE -->
+      <div class="info-card" id="card-banquise">
+        <div class="info-card-header">
+          <div class="info-card-icon" style="background:linear-gradient(135deg,#203040,#507090);border:1.5px solid rgba(144,192,220,0.4);box-shadow:0 0 18px rgba(144,192,220,0.25);">❄️</div>
+          <div>
+            <div class="info-card-name" style="color:#a0d0f0;">Banquise Équatoriale</div>
+            <div class="info-card-type">Chaîne Glaciaire — Zone Équatoriale</div>
+          </div>
+        </div>
+        <div class="info-divider"></div>
+        <p class="info-desc">Conséquence directe de l'axe de 78°, la banquise équatoriale est une anomalie frappante. Irrégulière, elle est quasi-fondue près du méridien de Kamses et épaisse et infranchissable du côté opposé.</p>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Latitude</div><div class="stat-value">~0° (équateur)</div></div>
+          <div class="stat-box"><div class="stat-label">Cause</div><div class="stat-value">Axe 78° inversé</div></div>
+          <div class="stat-box"><div class="stat-label">Corridor</div><div class="stat-value">Lore ↔ Kamses</div></div>
+          <div class="stat-box"><div class="stat-label">Côté opposé</div><div class="stat-value">Infranchissable</div></div>
+        </div>
+        <div class="info-lore">
+          <div class="info-lore-label">✦ Enjeu stratégique</div>
+          <div class="info-lore-text">La navigabilité saisonnière du corridor est un enjeu géopolitique majeur. En hiver austral, les glaces s'étendent parfois jusqu'à bloquer le passage, isolant temporairement les deux continents. Contrôler ces routes pendant les fenêtres ouvertes, c'est dominer le commerce mondial.</div>
+        </div>
+      </div>
+
+      <!-- PASSAGE IMPOSSIBLE -->
+      <div class="info-card" id="card-passage">
+        <div class="info-card-header">
+          <div class="info-card-icon" style="background:linear-gradient(135deg,#1a0a30,#4a2080);border:1.5px solid rgba(107,63,160,0.5);box-shadow:0 0 18px rgba(107,63,160,0.35);">⊗</div>
+          <div>
+            <div class="info-card-name" style="color:#c090e0;">Passage Impossible</div>
+            <div class="info-card-type">Chaîne Montagneuse & Chasseurs</div>
+          </div>
+        </div>
+        <div class="info-divider"></div>
+        <p class="info-desc">Chaîne de pics vertigineux séparant Lore et C3 sur un axe quasi vertical. Presque impossible à franchir par voie terrestre. Au cœur de cette chaîne opèrent les Chasseurs — clan secret d'~50 membres.</p>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Orientation</div><div class="stat-value">Axe vertical N-S</div></div>
+          <div class="stat-box"><div class="stat-label">Franchissable</div><div class="stat-value">Quasi impossible</div></div>
+          <div class="stat-box full"><div class="stat-label">Clan des Chasseurs</div><div class="stat-value">~50 membres max · recrutement par aptitude & moralité · structure cellulaire · empreinte magique interne</div></div>
+        </div>
+        <div class="info-lore">
+          <div class="info-lore-label">✦ Les Chasseurs</div>
+          <div class="info-lore-text">Sans marque physique visible, les Chasseurs portent une empreinte magique intérieure. L'organisation est cellulaire — les membres ne se connaissent pas tous. Leur origine et rituels restent inconnus même de leurs alliés les plus proches.</div>
+        </div>
+      </div>
+
+      <!-- VETH'IARI -->
+      <div class="info-card" id="card-vethiari">
+        <div class="info-card-header">
+          <div class="info-card-icon" style="background:linear-gradient(135deg,#100820,#3a1860);border:1.5px solid rgba(107,63,160,0.45);box-shadow:0 0 18px rgba(107,63,160,0.3);">🕳️</div>
+          <div>
+            <div class="info-card-name" style="color:#b080e0;">Zone Souterraine</div>
+            <div class="info-card-type">Veth'ari — Isolement Total</div>
+          </div>
+        </div>
+        <div class="info-divider"></div>
+        <p class="info-desc">À la frontière souterraine entre Kamses et C3, un vaste réseau de cavernes abrite les Veth'ari — insectoïdes à esprit de ruche, technologiquement très avancés. Contact surface : zéro délibéré.</p>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Localisation</div><div class="stat-value">Frontalier Kamses/C3</div></div>
+          <div class="stat-box"><div class="stat-label">Profondeur</div><div class="stat-value">Souterrain</div></div>
+          <div class="stat-box"><div class="stat-label">Peuple</div><div class="stat-value">Veth'ari (ruche)</div></div>
+          <div class="stat-box"><div class="stat-label">Contact surface</div><div class="stat-value">Zéro délibéré</div></div>
+          <div class="stat-box full"><div class="stat-label">Technologie</div><div class="stat-value">Cristaux Aetherium · Circuits magiques · Aucun équivalent en surface</div></div>
+        </div>
+        <div class="info-lore">
+          <div class="info-lore-label">✦ Présence silencieuse</div>
+          <div class="info-lore-text">Les Veth'ari observent la surface sans jamais s'y manifester. Les rares expéditions qui se sont aventurées vers leur territoire ne sont pas revenues.</div>
+        </div>
+      </div>
+
+      <!-- PÔLE NORD -->
+      <div class="info-card" id="card-pole-n">
+        <div class="info-card-header">
+          <div class="info-card-icon" style="background:linear-gradient(135deg,#3a2010,#8a5020);border:1.5px solid rgba(160,100,40,0.5);box-shadow:0 0 18px rgba(160,100,40,0.3);">☀️</div>
+          <div>
+            <div class="info-card-name" style="color:#d09050;">Pôle Nord</div>
+            <div class="info-card-type">Désert Rocheux & Zone Tropicale</div>
+          </div>
+        </div>
+        <div class="info-divider"></div>
+        <p class="info-desc">Paradoxe absolu : le pôle nord de Mythologia est chaud. L'axe de 78° y dirige les rayons d'Aurys pendant de longs mois. Paysage rocheux avec une bande tropicale verdoyante vers le sud.</p>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Latitude</div><div class="stat-value">~85–90°N</div></div>
+          <div class="stat-box"><div class="stat-label">Climat</div><div class="stat-value">Tropical rocheux</div></div>
+          <div class="stat-box"><div class="stat-label">Végétation</div><div class="stat-value">Parsemée, résistante</div></div>
+          <div class="stat-box"><div class="stat-label">Température</div><div class="stat-value">Chaud, saisons marquées</div></div>
+        </div>
+        <div class="info-lore">
+          <div class="info-lore-label">✦ Inversion climatique</div>
+          <div class="info-lore-text">Le pôle nord est tropical mais légèrement moins extrême que le pôle sud : l'excentricité orbitale (0,082) amplifie l'été austral car le périhélie coïncide avec le solstice d'été du pôle sud.</div>
+        </div>
+      </div>
+
+      <!-- PÔLE SUD -->
+      <div class="info-card" id="card-pole-s">
+        <div class="info-card-header">
+          <div class="info-card-icon" style="background:linear-gradient(135deg,#302810,#706020);border:1.5px solid rgba(160,140,50,0.5);box-shadow:0 0 18px rgba(160,140,50,0.3);">🌵</div>
+          <div>
+            <div class="info-card-name" style="color:#c0a840;">Pôle Sud</div>
+            <div class="info-card-type">Rocaille Méridionale — Aride</div>
+          </div>
+        </div>
+        <div class="info-divider"></div>
+        <p class="info-desc">Le pôle sud est le plus extrême : aride et rocheux, amplifiées par le périhélie orbital. Étendues de gravier et de sable durci, quasi sans végétation persistante.</p>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Latitude</div><div class="stat-value">~85–90°S</div></div>
+          <div class="stat-box"><div class="stat-label">Climat</div><div class="stat-value">Aride extrême</div></div>
+          <div class="stat-box"><div class="stat-label">Relief</div><div class="stat-value">Rocaille grise-dorée</div></div>
+          <div class="stat-box"><div class="stat-label">Périhélie</div><div class="stat-value">Coïncide été austral</div></div>
+        </div>
+        <div class="info-lore">
+          <div class="info-lore-label">✦ Extrême austral</div>
+          <div class="info-lore-text">Le périhélie de Mythologia — passage au plus proche d'Aurys — coïncide avec le solstice d'été austral. L'été polaire y est donc plus intense qu'au pôle nord. Les roches portent des stries d'oxydation liées aux vents chargés en Aetherium.</div>
+        </div>
+      </div>
+
+    </div><!-- fin info-panel -->
+  </div><!-- fin main-layout -->
+
+  <!-- SECTION BANDES CLIMATIQUES -->
+  <div class="climate-section">
+    <div class="section-title">— Bandes climatiques de Mythologia —</div>
+    <div class="climate-bar">
+      <div class="climate-zone" style="flex:0.55;background:linear-gradient(135deg,#5a3015,#8a5525);">Pôle N<br>Tropical</div>
+      <div class="climate-zone" style="flex:0.7;background:linear-gradient(135deg,#2a5020,#4a7530);">Tempéré<br>Nord</div>
+      <div class="climate-zone" style="flex:0.5;background:linear-gradient(135deg,#204060,#306080);">Froid<br>Pré-éq.</div>
+      <div class="climate-zone" style="flex:0.35;background:linear-gradient(135deg,#8ab0c8,#a8c8e0);color:rgba(20,40,60,0.9);">Banquise</div>
+      <div class="climate-zone" style="flex:0.55;background:linear-gradient(135deg,#204060,#306080);">Froid<br>Pré-éq.</div>
+      <div class="climate-zone" style="flex:1.1;background:linear-gradient(135deg,#604010,#906820);">Chaud &amp; Aride<br>Hémisphère Sud</div>
+      <div class="climate-zone" style="flex:0.55;background:linear-gradient(135deg,#4a3810,#706028);">Pôle S<br>Aride</div>
+    </div>
+    <div class="climate-labels">
+      <span class="climate-label">90°N</span><span class="climate-label">60°N</span>
+      <span class="climate-label">30°N</span><span class="climate-label">0°</span>
+      <span class="climate-label">30°S</span><span class="climate-label">60°S</span>
+      <span class="climate-label">90°S</span>
+    </div>
+    <div class="detail-grid">
+      <div class="detail-card">
+        <div class="detail-card-icon">🔄</div>
+        <div class="detail-card-title">Inversion Climatique</div>
+        <div class="detail-card-content">L'inclinaison axiale de <strong>78°</strong> inverse tout : l'équateur est glaciaire, les pôles sont chauds. Toute la géopolitique en découle — les routes commerciales contournent la banquise, les pôles sont les zones les plus habitables.</div>
+      </div>
+      <div class="detail-card">
+        <div class="detail-card-icon">🗓️</div>
+        <div class="detail-card-title">Saisons & Politique</div>
+        <div class="detail-card-content">Saisons <strong>~135 jours</strong> (été/hiver), <strong>~30 jours</strong> de transition. Les équinoxes sont stratégiquement critiques : les armées planifient leurs campagnes sur ces fenêtres où la banquise est la plus franchissable.</div>
+      </div>
+      <div class="detail-card">
+        <div class="detail-card-icon">🌊</div>
+        <div class="detail-card-title">Corridor Navigable</div>
+        <div class="detail-card-content">Seul passage maritime entre Lore et Kamses, le couloir près du méridien de Kamses est <strong>semi-fondu en permanence</strong>. Du côté opposé, la banquise est infranchissable toute l'année.</div>
+      </div>
+      <div class="detail-card">
+        <div class="detail-card-icon">🔮</div>
+        <div class="detail-card-title">Aetherium & Géologie</div>
+        <div class="detail-card-content">La concentration d'<strong>Aetherium</strong> varie par région. Les gorges de Lore et C3 en sont riches, attirant Aelven et Thyrak. Les zones Veth'ari concentrent les plus hautes densités connues, exploitées technologiquement.</div>
+      </div>
+      <div class="detail-card">
+        <div class="detail-card-icon">⚖️</div>
+        <div class="detail-card-title">Gravité & Relief</div>
+        <div class="detail-card-content">La gravité de <strong>1,9 g</strong> limite les arbres à <strong>~45 m</strong> et contraint l'architecture. Les bâtiments sont massifs, les tours courtes. La faune est trapue et musclée. Même les chaînes montagneuses restent contraintes.</div>
+      </div>
+      <div class="detail-card">
+        <div class="detail-card-icon">🏔️</div>
+        <div class="detail-card-title">Chaîne Équatoriale</div>
+        <div class="detail-card-content">La dorsale glaciaire équatoriale sépare les hémisphères et concentre les phénomènes extrêmes : tempêtes d'Aetherium, aurores magnétiques, faune adaptée au froid intense et à la haute altitude. Terrain du Passage Impossible.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const starCanvas = document.getElementById("starCanvas");
+const sCtx = starCanvas.getContext("2d");
+function resizeStarCanvas(){ starCanvas.width=window.innerWidth; starCanvas.height=window.innerHeight; }
+const stars = [];
+function initStars(){
+  stars.length=0;
+  for(let i=0;i<260;i++) stars.push({x:Math.random(),y:Math.random(),r:Math.random()*1.4+0.2,a:Math.random()*0.7+0.1,speed:Math.random()*0.003+0.001,phase:Math.random()*Math.PI*2});
+}
+function drawStars(){
+  sCtx.clearRect(0,0,starCanvas.width,starCanvas.height);
+  const now=Date.now()*0.001;
+  stars.forEach(s=>{ const alpha=s.a*(0.5+0.5*Math.sin(now*s.speed*10+s.phase)); sCtx.beginPath(); sCtx.arc(s.x*starCanvas.width,s.y*starCanvas.height,s.r,0,Math.PI*2); sCtx.fillStyle=`rgba(200,210,255,${alpha})`; sCtx.fill(); });
+}
+initStars(); resizeStarCanvas();
+window.addEventListener("resize",resizeStarCanvas);
+setInterval(drawStars,50);
+
+// Interactivité carte
+const regions = document.querySelectorAll(".map-region");
+const cards = document.querySelectorAll(".info-card");
+const welcome = document.getElementById("infoWelcome");
+
+function showCard(id){
+  cards.forEach(c=>c.classList.remove("active"));
+  welcome.style.display="none";
+  const card=document.getElementById("card-"+id);
+  if(card) card.classList.add("active");
+  else welcome.style.display="";
+}
+
+regions.forEach(r=>{
+  r.addEventListener("click",()=>{ if(r.dataset.region) showCard(r.dataset.region); });
+  r.addEventListener("mouseenter",()=>{ r.setAttribute("fill","rgba(255,255,255,0.08)"); });
+  r.addEventListener("mouseleave",()=>{ r.setAttribute("fill","transparent"); });
+});
+</script>
+</body>
+</html>
