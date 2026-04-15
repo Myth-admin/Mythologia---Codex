@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mythologia — Cosmologie</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bleu-nuit: #0a1520;
+    --bleu-ether: #1a3a5c;
+    --violet-ae: #6b3fa0;
+    --eclat-ae: #a78bfa;
+    --foudre: #60c0ff;
+    --or-ae: #c9a84c;
+    --rose-seraph: #f4a0c0;
+    --blanc-lune: #e8e4f0;
+    --or-aurys: #ffe0a0;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bleu-nuit);
+    color: var(--blanc-lune);
+    font-family: 'EB Garamond', serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* CANVAS ÉTOILES */
+  #starCanvas {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+  }
+
+  /* OVERLAY SOMBRE */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at center, rgba(10,21,32,0.3) 0%, rgba(10,21,32,0.85) 100%);
+    z-index: 1;
+  }
+
+  /* NAVIGATION */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 18px 36px;
+    background: linear-gradient(180deg, rgba(10,21,32,0.95) 0%, transparent 100%);
+  }
+
+  .nav-back {
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    color: var(--eclat-ae);
+    text-decoration: none;
+    text-transform: uppercase;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+  }
+  .nav-back:hover { opacity: 1; }
+
+  .nav-sep { color: rgba(167,139,250,0.3); }
+
+  .nav-current {
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--blanc-lune);
+  }
+
+  /* PAGE */
+  .page {
+    position: relative;
+    z-index: 10;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* EN-TÊTE */
+  .page-header {
+    text-align: center;
+    padding: 100px 20px 30px;
+    animation: fadeDown 1s ease both;
+  }
+
+  @keyframes fadeDown {
+    from { opacity:0; transform:translateY(-20px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  .page-header h1 {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    color: var(--blanc-lune);
+    text-shadow: 0 0 40px rgba(167,139,250,0.5), 0 0 80px rgba(167,139,250,0.2);
+    letter-spacing: 0.1em;
+    margin-bottom: 10px;
+  }
+
+  .page-header .sous-titre {
+    font-family: 'Cinzel', serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.5em;
+    color: var(--eclat-ae);
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+
+  .ornement {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 18px auto 0;
+    width: min(400px, 80vw);
+  }
+  .ornement-line { flex:1; height:1px; background:linear-gradient(90deg,transparent,var(--eclat-ae),transparent); }
+  .ornement-gem { width:7px;height:7px;background:var(--eclat-ae);transform:rotate(45deg);box-shadow:0 0 10px var(--eclat-ae);flex-shrink:0; }
+  .ornement-gem-s { width:4px;height:4px;background:var(--eclat-ae);transform:rotate(45deg);opacity:0.5;flex-shrink:0; }
+
+  /* LAYOUT PRINCIPAL */
+  .main-layout {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 0;
+    flex: 1;
+    padding: 30px 36px 60px;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+    animation: fadeIn 1.2s 0.3s ease both;
+  }
+
+  @keyframes fadeIn {
+    from { opacity:0; }
+    to   { opacity:1; }
+  }
+
+  @media (max-width: 900px) {
+    .main-layout { grid-template-columns: 1fr; }
+  }
+
+  /* CARTE STELLAIRE */
+  .map-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .map-legend {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.72rem;
+    font-family: 'Cinzel', serif;
+    letter-spacing: 0.1em;
+    color: rgba(232,228,240,0.55);
+  }
+
+  .legend-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .map-hint {
+    font-size: 0.7rem;
+    font-family: 'Cinzel', serif;
+    letter-spacing: 0.2em;
+    color: rgba(167,139,250,0.45);
+    text-align: center;
+    margin-top: 14px;
+    font-style: italic;
+  }
+
+  #systemCanvas {
+    border-radius: 20px;
+    border: 1px solid rgba(167,139,250,0.12);
+    background: radial-gradient(ellipse at 40% 50%, rgba(26,58,92,0.18) 0%, rgba(10,21,32,0.6) 100%);
+    cursor: pointer;
+    box-shadow: 0 0 60px rgba(107,63,160,0.12), 0 0 0 1px rgba(167,139,250,0.06) inset;
+  }
+
+  /* PANNEAU D'INFOS */
+  .info-panel {
+    padding: 30px 28px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .info-welcome {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    text-align: center;
+    opacity: 0.5;
+    gap: 14px;
+    padding: 40px 0;
+  }
+
+  .info-welcome-icon { font-size: 2.5rem; }
+  .info-welcome-text {
+    font-family: 'Cinzel', serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--eclat-ae);
+    line-height: 2;
+  }
+
+  .info-card {
+    display: none;
+    flex-direction: column;
+    gap: 0;
+    animation: slideIn 0.4s ease;
+  }
+
+  .info-card.active { display: flex; }
+
+  @keyframes slideIn {
+    from { opacity:0; transform:translateX(20px); }
+    to   { opacity:1; transform:translateX(0); }
+  }
+
+  .info-card-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .info-card-icon {
+    width: 50px; height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+  }
+
+  .info-card-title {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .info-card-name {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 1.2rem;
+    color: var(--blanc-lune);
+    text-shadow: 0 0 20px currentColor;
+  }
+
+  .info-card-type {
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--eclat-ae);
+    opacity: 0.7;
+  }
+
+  .info-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(167,139,250,0.3), transparent);
+    margin: 16px 0;
+  }
+
+  .info-desc {
+    font-size: 0.95rem;
+    line-height: 1.8;
+    color: rgba(232,228,240,0.82);
+    margin-bottom: 20px;
+    font-style: italic;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .stat-box {
+    background: rgba(13,27,42,0.6);
+    border: 1px solid rgba(167,139,250,0.12);
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+
+  .stat-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.58rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--eclat-ae);
+    opacity: 0.65;
+    margin-bottom: 5px;
+  }
+
+  .stat-value {
+    font-size: 0.92rem;
+    color: var(--blanc-lune);
+    font-weight: 500;
+  }
+
+  .stat-box.full { grid-column: 1 / -1; }
+
+  .info-lore {
+    margin-top: 18px;
+    padding: 16px;
+    background: rgba(107,63,160,0.08);
+    border-left: 2px solid rgba(167,139,250,0.35);
+    border-radius: 0 8px 8px 0;
+  }
+
+  .info-lore-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--eclat-ae);
+    margin-bottom: 8px;
+    opacity: 0.7;
+  }
+
+  .info-lore-text {
+    font-size: 0.88rem;
+    line-height: 1.75;
+    color: rgba(232,228,240,0.7);
+    font-style: italic;
+  }
+
+  /* SECTION MYTHOLOGIA DETAIL */
+  .mythologia-detail {
+    margin-top: 30px;
+    padding: 0 36px 60px;
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+    position: relative;
+    z-index: 10;
+  }
+
+  .detail-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.68rem;
+    letter-spacing: 0.45em;
+    text-transform: uppercase;
+    color: var(--or-ae);
+    margin-bottom: 24px;
+    text-align: center;
+    opacity: 0.8;
+  }
+
+  .detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 14px;
+  }
+
+  .detail-card {
+    background: rgba(13,27,42,0.65);
+    border: 1px solid rgba(167,139,250,0.12);
+    border-radius: 14px;
+    padding: 22px;
+    backdrop-filter: blur(10px);
+    transition: border-color 0.3s, transform 0.3s;
+  }
+
+  .detail-card:hover {
+    border-color: rgba(167,139,250,0.35);
+    transform: translateY(-3px);
+  }
+
+  .detail-card-icon { font-size: 1.5rem; margin-bottom: 12px; }
+
+  .detail-card-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--eclat-ae);
+    margin-bottom: 10px;
+  }
+
+  .detail-card-content {
+    font-size: 0.88rem;
+    line-height: 1.8;
+    color: rgba(232,228,240,0.72);
+  }
+
+  .detail-card-content strong {
+    color: var(--blanc-lune);
+    font-weight: 500;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="starCanvas"></canvas>
+<div class="overlay"></div>
+
+<nav>
+  <a class="nav-back" href="mythologia_accueil.html">← Mythologia</a>
+  <span class="nav-sep">✦</span>
+  <span class="nav-current">Cosmologie</span>
+</nav>
+
+<div class="page">
+
+  <div class="page-header">
+    <h1>COSMOLOGIE</h1>
+    <p class="sous-titre">Le Système d'Umbrath</p>
+    <div class="ornement">
+      <div class="ornement-line"></div>
+      <div class="ornement-gem-s"></div>
+      <div class="ornement-gem"></div>
+      <div class="ornement-gem-s"></div>
+      <div class="ornement-line"></div>
+    </div>
+  </div>
+
+  <div class="main-layout">
+
+    <!-- CARTE STELLAIRE -->
+    <div class="map-container">
+      <div class="map-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#1a1a1a;border:2px solid #ff6060;box-shadow:0 0 6px #ff6060;"></div>Trou noir</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#ffe0a0;box-shadow:0 0 8px #ffe0a0;"></div>Étoile principale</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#f4a0c0;box-shadow:0 0 6px #f4a0c0;"></div>Étoile secondaire</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#60a0e0;box-shadow:0 0 5px #60a0e0;"></div>Planète</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#a0b8d0;box-shadow:0 0 4px #a0b8d0;"></div>Lune</div>
+      </div>
+
+      <canvas id="systemCanvas" width="680" height="480"></canvas>
+      <p class="map-hint">↑ Cliquez sur un astre pour en savoir plus</p>
+    </div>
+
+    <!-- PANNEAU D'INFOS -->
+    <div class="info-panel">
+      <div class="info-welcome" id="infoWelcome">
+        <div class="info-welcome-icon">🌌</div>
+        <div class="info-welcome-text">Sélectionnez un astre<br>sur la carte</div>
+      </div>
+
+      <!-- UMBRATH -->
+      <div class="info-card" id="card-umbrath">
+        <div class="info-card-header">
+          <div class="info-card-icon" style="background:radial-gradient(circle,#1a0a0a,#000);border:2px solid #ff4040;box-shadow:0 0 20px #ff4040;">🕳️</div>
+          <div class="info-card-title">
+            <div class="info-card-name" style="color:#ff6060;">Umbrath</div>
+            <div class="info-card-type">Trou Noir — Source du Flux</div>
+          </div>
+        </div>
+        <div class="info-divider"></div>
+        <p class="info-desc">Ancre gravitationnelle du système, Umbrath est un trou noir en rotation dont l'influence façonne toute vie sur Mythologia à travers le Flux d'Ombrath.</p>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Masse</div><div class="stat-value">15 M☉</div></div>
+          <div class="stat-box"><div class="stat-label">Distance (Aurys)</div><div class="stat-value">~480 UA</div></div>
+          <div class="stat-box"><div class="stat-label">Type</div><div class="stat-value">Kerr (rotation)</div></div>
+          <div class="stat-box"><div class="stat-label">Effet Kerr</div><div class="stat-value">Chiralité Ae.</div></div>
+          <div class="stat-box full"><div class="stat-label">Mécanismes du Flux d'Ombrath</div><div class="stat-value">Rayonnement Hawking · Disque d'accrétion X/γ · Ondes gravitationnelles chirales</div></div>
+        </div>
+        <div class="info-lore">
+          <div class="info-lore-label">✦ Rôle dans le monde</div>
+          <div class="info-lore-text">Le rayonnement d'Hawking d'Umbrath polarise le vide quantique local depuis des milliards d'années. Son disque d'accrétion est à l'origine de la nucléosynthèse de l'Aetherium dans la croûte de Mythologia. L'effet Kerr encode la chiralité dans les orbitales 8s de l'Aetherium — fondement de toute magie.</div>
+        </div>
+      </div>
+
+      <!-- AURYS -->
+      <div class="info-card" id="card-aurys">
+        <div class="info-card-header">
+          <div class="info-card-icon" style="background:radial-gradient(circle,#fff8e0,#ffb040);box-shadow:0 0 20px #ffe080;">☀️</div>
+          <div class="info-card-title">
+            <div class="info-card-name" style="color:#ffe0a0;">Aurys</div>
+            <div class="info-card-type">Étoile Principale — G1V</div>
+          </div>
+        </div>
+        <div class="info-divider"></div>
+        <p class="info-desc">Étoile jaune lumineuse, Aurys est le soleil principal de Mythologia. Légèrement plus massive et lumineuse que notre Soleil, elle baigne le monde d'une lumière chaude et dorée.</p>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Classe</div><div class="stat-value">G1V</div></div>
+          <div class="stat-box"><div class="stat-label">Masse</div><div class="stat-value">1,15 M☉</div></div>
+          <div class="stat-box"><div class="stat-label">Température</div><div class="stat-value">5 900 K</div></div>
+          <div class="stat-box"><div class="stat-label">Luminosité</div><div class="stat-value">1,53 L☉</div></div>
+        </div>
+        <div class="info-lore">
+          <div class="info-lore-label">✦ Perception depuis Mythologia</div>
+          <div class="info-lore-text">Aurys apparaît comme un soleil jaune-blanc éclatant. Sa luminosité supérieure à notre Soleil compense en partie la distance orbitale de 1,2 UA de Mythologia.</div>
+        </div>
+      </div>
+
+      <!-- SÉRAPH -->
+      <div class="info-card" id="card-seraph">
+        <div class="info-card-header">
+          <div class="info-card-icon" style="background:radial-gradient(circle,#fff0f4,#e06080);box-shadow:0 0 20px #f4a0c0;">🌸</div>
+          <div class="info-card-title">
+            <div class="info-card-name" style="color:#f4a0c0;">Séraph</div>
+            <div class="info-card-type">Étoile Secondaire — K5V</div>
+          </div>
+        </div>
+        <div class="info-divider"></div>
+        <p class="info-desc">Étoile naine orange-rouge plus froide, Séraph orbite Aurys à grande distance. Depuis Mythologia, elle apparaît rose en raison des vapeurs d'Aetherium atmosphérique qui absorbent certaines longueurs d'onde.</p>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Classe</div><div class="stat-value">K5V</div></div>
+          <div class="stat-box"><div class="stat-label">Masse</div><div class="stat-value">0,67 M☉</div></div>
+          <div class="stat-box"><div class="stat-label">Température</div><div class="stat-value">4 400 K</div></div>
+          <div class="stat-box"><div class="stat-label">Orbite (Aurys)</div><div class="stat-value">8 UA — 17 ans</div></div>
+          <div class="stat-box"><div class="stat-label">Inclinaison</div><div class="stat-value">20°</div></div>
+          <div class="stat-box"><div class="stat-label">Couleur perçue</div><div class="stat-value">Rose (vapeurs Ae.)</div></div>
+        </div>
+        <div class="info-lore">
+          <div class="info-lore-label">✦ Perception depuis Mythologia</div>
+          <div class="info-lore-text">Les vapeurs d'Aetherium en suspension dans l'atmosphère absorbent les longueurs d'onde entre 580 et 640 nm, filtrant la lumière orangée de Séraph pour lui donner une teinte rose distinctive. Elle marque le ciel comme un second soleil pâle lors de ses passages.</div>
+        </div>
+      </div>
+
+      <!-- VESH -->
+      <div class="info-card" id="card-vesh">
+        <div class="info-card-header">
+          <div class="info-card-icon" style="background:radial-gradient(circle,#c08040,#804020);box-shadow:0 0 15px #c08040;">🪨</div>
+          <div class="info-card-title">
+            <div class="info-card-name" style="color:#c0a060;">Vesh</div>
+            <div class="info-card-type">Planète Rocheuse Interne</div>
+          </div>
+        </div>
+        <div class="info-divider"></div>
+        <p class="info-desc">Planète tellurique proche d'Aurys, Vesh est un monde brûlant et inhospitalier, balayé par les vents solaires et dépourvu d'atmosphère significative.</p>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Distance (Aurys)</div><div class="stat-value">0,5 UA</div></div>
+          <div class="stat-box"><div class="stat-label">Type</div><div class="stat-value">Rocheuse aride</div></div>
+        </div>
+        <div class="info-lore">
+          <div class="info-lore-label">✦ Perception depuis Mythologia</div>
+          <div class="info-lore-text">Vesh est visible à l'œil nu comme un point lumineux orangé proche d'Aurys. Les astronomes de Mythologia l'observent comme une étoile errante qui ne s'éloigne jamais beaucoup du soleil dans le ciel.</div>
+        </div>
+      </div>
+
+      <!-- MYTHOLOGIA -->
+      <div class="info-card" id="card-mythologia">
+        <div class="info-card-header">
+          <div class="info-card-icon" style="background:radial-gradient(circle,#80c0ff,#204080);box-shadow:0 0 20px #60a0e0;">🌍</div>
+          <div class="info-card-title">
+            <div class="info-card-name" style="color:#80c0ff;">Mythologia</div>
+            <div class="info-card-type">Planète Habitable</div>
+          </div>
+        </div>
+        <div class="info-divider"></div>
+        <p class="info-desc">Monde dense et massif, Mythologia abrite une biosphère riche façonnée par une gravité élevée, un axe très incliné et l'omniprésence de l'Aetherium dans sa croûte.</p>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Masse</div><div class="stat-value">10 M⊕</div></div>
+          <div class="stat-box"><div class="stat-label">Rayon</div><div class="stat-value">~14 800 km</div></div>
+          <div class="stat-box"><div class="stat-label">Gravité</div><div class="stat-value">1,9 g</div></div>
+          <div class="stat-box"><div class="stat-label">Distance (Aurys)</div><div class="stat-value">1,2 UA</div></div>
+          <div class="stat-box"><div class="stat-label">Année</div><div class="stat-value">~447 jours</div></div>
+          <div class="stat-box"><div class="stat-label">Jour sidéral</div><div class="stat-value">31,5 heures</div></div>
+          <div class="stat-box"><div class="stat-label">Inclinaison axiale</div><div class="stat-value">78° (inversée)</div></div>
+          <div class="stat-box"><div class="stat-label">Excentricité</div><div class="stat-value">0,082</div></div>
+        </div>
+        <div class="info-lore">
+          <div class="info-lore-label">✦ Particularités climatiques</div>
+          <div class="info-lore-text">L'inclinaison de 78° inverse les zones climatiques : l'équateur est une chaîne de montagnes glaciaires, les pôles sont chauds et arides. Le périhélie coïncide avec le solstice austral, rendant le pôle sud plus chaud. Saisons : été/hiver ~135 jours, printemps/automne ~30 jours.</div>
+        </div>
+      </div>
+
+      <!-- VÉRAN -->
+      <div class="info-card" id="card-veran">
+        <div class="info-card-header">
+          <div class="info-card-icon" style="background:radial-gradient(circle,#d0d8e8,#8090a8);box-shadow:0 0 14px #a0b8d0;">🌙</div>
+          <div class="info-card-title">
+            <div class="info-card-name" style="color:#c0d0e0;">Véran</div>
+            <div class="info-card-type">Lune de Mythologia</div>
+          </div>
+        </div>
+        <div class="info-divider"></div>
+        <p class="info-desc">Principale lune de Mythologia, Véran est un satellite rocheux dont l'attraction gravitationnelle module les marées d'Aetherium dans la croûte planétaire, influençant subtilement la puissance magique.</p>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Rayon</div><div class="stat-value">620 km</div></div>
+          <div class="stat-box"><div class="stat-label">Distance</div><div class="stat-value">370 000 km</div></div>
+          <div class="stat-box"><div class="stat-label">Période orbitale</div><div class="stat-value">21 jours</div></div>
+          <div class="stat-box"><div class="stat-label">Rôle magique</div><div class="stat-value">Modulateur Ae.</div></div>
+        </div>
+        <div class="info-lore">
+          <div class="info-lore-label">✦ Rôle dans le monde</div>
+          <div class="info-lore-text">Véran agit comme un modulateur gravitationnel mineur des marées d'Aetherium. Les mages expérimentés ressentent les cycles de Véran comme des variations subtiles dans leur puissance. Son cycle de 21 jours structure certains calendriers rituels dans les cultures de Mythologia.</div>
+        </div>
+      </div>
+
+      <!-- GARAN -->
+      <div class="info-card" id="card-garan">
+        <div class="info-card-header">
+          <div class="info-card-icon" style="background:radial-gradient(circle,#e0c080,#806020);box-shadow:0 0 18px #c09040;">🪐</div>
+          <div class="info-card-title">
+            <div class="info-card-name" style="color:#e0c080;">Garan</div>
+            <div class="info-card-type">Géante Gazeuse</div>
+          </div>
+        </div>
+        <div class="info-divider"></div>
+        <p class="info-desc">Imposante géante gazeuse à l'orbite externe, Garan joue un rôle de bouclier gravitationnel pour Mythologia, détournant une partie des astéroïdes et comètes qui pourraient menacer la planète habitable.</p>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Masse</div><div class="stat-value">1,8 MJ</div></div>
+          <div class="stat-box"><div class="stat-label">Distance (Aurys)</div><div class="stat-value">3,0 UA</div></div>
+          <div class="stat-box"><div class="stat-label">Type</div><div class="stat-value">Géante gazeuse</div></div>
+          <div class="stat-box"><div class="stat-label">Rôle</div><div class="stat-value">Bouclier orbital</div></div>
+        </div>
+        <div class="info-lore">
+          <div class="info-lore-label">✦ Perception depuis Mythologia</div>
+          <div class="info-lore-text">Garan est visible à l'œil nu comme un point brillant jaunâtre. Par nuit claire, les observateurs peuvent distinguer sa forme légèrement discoïde. Elle est associée dans de nombreuses cultures à la protection et à la stabilité.</div>
+        </div>
+      </div>
+
+    </div><!-- fin info-panel -->
+
+  </div><!-- fin main-layout -->
+
+  <!-- SECTION DÉTAIL MYTHOLOGIA -->
+  <div class="mythologia-detail">
+    <div class="detail-title">— Mythologia en détail —</div>
+    <div class="detail-grid">
+
+      <div class="detail-card">
+        <div class="detail-card-icon">🌡️</div>
+        <div class="detail-card-title">Climat & Saisons</div>
+        <div class="detail-card-content">
+          L'inclinaison axiale de <strong>78°</strong> inverse les zones climatiques. L'équateur abrite une chaîne montagneuse glaciaire, tandis que les pôles sont chauds et arides. Les saisons sont marquées : <strong>~135 jours</strong> d'été/hiver, <strong>~30 jours</strong> de transition. Les équinoxes sont des périodes politiques et militaires stratégiques.
+        </div>
+      </div>
+
+      <div class="detail-card">
+        <div class="detail-card-icon">🌊</div>
+        <div class="detail-card-title">Géographie Polaire</div>
+        <div class="detail-card-content">
+          La calotte équatoriale glaciaire est <strong>navigable</strong> près du méridien du continent désertique (Kamses), là où la glace est plus mince. Du côté opposé, elle est épaisse et infranchissable. Cette asymétrie oriente toutes les routes commerciales intercontinentales.
+        </div>
+      </div>
+
+      <div class="detail-card">
+        <div class="detail-card-icon">⚖️</div>
+        <div class="detail-card-title">Gravité & Faune</div>
+        <div class="detail-card-content">
+          La gravité de <strong>1,9 g</strong> contraint toute la vie : les arbres ne dépassent pas <strong>~45 mètres</strong>, la faune est trapue et musclée, les races intelligentes ont développé des squelettes plus denses. Les Aevhari compensent leur vol en utilisant le Flux d'Aetherium (Ae+N).
+        </div>
+      </div>
+
+      <div class="detail-card">
+        <div class="detail-card-icon">🔮</div>
+        <div class="detail-card-title">Aetherium & Croûte</div>
+        <div class="detail-card-content">
+          L'Aetherium (<strong>Ae, Z=119</strong>) est nucléosynthétisé dans la croûte par le rayonnement X/γ d'Umbrath. Sa concentration varie selon les zones géologiques, créant des "poches magiques" naturelles. Les vapeurs d'Aetherium en suspension dans l'atmosphère colorent Séraph en rose.
+        </div>
+      </div>
+
+      <div class="detail-card">
+        <div class="detail-card-icon">🌙</div>
+        <div class="detail-card-title">Véran & Marées</div>
+        <div class="detail-card-content">
+          La lune <strong>Véran</strong> (cycle 21 jours) module gravitationnellement les marées d'Aetherium dans la croûte. Ces variations influencent subtilement la puissance magique disponible. Certaines civilisations ont structuré leurs calendriers rituels autour de ce cycle lunaire.
+        </div>
+      </div>
+
+      <div class="detail-card">
+        <div class="detail-card-icon">📅</div>
+        <div class="detail-card-title">Temps & Orbite</div>
+        <div class="detail-card-content">
+          L'année dure <strong>~447 jours terrestres</strong> et le jour sidéral <strong>31,5 heures</strong>. L'excentricité orbitale de <strong>0,082</strong> est notable : le périhélie coïncide avec le solstice austral, amplifiant l'été du pôle sud et adoucissant celui du pôle nord.
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- fin page -->
+
+<script>
+// ═══════════════════════════════════════
+// ÉTOILES EN ARRIÈRE-PLAN
+// ═══════════════════════════════════════
+const starCanvas = document.getElementById('starCanvas');
+const sCtx = starCanvas.getContext('2d');
+
+function resizeStarCanvas() {
+  starCanvas.width = window.innerWidth;
+  starCanvas.height = window.innerHeight;
+  drawStars();
+}
+
+const stars = [];
+function initStars() {
+  stars.length = 0;
+  for (let i = 0; i < 280; i++) {
+    stars.push({
+      x: Math.random(), y: Math.random(),
+      r: Math.random() * 1.5 + 0.2,
+      a: Math.random(),
+      speed: Math.random() * 0.003 + 0.001,
+      phase: Math.random() * Math.PI * 2
+    });
+  }
+}
+
+function drawStars() {
+  sCtx.clearRect(0,0,starCanvas.width,starCanvas.height);
+  const now = Date.now() * 0.001;
+  stars.forEach(s => {
+    const alpha = s.a * (0.5 + 0.5 * Math.sin(now * s.speed * 10 + s.phase));
+    sCtx.beginPath();
+    sCtx.arc(s.x * starCanvas.width, s.y * starCanvas.height, s.r, 0, Math.PI*2);
+    sCtx.fillStyle = `rgba(200,210,255,${alpha})`;
+    sCtx.fill();
+  });
+}
+
+initStars();
+resizeStarCanvas();
+window.addEventListener('resize', resizeStarCanvas);
+setInterval(drawStars, 50);
+
+// ═══════════════════════════════════════
+// CARTE STELLAIRE INTERACTIVE
+// ═══════════════════════════════════════
+const canvas = document.getElementById('systemCanvas');
+const ctx = canvas.getContext('2d');
+
+// Responsive canvas
+function resizeSystemCanvas() {
+  const container = canvas.parentElement;
+  const w = Math.min(container.clientWidth - 10, 680);
+  canvas.width = w;
+  canvas.height = Math.round(w * 480/680);
+}
+resizeSystemCanvas();
+window.addEventListener('resize', () => { resizeSystemCanvas(); });
+
+// Objets du système
+const system = {
+  umbrath: { id:'umbrath', label:'Umbrath', color:'#ff4040', glowColor:'rgba(255,64,64,0.4)', r:14, orbitR:0, orbitCenter:null, speed:0, angle:0, type:'blackhole' },
+  aurys:   { id:'aurys',   label:'Aurys',   color:'#ffe080', glowColor:'rgba(255,220,128,0.5)', r:18, orbitR:0, orbitCenter:'center', speed:0.0004, angle:0, type:'star' },
+  seraph:  { id:'seraph',  label:'Séraph',  color:'#f4a0c0', glowColor:'rgba(244,160,192,0.4)', r:11, orbitR:130, orbitCenter:'aurys', speed:0.0008, angle:1.2, type:'star' },
+  vesh:    { id:'vesh',    label:'Vesh',    color:'#c09050', glowColor:'rgba(192,144,80,0.3)', r:5,  orbitR:70,  orbitCenter:'aurys', speed:0.003,  angle:0.5, type:'planet' },
+  mythologia:{ id:'mythologia', label:'Mythologia', color:'#60a0f0', glowColor:'rgba(96,160,240,0.4)', r:9, orbitR:110, orbitCenter:'aurys', speed:0.0018, angle:2.5, type:'planet' },
+  veran:   { id:'veran',   label:'Véran',   color:'#a0b8d0', glowColor:'rgba(160,184,208,0.3)', r:3,  orbitR:26,  orbitCenter:'mythologia', speed:0.015, angle:0.8, type:'moon' },
+  garan:   { id:'garan',   label:'Garan',   color:'#e0c060', glowColor:'rgba(224,192,96,0.35)', r:13, orbitR:190, orbitCenter:'aurys', speed:0.0009, angle:4.0, type:'planet' },
+};
+
+const positions = {};
+let selectedBody = null;
+let hovered = null;
+let animId;
+
+function getCenter() {
+  return { x: canvas.width * 0.42, y: canvas.height * 0.5 };
+}
+
+function computePositions(t) {
+  const center = getCenter();
+  positions['center'] = center;
+
+  // Umbrath (fixe, loin à gauche)
+  positions['umbrath'] = { x: canvas.width * 0.06, y: canvas.height * 0.5 };
+
+  // Aurys orbite lentement autour du centre
+  const aurysAngle = system.aurys.angle + t * system.aurys.speed;
+  positions['aurys'] = {
+    x: center.x + Math.cos(aurysAngle) * 18,
+    y: center.y + Math.sin(aurysAngle) * 10
+  };
+
+  // Corps orbitant Aurys
+  ['seraph','vesh','mythologia','garan'].forEach(id => {
+    const obj = system[id];
+    const a = obj.angle + t * obj.speed;
+    const ap = positions['aurys'];
+    positions[id] = {
+      x: ap.x + Math.cos(a) * obj.orbitR,
+      y: ap.y + Math.sin(a) * (obj.orbitR * 0.38)
+    };
+  });
+
+  // Véran orbite Mythologia
+  const va = system.veran.angle + t * system.veran.speed;
+  positions['veran'] = {
+    x: positions['mythologia'].x + Math.cos(va) * system.veran.orbitR,
+    y: positions['mythologia'].y + Math.sin(va) * (system.veran.orbitR * 0.5)
+  };
+}
+
+function drawGlow(x, y, r, color) {
+  const g = ctx.createRadialGradient(x,y,r*0.3,x,y,r*3.5);
+  g.addColorStop(0, color);
+  g.addColorStop(1, 'transparent');
+  ctx.beginPath();
+  ctx.arc(x, y, r*3.5, 0, Math.PI*2);
+  ctx.fillStyle = g;
+  ctx.fill();
+}
+
+function drawOrbit(cx, cy, rx, ry, isHovered) {
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI*2);
+  ctx.strokeStyle = isHovered ? 'rgba(167,139,250,0.3)' : 'rgba(167,139,250,0.08)';
+  ctx.lineWidth = isHovered ? 1 : 0.5;
+  ctx.setLineDash([4,8]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+function drawBlackHole(x, y, t) {
+  // Disque d'accrétion
+  const rings = [
+    { r: 22, a: 0.18, color: '#ff6020' },
+    { r: 18, a: 0.12, color: '#ff4010' },
+    { r: 14, a: 0.08, color: '#ff2000' },
+  ];
+  rings.forEach(ring => {
+    ctx.beginPath();
+    ctx.ellipse(x, y, ring.r, ring.r * 0.25, t * 0.0003, 0, Math.PI*2);
+    ctx.strokeStyle = `rgba(${ring.color.slice(1).match(/../g).map(h=>parseInt(h,16)).join(',')},${ring.a})`;
+    ctx.lineWidth = 3;
+    ctx.stroke();
+  });
+  // Corps noir
+  const g = ctx.createRadialGradient(x,y,0,x,y,14);
+  g.addColorStop(0,'#000000');
+  g.addColorStop(0.7,'#0a0000');
+  g.addColorStop(1,'rgba(20,0,0,0)');
+  ctx.beginPath();
+  ctx.arc(x, y, 14, 0, Math.PI*2);
+  ctx.fillStyle = g;
+  ctx.fill();
+  // Halo rouge
+  drawGlow(x, y, 5, 'rgba(255,60,0,0.15)');
+}
+
+function drawStar(x, y, r, color, glowColor, t, id) {
+  const pulse = 1 + 0.04 * Math.sin(t * 0.002 + (id==='seraph' ? 1 : 0));
+  drawGlow(x, y, r*pulse, glowColor);
+  const g = ctx.createRadialGradient(x,y,0,x,y,r*pulse);
+  g.addColorStop(0,'#ffffff');
+  g.addColorStop(0.3,color);
+  g.addColorStop(1, color+'80');
+  ctx.beginPath();
+  ctx.arc(x, y, r*pulse, 0, Math.PI*2);
+  ctx.fillStyle = g;
+  ctx.fill();
+}
+
+function drawPlanet(x, y, r, color, glowColor, isSelected, isHovered) {
+  if (isSelected || isHovered) drawGlow(x, y, r, glowColor.replace('0.4','0.6').replace('0.3','0.5').replace('0.35','0.55'));
+  else drawGlow(x, y, r, glowColor);
+  const g = ctx.createRadialGradient(x-r*0.3,y-r*0.3,0,x,y,r);
+  g.addColorStop(0,'#ffffff40');
+  g.addColorStop(0.4,color);
+  g.addColorStop(1,color+'60');
+  ctx.beginPath();
+  ctx.arc(x, y, r * (isSelected ? 1.15 : isHovered ? 1.1 : 1), 0, Math.PI*2);
+  ctx.fillStyle = g;
+  ctx.fill();
+  if (isSelected) {
+    ctx.beginPath();
+    ctx.arc(x, y, r * 1.6, 0, Math.PI*2);
+    ctx.strokeStyle = color + '60';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+}
+
+function drawLabel(x, y, r, label, isSelected, isHovered) {
+  if (!isSelected && !isHovered) return;
+  ctx.font = `${isSelected ? '600 ' : ''}11px Cinzel, serif`;
+  ctx.fillStyle = isSelected ? '#e8e4f0' : 'rgba(232,228,240,0.7)';
+  ctx.textAlign = 'center';
+  ctx.fillText(label, x, y + r + 16);
+}
+
+// Ligne gravitationnelle Umbrath → Aurys
+function drawGravLine(t) {
+  const um = positions['umbrath'];
+  const au = positions['aurys'];
+  const g = ctx.createLinearGradient(um.x, um.y, au.x, au.y);
+  g.addColorStop(0, 'rgba(255,60,0,0.15)');
+  g.addColorStop(1, 'rgba(255,60,0,0)');
+  ctx.beginPath();
+  ctx.moveTo(um.x, um.y);
+  ctx.lineTo(au.x, au.y);
+  ctx.strokeStyle = g;
+  ctx.lineWidth = 0.8;
+  ctx.setLineDash([3,12]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+let t = 0;
+function animate() {
+  t += 1;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  computePositions(t);
+
+  const au = positions['aurys'];
+  const my = positions['mythologia'];
+
+  // Ligne Umbrath → Aurys
+  drawGravLine(t);
+
+  // Orbites autour d'Aurys
+  drawOrbit(au.x, au.y, system.seraph.orbitR, system.seraph.orbitR*0.38, hovered==='seraph');
+  drawOrbit(au.x, au.y, system.vesh.orbitR, system.vesh.orbitR*0.38, hovered==='vesh');
+  drawOrbit(au.x, au.y, system.mythologia.orbitR, system.mythologia.orbitR*0.38, hovered==='mythologia');
+  drawOrbit(au.x, au.y, system.garan.orbitR, system.garan.orbitR*0.38, hovered==='garan');
+  // Orbite Véran
+  drawOrbit(my.x, my.y, system.veran.orbitR, system.veran.orbitR*0.5, hovered==='veran');
+
+  // Umbrath
+  drawBlackHole(positions['umbrath'].x, positions['umbrath'].y, t);
+  drawLabel(positions['umbrath'].x, positions['umbrath'].y, 14, 'Umbrath', selectedBody==='umbrath', hovered==='umbrath');
+
+  // Aurys
+  drawStar(au.x, au.y, system.aurys.r, system.aurys.color, system.aurys.glowColor, t, 'aurys');
+  drawLabel(au.x, au.y, system.aurys.r, 'Aurys', selectedBody==='aurys', hovered==='aurys');
+
+  // Séraph
+  const se = positions['seraph'];
+  drawStar(se.x, se.y, system.seraph.r, system.seraph.color, system.seraph.glowColor, t, 'seraph');
+  drawLabel(se.x, se.y, system.seraph.r, 'Séraph', selectedBody==='seraph', hovered==='seraph');
+
+  // Planètes + lune
+  ['vesh','garan','mythologia'].forEach(id => {
+    const obj = system[id];
+    const pos = positions[id];
+    drawPlanet(pos.x, pos.y, obj.r, obj.color, obj.glowColor, selectedBody===id, hovered===id);
+    drawLabel(pos.x, pos.y, obj.r, obj.label, selectedBody===id, hovered===id);
+  });
+
+  // Véran
+  const vp = positions['veran'];
+  drawPlanet(vp.x, vp.y, system.veran.r, system.veran.color, system.veran.glowColor, selectedBody==='veran', hovered==='veran');
+  drawLabel(vp.x, vp.y, system.veran.r, 'Véran', selectedBody==='veran', hovered==='veran');
+
+  // Garan anneaux (subtils)
+  const gp = positions['garan'];
+  ctx.beginPath();
+  ctx.ellipse(gp.x, gp.y, system.garan.r*1.8, system.garan.r*0.4, 0.3, 0, Math.PI*2);
+  ctx.strokeStyle = 'rgba(224,192,96,0.25)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  animId = requestAnimationFrame(animate);
+}
+animate();
+
+// ═══════════════════════════════════════
+// INTERACTIONS
+// ═══════════════════════════════════════
+function getHitBody(mx, my) {
+  const hitRadii = { umbrath:20, aurys:24, seraph:18, vesh:14, mythologia:18, veran:12, garan:20 };
+  for (const id of ['umbrath','aurys','seraph','mythologia','veran','vesh','garan']) {
+    const pos = positions[id];
+    if (!pos) continue;
+    const dx = mx - pos.x, dy = my - pos.y;
+    if (Math.sqrt(dx*dx+dy*dy) < hitRadii[id]) return id;
+  }
+  return null;
+}
+
+canvas.addEventListener('mousemove', e => {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const mx = (e.clientX - rect.left) * scaleX;
+  const my = (e.clientY - rect.top) * scaleY;
+  const hit = getHitBody(mx, my);
+  hovered = hit;
+  canvas.style.cursor = hit ? 'pointer' : 'default';
+});
+
+canvas.addEventListener('mouseleave', () => { hovered = null; });
+
+canvas.addEventListener('click', e => {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const mx = (e.clientX - rect.left) * scaleX;
+  const my = (e.clientY - rect.top) * scaleY;
+  const hit = getHitBody(mx, my);
+  if (hit) {
+    selectedBody = hit;
+    document.getElementById('infoWelcome').style.display = 'none';
+    document.querySelectorAll('.info-card').forEach(c => c.classList.remove('active'));
+    const card = document.getElementById('card-' + hit);
+    if (card) card.classList.add('active');
+  }
+});
+
+// Touch support
+canvas.addEventListener('touchend', e => {
+  e.preventDefault();
+  const touch = e.changedTouches[0];
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const mx = (touch.clientX - rect.left) * scaleX;
+  const my = (touch.clientY - rect.top) * scaleY;
+  const hit = getHitBody(mx, my);
+  if (hit) {
+    selectedBody = hit;
+    document.getElementById('infoWelcome').style.display = 'none';
+    document.querySelectorAll('.info-card').forEach(c => c.classList.remove('active'));
+    const card = document.getElementById('card-' + hit);
+    if (card) card.classList.add('active');
+  }
+});
+</script>
+</body>
+</html>
