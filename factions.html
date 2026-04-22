@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mythologia — Groupes d'Intérêt</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bleu-nuit: #0a1520;
+    --violet-ae: #6b3fa0;
+    --eclat-ae:  #a78bfa;
+    --or-ae:     #c9a84c;
+    --blanc-lune:#e8e4f0;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  html, body { height: 100%; overflow: hidden; }
+
+  body {
+    background: var(--bleu-nuit);
+    color: var(--blanc-lune);
+    font-family: 'EB Garamond', serif;
+  }
+
+  /* ── ÉTOILES ── */
+  #starCanvas { position:fixed; inset:0; z-index:0; }
+
+  .overlay {
+    position:fixed; inset:0;
+    background: radial-gradient(ellipse at center, rgba(10,21,32,0.3) 0%, rgba(10,21,32,0.85) 100%);
+    z-index:1;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed;
+    top:0; left:0; right:0;
+    height: 56px;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 0 36px;
+    background: linear-gradient(180deg, rgba(10,21,32,0.97) 0%, rgba(10,21,32,0.0) 100%);
+  }
+  .nav-back {
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    color: var(--eclat-ae);
+    text-decoration: none;
+    text-transform: uppercase;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+  }
+  .nav-back:hover { opacity: 1; }
+  .nav-sep { color: rgba(167,139,250,0.3); }
+  .nav-current {
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--blanc-lune);
+  }
+
+  /* ══════════════════════════════════════
+     STRUCTURE PRINCIPALE
+     56px nav fixe → en-tête → tabs → contenu
+  ══════════════════════════════════════ */
+  .page {
+    position: relative;
+    z-index: 10;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── EN-TÊTE ── */
+  .page-header {
+    flex-shrink: 0;
+    text-align: center;
+    padding: 72px 20px 16px; /* 72 = nav 56px + 16px gap */
+    animation: fadeDown 1s ease both;
+  }
+
+  @keyframes fadeDown {
+    from { opacity:0; transform:translateY(-20px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  .page-header h1 {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(1.4rem, 3vw, 2.4rem);
+    color: var(--blanc-lune);
+    text-shadow: 0 0 40px rgba(167,139,250,0.5), 0 0 80px rgba(167,139,250,0.2);
+    letter-spacing: 0.1em;
+    margin-bottom: 6px;
+  }
+
+  .sous-titre {
+    font-family: 'Cinzel', serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.5em;
+    color: var(--eclat-ae);
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+
+  .ornement {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 12px auto 0;
+    width: min(400px, 80vw);
+  }
+  .ornement-line  { flex:1; height:1px; background:linear-gradient(90deg,transparent,var(--eclat-ae),transparent); }
+  .ornement-gem   { width:7px; height:7px; background:var(--eclat-ae); transform:rotate(45deg); box-shadow:0 0 10px var(--eclat-ae); flex-shrink:0; }
+  .ornement-gem-s { width:4px; height:4px; background:var(--eclat-ae); transform:rotate(45deg); opacity:0.5; flex-shrink:0; }
+
+  /* ── TABS ── */
+  .continent-tabs {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 36px 12px;
+    border-bottom: 1px solid rgba(167,139,250,0.1);
+    animation: fadeIn 1s 0.3s ease both;
+  }
+
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+  .ctab {
+    font-family: 'Cinzel', serif;
+    font-size: 0.62rem;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    padding: 6px 20px;
+    background: transparent;
+    border: 1px solid rgba(167,139,250,0.18);
+    color: rgba(167,139,250,0.45);
+    cursor: pointer;
+    transition: all 0.22s;
+    border-radius: 2px;
+  }
+  .ctab:hover { color: var(--eclat-ae); border-color: rgba(167,139,250,0.4); }
+  .ctab.active {
+    color: var(--or-ae);
+    border-color: rgba(201,168,76,0.45);
+    background: rgba(201,168,76,0.06);
+    text-shadow: 0 0 12px rgba(201,168,76,0.3);
+  }
+  .ctab.active-lore {
+    color: var(--eclat-ae);
+    border-color: rgba(167,139,250,0.5);
+    background: rgba(107,63,160,0.12);
+    text-shadow: 0 0 12px rgba(167,139,250,0.3);
+  }
+  .ctab.active-kamses {
+    color: #f4b860;
+    border-color: rgba(244,184,96,0.45);
+    background: rgba(244,184,96,0.07);
+    text-shadow: 0 0 12px rgba(244,184,96,0.3);
+  }
+
+  /* ══════════════════════════════════════
+     ZONE CONTENU  —  flex: 1, deux colonnes
+  ══════════════════════════════════════ */
+  .content-area {
+    flex: 1;
+    min-height: 0;       /* indispensable pour que flex-child puisse scroller */
+    display: flex;
+    overflow: hidden;
+    animation: fadeIn 1s 0.4s ease both;
+  }
+
+  /* ── SIDEBAR ── */
+  .faction-list {
+    width: 260px;
+    flex-shrink: 0;
+    overflow-y: auto;
+    border-right: 1px solid rgba(167,139,250,0.1);
+    padding-bottom: 40px;
+  }
+  .faction-list::-webkit-scrollbar { width: 4px; }
+  .faction-list::-webkit-scrollbar-track { background: transparent; }
+  .faction-list::-webkit-scrollbar-thumb { background: rgba(167,139,250,0.18); border-radius:2px; }
+
+  .sidebar-cat-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.55rem;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--or-ae);
+    opacity: 0.6;
+    padding: 16px 18px 6px;
+    border-bottom: 1px solid rgba(201,168,76,0.1);
+  }
+
+  .faction-btn {
+    width: 100%;
+    padding: 10px 18px;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(167,139,250,0.06);
+    border-left: 2px solid transparent;
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    transition: background 0.18s, border-left-color 0.18s;
+  }
+  .faction-btn:hover { background: rgba(107,63,160,0.1); }
+  .faction-btn.active { background: rgba(107,63,160,0.16); border-left-color: var(--eclat-ae); }
+  .faction-btn.active.k { border-left-color: var(--or-ae); }
+
+  .btn-name {
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    color: rgba(232,228,240,0.7);
+    line-height: 1.35;
+    transition: color 0.18s;
+  }
+  .faction-btn:hover .btn-name,
+  .faction-btn.active .btn-name { color: var(--blanc-lune); }
+
+  .btn-type {
+    font-size: 0.78rem;
+    color: rgba(167,139,250,0.45);
+    font-style: italic;
+  }
+  .faction-btn.k .btn-type { color: rgba(201,168,76,0.45); }
+
+  /* ── PANNEAU DETAIL ── */
+  .info-panel {
+    flex: 1;
+    overflow-y: auto;
+    padding: 32px 44px 60px;
+  }
+  .info-panel::-webkit-scrollbar { width: 4px; }
+  .info-panel::-webkit-scrollbar-track { background: transparent; }
+  .info-panel::-webkit-scrollbar-thumb { background: rgba(167,139,250,0.18); border-radius:2px; }
+
+  /* Placeholder */
+  .info-welcome {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    opacity: 0.45;
+    gap: 14px;
+  }
+  .info-welcome-icon { font-size: 2.5rem; }
+  .info-welcome-text {
+    font-family: 'Cinzel', serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--eclat-ae);
+    line-height: 2;
+  }
+
+  /* Cartes */
+  .info-card { display: none; animation: slideIn 0.4s ease; }
+  .info-card.active { display: block; }
+
+  @keyframes slideIn {
+    from { opacity:0; transform:translateX(16px); }
+    to   { opacity:1; transform:translateX(0); }
+  }
+
+  /* En-tête de carte */
+  .info-card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+    margin-bottom: 20px;
+  }
+
+  .info-card-icon {
+    width: 52px; height: 52px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+    border: 1px solid rgba(167,139,250,0.2);
+    background: rgba(107,63,160,0.1);
+  }
+  .info-card-icon.k {
+    border-color: rgba(201,168,76,0.2);
+    background: rgba(201,168,76,0.07);
+  }
+
+  .info-card-name {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(1rem, 2vw, 1.4rem);
+    color: var(--blanc-lune);
+    text-shadow: 0 0 20px rgba(167,139,250,0.25);
+    line-height: 1.25;
+    margin-bottom: 5px;
+  }
+
+  .info-card-type {
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--eclat-ae);
+    opacity: 0.7;
+  }
+  .info-card-type.k { color: var(--or-ae); }
+
+  /* Séparateur */
+  .info-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(167,139,250,0.3), transparent);
+    margin: 16px 0;
+  }
+  .info-divider.k { background: linear-gradient(90deg, transparent, rgba(201,168,76,0.3), transparent); }
+
+  /* Label de section */
+  .section-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.58rem;
+    letter-spacing: 0.38em;
+    text-transform: uppercase;
+    color: var(--eclat-ae);
+    opacity: 0.65;
+    margin-bottom: 8px;
+  }
+  .section-label.k { color: var(--or-ae); }
+
+  /* Texte descriptif */
+  .info-desc {
+    font-size: 1rem;
+    line-height: 1.85;
+    color: rgba(232,228,240,0.82);
+    font-style: italic;
+    margin-bottom: 18px;
+  }
+
+  /* Grille de stats */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  .stat-box {
+    background: rgba(13,27,42,0.6);
+    border: 1px solid rgba(167,139,250,0.12);
+    border-radius: 10px;
+    padding: 11px 14px;
+  }
+  .stat-box.full { grid-column: 1 / -1; }
+  .stat-box.k { border-color: rgba(201,168,76,0.12); }
+
+  .stat-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.55rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--eclat-ae);
+    opacity: 0.65;
+    margin-bottom: 5px;
+  }
+  .stat-label.k { color: var(--or-ae); }
+
+  .stat-value {
+    font-size: 0.95rem;
+    color: var(--blanc-lune);
+    line-height: 1.5;
+  }
+
+  /* Relations */
+  .relations-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  .rel-block {
+    background: rgba(13,27,42,0.6);
+    border: 1px solid rgba(167,139,250,0.1);
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+
+  .rel-block-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.55rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    margin-bottom: 7px;
+  }
+  .rel-positive .rel-block-label { color: #70c090; }
+  .rel-negative .rel-block-label { color: #c07070; }
+
+  .rel-item {
+    font-size: 0.92rem;
+    line-height: 1.8;
+    color: rgba(232,228,240,0.65);
+    font-style: italic;
+  }
+  .rel-positive .rel-item::before { content:'↑ '; color:#70c090; font-style:normal; }
+  .rel-negative .rel-item::before { content:'↓ '; color:#c07070; font-style:normal; }
+
+  /* Bloc rôle */
+  .info-lore {
+    padding: 14px 16px;
+    background: rgba(107,63,160,0.08);
+    border-left: 2px solid rgba(167,139,250,0.35);
+    border-radius: 0 8px 8px 0;
+    margin-bottom: 18px;
+  }
+  .info-lore.k {
+    background: rgba(201,168,76,0.06);
+    border-left-color: rgba(201,168,76,0.35);
+  }
+
+  .info-lore-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.58rem;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--eclat-ae);
+    opacity: 0.7;
+    margin-bottom: 8px;
+  }
+  .info-lore-label.k { color: var(--or-ae); }
+
+  .info-lore-text {
+    font-size: 0.97rem;
+    line-height: 1.85;
+    color: rgba(232,228,240,0.75);
+    font-style: italic;
+  }
+
+  /* Héros */
+  .hero-block {
+    background: rgba(13,27,42,0.7);
+    border: 1px solid rgba(167,139,250,0.18);
+    border-radius: 10px;
+    padding: 18px 20px;
+    position: relative;
+  }
+  .hero-block.k { border-color: rgba(201,168,76,0.18); }
+
+  .hero-block::before {
+    content: '✦';
+    position: absolute;
+    top: -9px; left: 18px;
+    font-size: 10px;
+    color: var(--eclat-ae);
+    background: var(--bleu-nuit);
+    padding: 0 6px;
+  }
+  .hero-block.k::before { color: var(--or-ae); }
+
+  .hero-name {
+    font-family: 'Cinzel', serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.04em;
+    color: var(--eclat-ae);
+    margin-bottom: 3px;
+    line-height: 1.35;
+  }
+  .hero-block.k .hero-name { color: var(--or-ae); }
+
+  .hero-meta {
+    font-family: 'Cinzel', serif;
+    font-size: 0.57rem;
+    letter-spacing: 0.2em;
+    color: rgba(167,139,250,0.5);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .hero-block.k .hero-meta { color: rgba(201,168,76,0.5); }
+
+  .hero-desc {
+    font-size: 0.95rem;
+    line-height: 1.85;
+    color: rgba(232,228,240,0.72);
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="starCanvas"></canvas>
+<div class="overlay"></div>
+
+<nav>
+  <a class="nav-back" href="index.html">← Mythologia</a>
+  <span class="nav-sep">✦</span>
+  <span class="nav-current">Groupe d'intérêt</span>
+</nav>
+
+<div class="page">
+
+  <!-- EN-TÊTE -->
+  <div class="page-header">
+    <h1>FACTIONS & POUVOIRS</h1>
+    <p class="sous-titre">Ordres, Maisons, Clans &amp; Ombres du Monde</p>
+    <div class="ornement">
+      <div class="ornement-line"></div>
+      <div class="ornement-gem-s"></div>
+      <div class="ornement-gem"></div>
+      <div class="ornement-gem-s"></div>
+      <div class="ornement-line"></div>
+    </div>
+  </div>
+
+  <!-- TABS CONTINENT -->
+  <div class="continent-tabs">
+    <button class="ctab active" onclick="setContinent('all',this)">Tous les Territoires</button>
+    <button class="ctab"        onclick="setContinent('lore',this)">⚔ Pays de Lore</button>
+    <button class="ctab"        onclick="setContinent('kamses',this)">🜔 Empire Kamses</button>
+  </div>
+
+  <!-- ZONE CONTENU -->
+  <div class="content-area">
+
+    <!-- SIDEBAR -->
+    <div class="faction-list" id="sidebar"></div>
+
+    <!-- PANNEAU DÉTAIL -->
+    <div class="info-panel" id="infoPanel">
+      <div class="info-welcome" id="infoWelcome">
+        <div class="info-welcome-icon">⚔</div>
+        <div class="info-welcome-text">Sélectionnez une faction<br>pour consulter sa fiche</div>
+      </div>
+      <div id="cardsContainer"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════
+   ÉTOILES
+══════════════════════════════════ */
+const starCanvas = document.getElementById('starCanvas');
+const sCtx = starCanvas.getContext('2d');
+const stars = [];
+
+function resizeStarCanvas() {
+  starCanvas.width  = window.innerWidth;
+  starCanvas.height = window.innerHeight;
+}
+function initStars() {
+  stars.length = 0;
+  for (let i = 0; i < 260; i++) stars.push({
+    x: Math.random(), y: Math.random(),
+    r: Math.random() * 1.4 + 0.2,
+    a: Math.random() * 0.7 + 0.1,
+    speed: Math.random() * 0.003 + 0.001,
+    phase: Math.random() * Math.PI * 2
+  });
+}
+function drawStars() {
+  sCtx.clearRect(0, 0, starCanvas.width, starCanvas.height);
+  const now = Date.now() * 0.001;
+  stars.forEach(s => {
+    const alpha = s.a * (0.5 + 0.5 * Math.sin(now * s.speed * 10 + s.phase));
+    sCtx.beginPath();
+    sCtx.arc(s.x * starCanvas.width, s.y * starCanvas.height, s.r, 0, Math.PI * 2);
+    sCtx.fillStyle = `rgba(200,210,255,${alpha})`;
+    sCtx.fill();
+  });
+}
+initStars(); resizeStarCanvas();
+window.addEventListener('resize', resizeStarCanvas);
+setInterval(drawStars, 50);
+
+/* ══════════════════════════════════
+   DONNÉES
+══════════════════════════════════ */
+const factions = [
+  {id:'elindor',continent:'lore',icon:'👑',name:'Le Trône Elindor',type:'Pouvoir Central',cat:'Pouvoir Établi',politique:'Monarchie autoritaire humaine. Conquête territoriale, pacification commerciale, répression ciblée. <em>Gouverne par la peur autant que par la loi.</em>',orientation:['Militaire','Magie de Guerre','Diplomatique'],allies:['Bannière Sangrelis','Maison Drael Sorn','Clan Vörek'],enemies:['Ordre des Mages','Maison Oryndale','Enfants du Seuil'],role:'Apex politique de Lore. Avant que la Tour d\'Opale ne se réforme, le Trône a corrompu et détourné une faction interne de l\'Ordre. Ces mages reconditionnnés en <em>mages de guerre</em> servent le contrôle territorial par la force et la terreur. La Tour ne leur pardonne pas cette trahison. Administration, noblesse et cour : humains exclusivement.',hero_name:'Aldric Elindor, dit "Le Scelleur"',hero_meta:'Humain · 54 ans · Monarque régnant — non-mage',hero_desc:'Pas un mage — une volonté. A consolidé en vingt ans ce que ses prédécesseurs bâtissaient en cinquante. A négocié la reddition de Maison Veltharyn avec une coupe de vin et une lettre. A brûlé le fort de Kesshar avec trois mages de guerre en dix minutes. Son pouvoir : lire les hommes. Savoir exactement ce qu\'ils veulent et ce qu\'ils craignent.'},
+  {id:'ordre-mages',continent:'lore',icon:'🔮',name:'L\'Ordre des Mages',type:'Ordre Indépendant',cat:'Pouvoir Établi',politique:'Institution autonome de surveillance et de doctrine magique. <em>Ni gouvernement ni armée — un arbitre du savoir.</em>',orientation:['Magie (toutes Ae)','Institutionnel','Indépendant'],allies:['Maison Oryndale','Cercle des Cendres Lentes'],enemies:['Trône Elindor','Ordre Noxferis','Mages de Guerre'],role:'Gardien de la doctrine magique mondiale. Depuis la trahison des mages de guerre, l\'Ordre a reformé ses serments internes. Un mage de guerre capturé est désormais un renégat, non un membre. Son autorité morale dépasse ses moyens militaires. Siège : Tour d\'Opale.',hero_name:'Vaëlys Oryndare, Grande Maîtresse',hero_meta:'Aelven · 312 ans · Maîtresse Ae+O / Ae+P',hero_desc:'A réécrit les serments d\'allégeance de l\'Ordre après la trahison — un travail de vingt ans. Peut maintenir deux résonances simultanément, exploit rarissime même chez les Aelven. Froide, méthodique, absolument incorruptible. N\'a pas quitté la Tour d\'Opale depuis quarante-sept ans, mais sait tout ce qui s\'y passe à cinquante lieues.'},
+  {id:'oryndale',continent:'lore',icon:'🌿',name:'Maison Oryndale',type:'Maison Noble',cat:'Maisons Nobles',politique:'Aristocratie magique Aelven. Autonomie de facto — trop ancienne pour être soumise directement. <em>Joue la diplomatie longue durée.</em>',orientation:['Magie (Ae+O / Ae+P)','Aristocratique','Académique'],allies:['Ordre des Mages','Lutharin internes'],enemies:['Maison Veltharyn','Trône Elindor'],role:'Vivier de Grands Maîtres pour l\'Ordre des Mages. Contrôle de gorges forestières riches en Aetherium dans la région Eryndor. Influence les nominations magiques de manière tacite. Le Trône la tolère parce qu\'il ne peut pas l\'écraser sans déclencher une guerre magique coûteuse.',hero_name:'Thariel Oryndale, l\'Architecte du Flux',hero_meta:'Aelven · 189 ans · Ae+Si maître (terre / structure)',hero_desc:'A cartographié les veines d\'Aetherium sous les gorges Eryndor — un travail considéré comme impossible. Discret, jamais à la cour, toujours sous terre ou en forêt. On dit qu\'il peut sentir un gisement à dix mètres. Négociateur froid quand ses gorges sont menacées.'},
+  {id:'veltharyn',continent:'lore',icon:'📜',name:'Maison Veltharyn',type:'Maison Noble',cat:'Maisons Nobles',politique:'Aristocratie humaine terrienne. Expansion foncière et réseaux commerciaux. <em>Loyale au Trône en surface, ambitieuse en profondeur.</em>',orientation:['Économique','Diplomatique','Non-Magique'],allies:['Trône Elindor','Cercle des Cendres (accord)'],enemies:['Maison Oryndale','Confrérie Étain Creux'],role:'Bras économique de la noblesse humaine. Ses membres peuplent les postes d\'intendants et gouverneurs provinciaux. Contrôle les droits de coupe et les routes intérieures — une puissance discrète mais structurante.',hero_name:'Caelen Veltharyn, le Cartographe des Routes',hero_meta:'Humain · 38 ans · Non-mage, stratège commercial',hero_desc:'A ouvert en cinq ans trois nouveaux couloirs commerciaux que des négociateurs mettaient une décennie à sécuriser. Aucune magie — juste une mémoire photographique des itinéraires, des prix, et des dettes. Souriant en permanence. <em>Dangereux pour la même raison.</em>'},
+  {id:'drael-sorn',continent:'lore',icon:'🗡️',name:'Maison Drael Sorn',type:'Maison Noble',cat:'Maisons Nobles',politique:'Aristocratie militaire humaine. Gardienne des falaises côtières. <em>Pragmatisme total — sert qui paie, protège qui lui est utile.</em>',orientation:['Militaire','Non-Magique','Frontière'],allies:['Trône Elindor','Aevhari contractuels'],enemies:['Ordre des Mages','Voile Blanc'],role:'Verrou stratégique de Lore vers le corridor commercial Kamses. Ses éclaireurs Aevhari contractuels sont les meilleurs du continent — une dépendance que la Maison minimise publiquement mais exploite en privé.',hero_name:'Mira Sorn, Commandante des Falaises',hero_meta:'Humaine · 43 ans · Stratège militaire, non-mage',hero_desc:'A repoussé deux tentatives d\'infiltration kamséenne avec des effectifs inférieurs. N\'a jamais perdu un passage sous sa garde. Traite ses Aevhari contractuels avec un respect inhabituellement sincère — ce qui leur achète une loyauté que l\'argent seul n\'obtiendrait pas.'},
+  {id:'sangrelis',continent:'lore',icon:'✊',name:'La Bannière Sangrelis',type:'Corps d\'Élite',cat:'Ordres & Confréries',politique:'Corps militaire d\'élite lié au Trône par serment de sang collectif. <em>Sert la continuité du Trône — pas l\'Elindor régnant.</em>',orientation:['Militaire d\'élite','Non-Magique','Institutionnel'],allies:['Trône Elindor','Mages de Guerre (fonctionnel)'],enemies:['Ordre Noxferis','Enfants du Seuil'],role:'Bras armé de dernière instance du Trône. Escorte les mages de guerre en opération. La distinction entre "servir le Trône" et "servir le souverain" a sauvé l\'institution lors d\'une tentative de coup intérieure il y a deux générations. Symbole : une main rouge sur fond noir.',hero_name:'Vorath Keld, Commandant de la Main Rouge',hero_meta:'Humain · 51 ans · Combattant pur, non-mage',hero_desc:'A prêté le serment Sangrelis à 19 ans — le plus jeune de son histoire. A refusé un ordre direct d\'Aldric Elindor qu\'il jugeait contraire à la continuité du Trône, et a eu raison. <em>N\'a jamais été puni. Tout le monde comprend pourquoi.</em>'},
+  {id:'noxferis',continent:'lore',icon:'💀',name:'L\'Ordre Noxferis',type:'Ordre Sectaire',cat:'Ordres & Confréries',politique:'Confrérie secrète nécromantique. Officiellement inexistante en Lore. <em>Tolérée par le Trône pour son utilité militaire.</em>',orientation:['Ae+N Nécromantie','Doctrinal','Clandestin'],allies:['Trône (implicite)','Mages de Guerre (rares)'],enemies:['Ordre des Mages','Bannière Sangrelis','Sek\'Varas'],role:'Doctrine centrale : <em>la mort est un changement d\'état de l\'Aetherium</em>. Récupèrent et réancrent les morts de champ de bataille. Des mages de guerre renégats auraient rejoint leurs rangs. Le titre suprême, le Drak\'Nox, est toujours un Sauridh.',hero_name:'Ssarak Vel, Drak\'Nox',hero_meta:'Sauridh · ~90 ans · Ae+N maître absolu',hero_desc:'Peut maintenir jusqu\'à sept réancrages simultanés — un record non vérifié. Ne combat jamais lui-même. Il envoie ce qu\'il a récupéré. A survécu à deux tentatives d\'assassinat de la Bannière Sangrelis sans cicatrice visible.'},
+  {id:'etain-creux',continent:'lore',icon:'⚒️',name:'Confrérie de l\'Étain Creux',type:'Clan Durgoth',cat:'Clans Alliés',politique:'Guilde souterraine de neutralité absolue. <em>Contrôle l\'Aetherium brut — et donc, indirectement, tout le monde.</em>',orientation:['Économique','Neutre absolu','Forge Ae'],allies:['Charte de non-interférence avec le Trône'],enemies:['Quiconque dans les tunnels'],role:'Fournisseur incontournable d\'Aetherium forgé pour toutes les factions. Charte signée depuis quatre générations : le Trône ne descend pas dans les tunnels, la Confrérie ne monte pas à la cour. Leur neutralité n\'est pas de l\'indifférence — c\'est leur arme.',hero_name:'Drûkk Vaen, Maître-Forgeur',hero_meta:'Durgoth · 67 ans · Ae ancré (sans capacité bio-magique)',hero_desc:'A forgé le reliquaire d\'Aetherium le plus stable jamais enregistré — demi-vie étendue à 40 ans. Ne monte jamais en surface. A refusé des offres de la Tour d\'Opale, du Trône, et d\'une troisième entité inidentifiable. <em>La Confrérie l\'a élu maître par acclamation unanime pour la première fois en deux siècles.</em>'},
+  {id:'cendres-lentes',continent:'lore',icon:'🌲',name:'Cercle des Cendres Lentes',type:'Cercle Druidique',cat:'Clans Alliés',politique:'Ordre druidique apolitique. <em>Aucune autorité temporelle reconnue — leur loi est la forêt.</em>',orientation:['Nature','Ae+Si / Ae+C','Rituel'],allies:['Maison Veltharyn (accord)','Ordre des Mages (respect)'],enemies:['Quiconque exploite leurs forêts'],role:'Garde-fou environnemental et magique. Une forêt sous leur protection devient stérile si elle est violée. Pendant la mue saisonnière des Thyrak (20 jours de vulnérabilité collective), des factions tentent parfois d\'agir dans leurs zones. Le Trône s\'en abstient depuis un incident non documenté.',hero_name:'Vynara des Cendres, Voix du Cercle',hero_meta:'Thyrak · ~210 ans (estimé) · Ae+Si / Ae+C maîtresse',hero_desc:'Ses bois d\'Aetherium creux amplifient deux résonances simultanées lors des grandes cérémonies. A "maudit" une exploitation illégale de Veltharyn il y a quarante ans — la forêt est stérile à ce jour. <em>Parle rarement. Quand elle le fait, même le Trône écoute.</em>'},
+  {id:'vorek',continent:'lore',icon:'⛰️',name:'Le Clan Vörek',type:'Clan Frontalier',cat:'Clans Alliés',politique:'Clan des marches, composition mixte par nécessité. <em>Fidélité armée au Trône contre monopole sur deux cols stratégiques.</em>',orientation:['Militaire','Commercial','Mixte'],allies:['Trône Elindor','Confrérie Étain Creux'],enemies:['Maison Drael Sorn (concurrence)'],role:'Verrouille les deux cols alpins les plus stratégiques de Lore. Escorte les convois d\'Aetherium brut entre tunnels Durgoth et routes de surface. Composition Humains / Durgoth / Aevhari vue comme une nécessité pratique par le Trône — <em>"Utile mais pas présentable."</em>',hero_name:'Brann Vörek, Maître des Cols',hero_meta:'Humain · 44 ans · Tacticien de montagne, non-mage',hero_desc:'A sécurisé le col de Vaerath en pleine tempête Ae avec vingt hommes là où une compagnie entière avait échoué. Comprend les cultures Humaine et Durgoth sans appartenir pleinement à aucune. Honnit le terme "métis" et préfère "double-sang" — une distinction qu\'il impose avec une conviction tranquille.'},
+  {id:'seuil',continent:'lore',icon:'🕯️',name:'Les Enfants du Seuil',type:'Mouvement Rebelle',cat:'Rebelles & Ombres',politique:'Réseau protestataire décentralisé. <em>Contre le monopole magique et la militarisation de l\'Aetherium par le Trône.</em>',orientation:['Clandestin','Contestataire','Faible magie'],allies:['Contacts extérieurs inconnus'],enemies:['Trône Elindor','Bannière Sangrelis','Ordre des Mages'],role:'Friction basse intensité contre les institutions. Sabotage de relais d\'Aetherium, pamphlets, disparitions ciblées. Structure en cellules — aucun chef central identifié. Probablement en contact avec la faction secrète de montagne.',hero_name:'"Seuil" — Coordinateur des Cellules',hero_meta:'Race inconnue · Âge inconnu · Magie suspectée (Ae+neural ?)',hero_desc:'Personne ne l\'a vu. Les cellules reçoivent des ordres par fragments de texte chiffrés, jamais deux fois de la même main. <em>La Bannière Sangrelis a arrêté dix-sept personnes soupçonnées d\'être "Seuil". Aucune n\'était la bonne.</em>'},
+  {id:'voile-blanc',continent:'lore',icon:'🌫️',name:'Le Voile Blanc',type:'Réseau d\'Ombres',cat:'Rebelles & Ombres',politique:'Réseau Aevhari exilé de manipulation mentale. <em>Vendent leurs services à qui paie. Et à qui ne paie pas, si c\'est utile.</em>',orientation:['Ae+Neural (mental)','Infiltration','Influence'],allies:['Clients variables — identités opaques'],enemies:['Communauté Aevhari orthodoxe','Ordre des Mages'],role:'Joker politique absolu. Quand le Voile Blanc est actif dans une région, aucune décision de cour ne peut être certifiée libre. Ni le Trône ni l\'Ordre ne les ont officiellement reconnus — ce qui les rend d\'autant plus utiles à tous.',hero_name:'Aev\'ris, la Sans-Code',hero_meta:'Aevhari · 29 ans · Ae+Neural maîtresse',hero_desc:'Exilée à 17 ans pour avoir utilisé l\'influence mentale sans consentement sur un juge. Peut maintenir une suggestion douce sur une cible pendant 72 heures sans contact. Refuse les contrats de meurtre — uniquement de la manipulation. <em>Une ligne qu\'elle maintient et que personne ne comprend vraiment.</em>'},
+
+  {id:'empire-kamses',continent:'kamses',icon:'🏛️',name:'L\'Empire Kamses',type:'Pouvoir Central',cat:'Pouvoir Établi',politique:'Empire centralisé multiracial par nécessité. <em>Contrôle de l\'eau = contrôle du pouvoir. Autoritaire par tradition, pragmatique par survie.</em>',orientation:['Impérial','Hydraulique','Militaire'],allies:['Maison des Miroirs','Gardiens du Fleuve','Bannière Sangrelis (historique)'],enemies:['Dynastie Valdrith','Keth\'Ahrak','Marée Basse'],role:'Apex politique de Kamses et du corridor commercial nord. Sa faiblesse structurelle : la Dynastie Valdrith maintient une légitimité historique que l\'Empire ne peut effacer. Le nom "Valdrith" est interdit dans les documents officiels depuis dix ans — ce qui n\'a fait qu\'amplifier le mythe.',hero_name:'Khamara IV, Impératrice des Sables',hero_meta:'Humaine · 47 ans · Non-mage, administratrice de génie',hero_desc:'A unifié les tribus Grauth du corridor sud par la taxation différenciée — un instrument économique que ses généraux ne comprenaient pas. Surveille la Maison des Miroirs avec la méfiance de quelqu\'un qui <em>sait exactement ce qu\'elle lui cache.</em>'},
+  {id:'valdrith',continent:'kamses',icon:'☀️',name:'Dynastie Valdrith',type:'Ancienne Puissance',cat:'Pouvoir Établi',politique:'Maison détrônée, non détruite. <em>Dignité dorée, surveillance constante, influence réelle impossible à mesurer.</em>',orientation:['Légitimiste','Clandestin','Ae+P (alliés Kethara)'],allies:['Maison des Miroirs','Marée Basse (à leur insu)'],enemies:['Empire Kamses','Bannière Sangrelis'],role:'Légende vivante. Leur seule existence déstabilise l\'Empire. Financent discrètement des cellules de la Marée Basse sans que celles-ci sachent qui paie. Symbole : un soleil noir sur fond d\'or — officiellement interdit. Porté en secret par des milliers.',hero_name:'Serath Valdrith, l\'Héritier Silencieux',hero_meta:'Humain · 24 ans · Ae+P faible (instruit par les Kethara)',hero_desc:'Ne revendique rien publiquement. Sourit aux banquets impériaux. Répond poliment aux agents de surveillance. Chaque semaine, il mémorise la géographie des écluses de Kamses. <em>Les empires ne tombent pas d\'un coup. Ils se vident.</em>'},
+  {id:'miroirs',continent:'kamses',icon:'🪞',name:'La Maison des Miroirs',type:'Maison Kethara',cat:'Maisons & Ordres',politique:'Maison matrilinéaire Kethara. Officiellement institution culturelle. <em>En réalité : le groupe d\'influence le plus redouté de Kamses.</em>',orientation:['Ae+P Illusion','Manipulation','Diplomatique'],allies:['Dynastie Valdrith (ancienne)','Empire Kamses (utilitaire)'],enemies:['Keth\'Ahrak (imperméables)','Gardiens du Fleuve'],role:'Simulations de présences, altérations de souvenirs récents, ambassadeurs fictifs. L\'Empire les craint plus qu\'il ne les contrôle. Règle interne : aucune illusion contre un autre membre. <em>Règle la plus violée de l\'institution.</em>',hero_name:'Lyara des Reflets, Première Voix',hero_meta:'Kethara · 61 ans · Ae+P maîtresse absolue',hero_desc:'A négocié trois traités commerciaux en représentant simultanément un personnage fictif lors de chacun. Les traités tiennent. Les personnages n\'ont jamais existé. <em>"Tous mes regrets sont dans des pièces que j\'ai oublié de fermer."</em>'},
+  {id:'gardiens-fleuve',continent:'kamses',icon:'🌊',name:'Les Gardiens du Fleuve',type:'Guilde',cat:'Maisons & Ordres',politique:'Guilde technique hydraulique semi-secrète. <em>Ne prend pas parti. Coupe l\'eau si on les attaque.</em>',orientation:['Hydraulique','Neutre','Technique'],allies:['Empire Kamses (dépendance)','Keth\'Ahrak (informateurs)'],enemies:['Quiconque menace les écluses'],role:'Contrôle physique des artères vitales de Kamses. Une guilde technique rendue indispensable par l\'inaction structurelle de l\'Empire. <em>"L\'eau ne choisit pas son lit. Nous, si."</em>',hero_name:'Uras Vel-Khen, Maître des Écluses',hero_meta:'Humain · 58 ans · Non-mage, ingénieur hydraulique',hero_desc:'A redirigé le cours du fleuve central sur 12 kilomètres pour sauver une oasis condamnée — jugé impossible par trois ingénieurs impériaux. L\'Empire lui a offert un titre de noblesse. <em>Il a refusé. "Je préfère l\'eau au titre."</em>'},
+  {id:'keth-ahrak',continent:'kamses',icon:'🏜️',name:'Les Keth\'Ahrak',type:'Confédération Nomade',cat:'Nomades & Clans',politique:'Confédération tribale Grauth. <em>Ne reconnaissent pas l\'Empire — ils l\'ignorent. Trois campagnes militaires n\'ont rien changé.</em>',orientation:['Nomade','Quasi-zéro magie','Survie extrême'],allies:['Personne — indépendance totale'],enemies:['Empire Kamses','Bannière Sangrelis (historique)'],role:'Détenteurs de ressources et d\'informations climatiques qu\'aucune autre faction ne peut obtenir. Échangent minéraux rares et météo contre neutralité. Leur résistance à la chaleur et leur endurance font d\'eux des forces naturelles dans le désert profond.',hero_name:'Varka des Étoiles, Guide de la Confédération',hero_meta:'Grauth · 39 ans · Résistance thermique exceptionnelle, non-mage',hero_desc:'Mémorise les routes des étoiles de quatre constellations selon la saison. A refusé une proposition de l\'Impératrice Khamara IV avec assez de courtoisie pour qu\'elle ne l\'attaque pas et assez de fermeté pour qu\'elle comprenne. A survécu seule au pôle sud aride pendant trente jours.'},
+  {id:'sek-varas',continent:'kamses',icon:'🦎',name:'Les Sek\'Varas',type:'Secte Nomade',cat:'Nomades & Clans',politique:'Secte Sauridh dissidente. <em>La mort est un seuil sacré, non un outil — opposition doctrinale à l\'Ordre Noxferis.</em>',orientation:['Ae+N (communion)','Sacré','Nomade'],allies:['Intermédiaires de succession','Gardiens du Fleuve (ponctuel)'],enemies:['Ordre Noxferis (Lore)','Empire Kamses'],role:'Faction indispensable dans les affaires de succession compliquées — communiquent avec les morts pour vérifier testaments, serments et mémoires. Apolitiques par doctrine. Leur seul ennemi institutionnel : les Noxferis.',hero_name:'Thessara-Ven, Passeuse du Seuil',hero_meta:'Sauridh · 67 ans · Ae+N maîtresse (communion)',hero_desc:'A résolu une crise de succession menaçant une guerre civile provinciale en deux heures de communion avec le seigneur défunt. N\'a pas demandé d\'argent. A demandé le droit de passage sur trois routes sans taxation. <em>L\'Empire a accepté.</em>'},
+  {id:'maree-basse',continent:'kamses',icon:'💧',name:'La Marée Basse',type:'Réseau Rebelle',cat:'Ombres & Dissidents',politique:'Résistance populaire diffuse. <em>Pas d\'idéologie claire — une colère commune contre l\'impôt impérial.</em>',orientation:['Clandestin','Faible magie','Contestataire'],allies:['Dynastie Valdrith (sans le savoir)','Keth\'Ahrak (ponctuel)'],enemies:['Empire Kamses','Bannière Sangrelis'],role:'Bruit de fond permanent de l\'Empire. Pas assez organisée pour renverser quoi que ce soit — assez pour rendre toute expansion coûteuse. Des cellules reçoivent un financement Valdrith sans en connaître la source.',hero_name:'Rhen Deux-Mains, Voix des Canaux',hero_meta:'Humain · 31 ans · Non-mage, ancien ouvrier des écluses',hero_desc:'Renvoyé des Gardiens du Fleuve pour avoir refusé de couper l\'eau à un village lors d\'une punition collective. A réorganisé trois cellules sans jamais les rencontrer — par marques sur les berges du fleuve. <em>Recherché par l\'Empire depuis huit mois.</em>'},
+  {id:'guetteurs-sourds',continent:'kamses',icon:'🕳️',name:'Les Guetteurs Sourds',type:'Faction Veth\'ari',cat:'Ombres & Dissidents',politique:'Réseau de surveillance souterrain Veth\'ari. <em>Aucun contact délibéré avec la surface. Savent tout. Ne montrent rien.</em>',orientation:['Technologie Ae','Isolationniste','Observateur pur'],allies:['Inconnu — ou aucun'],enemies:['Quiconque approche les tunnels'],role:'Rumeur pour les factions de surface. Certitude pour le lecteur. Réseau de capteurs Ae cristallins enregistrant chaque vibration sismique, chaque déplacement de troupe. S\'ils ont des agents infiltrés en surface, personne ne les a identifiés comme tels.',hero_name:'Le Veth\'mara Sans-Nom',hero_meta:'Veth\'ari · Âge inconnu · Caste Veth\'mara (coordinatrice)',hero_desc:'Le seul à avoir laissé une trace en surface — une marque cristalline Ae dans une galerie proche de Kamses. <em>Message ou accident ? Aucune faction n\'a su interpréter le signe.</em>'}
+];
+
+/* ══════════════════════════════════
+   ÉTAT
+══════════════════════════════════ */
+let currentContinent = 'all';
+let currentFaction   = null;
+
+/* ══════════════════════════════════
+   GÉNÈRE TOUTES LES CARTES (une seule fois)
+══════════════════════════════════ */
+function buildCards() {
+  const container = document.getElementById('cardsContainer');
+  factions.forEach(f => {
+    const k = f.continent === 'kamses';
+    const kc = k ? ' k' : '';
+
+    const card = document.createElement('div');
+    card.className = 'info-card';
+    card.id = 'card-' + f.id;
+
+    card.innerHTML = `
+      <div class="info-card-header">
+        <div class="info-card-icon${kc}">${f.icon}</div>
+        <div>
+          <div class="info-card-name">${f.name}</div>
+          <div class="info-card-type${kc}">${f.type} — ${k ? 'Empire Kamses' : 'Pays de Lore'}</div>
+        </div>
+      </div>
+
+      <div class="info-divider${kc}"></div>
+
+      <div class="section-label${kc}">Politique appliquée</div>
+      <p class="info-desc">${f.politique}</p>
+
+      <div class="stats-grid">
+        <div class="stat-box full${kc}">
+          <div class="stat-label${kc}">Orientation</div>
+          <div class="stat-value">${f.orientation.join(' · ')}</div>
+        </div>
+        <div class="stat-box${kc}">
+          <div class="stat-label${kc}">Catégorie</div>
+          <div class="stat-value">${f.cat}</div>
+        </div>
+        <div class="stat-box${kc}">
+          <div class="stat-label${kc}">Territoire</div>
+          <div class="stat-value">${k ? 'Empire Kamses' : 'Pays de Lore'}</div>
+        </div>
+      </div>
+
+      <div class="section-label${kc}">Relations</div>
+      <div class="relations-grid">
+        <div class="rel-block rel-positive">
+          <div class="rel-block-label">Alliés</div>
+          ${f.allies.map(a => `<div class="rel-item">${a}</div>`).join('')}
+        </div>
+        <div class="rel-block rel-negative">
+          <div class="rel-block-label">Tensions</div>
+          ${f.enemies.map(e => `<div class="rel-item">${e}</div>`).join('')}
+        </div>
+      </div>
+
+      <div class="info-lore${kc}">
+        <div class="info-lore-label${kc}">✦ Rôle au sein du pouvoir</div>
+        <div class="info-lore-text">${f.role}</div>
+      </div>
+
+      <div class="section-label${kc}" style="margin-top:6px">Héros de faction</div>
+      <div class="hero-block${kc}">
+        <div class="hero-name">${f.hero_name}</div>
+        <div class="hero-meta">${f.hero_meta}</div>
+        <div class="hero-desc">${f.hero_desc}</div>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+/* ══════════════════════════════════
+   SIDEBAR
+══════════════════════════════════ */
+function renderSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  sidebar.innerHTML = '';
+
+  const filtered = currentContinent === 'all'
+    ? factions
+    : factions.filter(f => f.continent === currentContinent);
+
+  const groups = {};
+  filtered.forEach(f => {
+    if (!groups[f.cat]) groups[f.cat] = [];
+    groups[f.cat].push(f);
+  });
+
+  Object.entries(groups).forEach(([cat, list]) => {
+    const label = document.createElement('div');
+    label.className = 'sidebar-cat-label';
+    label.textContent = cat;
+    sidebar.appendChild(label);
+
+    list.forEach(f => {
+      const k = f.continent === 'kamses';
+      const btn = document.createElement('button');
+      btn.className = `faction-btn${f.id === currentFaction ? ' active' : ''}${k ? ' k' : ''}`;
+      btn.innerHTML = `<span class="btn-name">${f.icon} ${f.name}</span><span class="btn-type">${f.type}</span>`;
+      btn.addEventListener('click', () => selectFaction(f.id));
+      sidebar.appendChild(btn);
+    });
+  });
+}
+
+/* ══════════════════════════════════
+   SÉLECTION
+══════════════════════════════════ */
+function selectFaction(id) {
+  currentFaction = id;
+  renderSidebar();
+
+  document.getElementById('infoWelcome').style.display = 'none';
+  document.querySelectorAll('.info-card').forEach(c => c.classList.remove('active'));
+  document.getElementById('card-' + id).classList.add('active');
+  document.getElementById('infoPanel').scrollTop = 0;
+}
+
+/* ══════════════════════════════════
+   FILTRE CONTINENT
+══════════════════════════════════ */
+function setContinent(c, btn) {
+  currentContinent = c;
+  currentFaction   = null;
+
+  document.querySelectorAll('.ctab').forEach(b => b.className = 'ctab');
+  btn.classList.add(c === 'all' ? 'active' : c === 'lore' ? 'active-lore' : 'active-kamses');
+
+  document.getElementById('infoWelcome').style.display = '';
+  document.querySelectorAll('.info-card').forEach(c => c.classList.remove('active'));
+  renderSidebar();
+}
+
+/* ══════════════════════════════════
+   INIT
+══════════════════════════════════ */
+buildCards();
+renderSidebar();
+</script>
+</body>
+</html>
