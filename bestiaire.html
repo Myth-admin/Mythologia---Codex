@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mythologia — Bestiaire</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:            #0a1520;
+    --bg-card:       rgba(11,20,36,0.75);
+    --bg-card-h:     rgba(14,24,44,0.9);
+    --border-dim:    rgba(167,139,250,0.1);
+    --border-mid:    rgba(167,139,250,0.25);
+    --border-ae:     rgba(167,139,250,0.4);
+    --ae-glow:       #6b3fa0;
+    --ae-bright:     #a78bfa;
+    --ae-pale:       rgba(107,63,160,0.15);
+    --gold:          #c9a84c;
+    --gold-bright:   #e8cc7a;
+    --gold-pale:     rgba(201,168,76,0.1);
+    --text-main:     #e8e4f0;
+    --text-body:     rgba(232,228,240,0.72);
+    --text-dim:      rgba(167,139,250,0.45);
+    --ice-blue:      #7ab8e8;
+    --sand-amber:    #d4a055;
+    --jungle-green:  #4a9e6a;
+    --nav-h:         56px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body { background: var(--bg); color: var(--text-main); font-family: 'EB Garamond', serif; font-size: 16px; }
+
+  /* ── CANVAS ── */
+  #starCanvas { position: fixed; inset: 0; z-index: 0; }
+  .overlay { position: fixed; inset: 0; background: radial-gradient(ellipse at center, rgba(10,21,32,0.3) 0%, rgba(10,21,32,0.85) 100%); z-index: 1; pointer-events: none; }
+
+  /* ── NAV ── */
+  .site-nav {
+    position: fixed; top: 0; left: 0; right: 0; height: var(--nav-h);
+    z-index: 200; display: flex; align-items: center; gap: 20px; padding: 0 36px;
+    background: linear-gradient(180deg, rgba(10,21,32,0.97) 0%, transparent 100%);
+  }
+  .site-nav a { font-family: 'Cinzel', serif; font-size: 0.7rem; letter-spacing: 0.3em; color: var(--ae-bright); text-decoration: none; text-transform: uppercase; opacity: 0.7; transition: opacity .2s; }
+  .site-nav a:hover { opacity: 1; }
+  .nav-sep { color: rgba(167,139,250,0.3); }
+  .nav-curr { font-family: 'Cinzel', serif; font-size: 0.7rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--text-main); }
+
+  /* ══════════════════════════
+     PAGE STRUCTURE
+  ══════════════════════════ */
+  .page {
+    position: relative; z-index: 10; height: 100vh;
+    display: flex; flex-direction: column;
+  }
+
+  /* ── HEADER ── */
+  .page-header {
+    flex-shrink: 0; text-align: center;
+    padding: 68px 20px 14px;
+    animation: fadeDown 1s ease both;
+  }
+  @keyframes fadeDown { from{opacity:0;transform:translateY(-20px)} to{opacity:1;transform:none} }
+
+  .page-header h1 {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(1.4rem, 3vw, 2.4rem);
+    color: var(--text-main);
+    text-shadow: 0 0 40px rgba(167,139,250,0.5), 0 0 80px rgba(167,139,250,0.2);
+    letter-spacing: 0.1em; margin-bottom: 6px;
+  }
+  .sous-titre {
+    font-family: 'Cinzel', serif; font-size: 0.72rem;
+    letter-spacing: 0.5em; color: var(--ae-bright); text-transform: uppercase; opacity: 0.7;
+  }
+  .ornement {
+    display: flex; align-items: center; gap: 16px;
+    margin: 12px auto 0; width: min(400px, 80vw);
+  }
+  .ornement-line  { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
+  .ornement-gem   { width: 7px; height: 7px; background: var(--gold); transform: rotate(45deg); box-shadow: 0 0 10px var(--gold); flex-shrink: 0; }
+  .ornement-gem-s { width: 4px; height: 4px; background: var(--gold); transform: rotate(45deg); opacity: 0.5; flex-shrink: 0; }
+
+  /* ── STATS BAR ── */
+  .stats-strip {
+    flex-shrink: 0;
+    display: flex; justify-content: center; gap: 2.5rem; flex-wrap: wrap;
+    padding: 8px 36px;
+    border-bottom: 1px solid var(--border-dim);
+    animation: fadeDown 1s 0.1s ease both;
+  }
+  .stat-item { text-align: center; }
+  .stat-value { font-family: 'Cinzel', serif; font-size: 1.1rem; font-weight: 700; color: var(--gold-bright); display: block; }
+  .stat-value.ae { color: var(--ae-bright); }
+  .stat-label { font-family: 'Cinzel', serif; font-size: 0.52rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-dim); }
+
+  /* ── BIOME TABS ── */
+  .biome-tabs {
+    flex-shrink: 0;
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 5px;
+    padding: 10px 36px 10px;
+    border-bottom: 1px solid var(--border-dim);
+    animation: fadeIn 1s 0.2s ease both;
+  }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+  .btab {
+    font-family: 'Cinzel', serif; font-size: 0.6rem; letter-spacing: 0.25em;
+    text-transform: uppercase; padding: 5px 14px;
+    background: transparent; border: 1px solid var(--border-dim);
+    color: var(--text-dim); cursor: pointer; transition: all .2s; border-radius: 2px;
+  }
+  .btab:hover { color: var(--ae-bright); border-color: var(--border-ae); }
+  .btab.active      { color: var(--gold); border-color: var(--gold); background: var(--gold-pale); }
+  .btab.active-lore { color: var(--ae-bright); border-color: var(--ae-bright); background: var(--ae-pale); }
+  .btab.active-passage { color: var(--ice-blue); border-color: var(--ice-blue); background: rgba(122,184,232,0.1); }
+  .btab.active-desert  { color: var(--sand-amber); border-color: var(--sand-amber); background: rgba(212,160,85,0.1); }
+  .btab.active-jungle  { color: var(--jungle-green); border-color: var(--jungle-green); background: rgba(74,158,106,0.1); }
+  .btab.active-underground { color: #c04a60; border-color: #c04a60; background: rgba(192,74,96,0.1); }
+  .btab.active-ocean   { color: #5a9fd4; border-color: #5a9fd4; background: rgba(90,159,212,0.1); }
+  .btab.active-poles   { color: #9ee870; border-color: #9ee870; background: rgba(158,232,112,0.1); }
+  .btab.active-mythique{ color: var(--gold-bright); border-color: var(--gold); background: var(--gold-pale); }
+
+  /* ══════════════════════════
+     CONTENT AREA
+  ══════════════════════════ */
+  .content-area {
+    flex: 1; min-height: 0;
+    display: flex; overflow: hidden;
+    animation: fadeIn 1s 0.3s ease both;
+  }
+
+  /* ── SIDEBAR ── */
+  .creature-list {
+    width: 250px; flex-shrink: 0;
+    overflow-y: auto; border-right: 1px solid var(--border-dim);
+    padding-bottom: 40px;
+  }
+  .creature-list::-webkit-scrollbar { width: 4px; }
+  .creature-list::-webkit-scrollbar-track { background: transparent; }
+  .creature-list::-webkit-scrollbar-thumb { background: rgba(167,139,250,0.18); border-radius: 2px; }
+
+  .sidebar-biome-label {
+    font-family: 'Cinzel', serif; font-size: 0.52rem; letter-spacing: 0.4em;
+    text-transform: uppercase; padding: 14px 16px 5px;
+    border-bottom: 1px solid var(--border-dim);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .sidebar-biome-label .lbl-text { opacity: 0.7; }
+
+  .creature-btn {
+    width: 100%; padding: 9px 16px;
+    background: transparent; border: none;
+    border-bottom: 1px solid rgba(167,139,250,0.05);
+    border-left: 2px solid transparent;
+    text-align: left; cursor: pointer;
+    display: flex; flex-direction: column; gap: 2px;
+    transition: background .18s, border-left-color .18s;
+  }
+  .creature-btn:hover { background: rgba(107,63,160,0.1); }
+  .creature-btn.active { background: rgba(107,63,160,0.16); }
+
+  .cbtn-name {
+    font-family: 'Cinzel', serif; font-size: 0.68rem; letter-spacing: 0.04em;
+    color: rgba(232,228,240,0.7); line-height: 1.3; transition: color .18s;
+  }
+  .creature-btn:hover .cbtn-name, .creature-btn.active .cbtn-name { color: var(--text-main); }
+
+  .cbtn-latin { font-size: 0.74rem; color: var(--text-dim); font-style: italic; }
+
+  .cbtn-danger {
+    display: flex; gap: 2px; margin-top: 2px;
+  }
+  .cdot { width: 5px; height: 5px; border-radius: 1px; transform: rotate(45deg); }
+  .cdot.filled { background: currentColor; }
+  .cdot.empty  { background: transparent; border: 1px solid currentColor; opacity: 0.3; }
+
+  /* Biome accent colors on active */
+  .creature-btn.active[data-biome="lore"]        { border-left-color: var(--ae-bright); }
+  .creature-btn.active[data-biome="passage"]     { border-left-color: var(--ice-blue); }
+  .creature-btn.active[data-biome="desert"]      { border-left-color: var(--sand-amber); }
+  .creature-btn.active[data-biome="jungle"]      { border-left-color: var(--jungle-green); }
+  .creature-btn.active[data-biome="underground"] { border-left-color: #c04a60; }
+  .creature-btn.active[data-biome="ocean"]       { border-left-color: #5a9fd4; }
+  .creature-btn.active[data-biome="poles"]       { border-left-color: #9ee870; }
+  .creature-btn.active[data-biome="mythique"]    { border-left-color: var(--gold); }
+
+  /* Danger dot color per biome */
+  .creature-btn[data-biome="lore"]        .cbtn-danger { color: var(--ae-bright); }
+  .creature-btn[data-biome="passage"]     .cbtn-danger { color: var(--ice-blue); }
+  .creature-btn[data-biome="desert"]      .cbtn-danger { color: var(--sand-amber); }
+  .creature-btn[data-biome="jungle"]      .cbtn-danger { color: var(--jungle-green); }
+  .creature-btn[data-biome="underground"] .cbtn-danger { color: #c04a60; }
+  .creature-btn[data-biome="ocean"]       .cbtn-danger { color: #5a9fd4; }
+  .creature-btn[data-biome="poles"]       .cbtn-danger { color: #9ee870; }
+  .creature-btn[data-biome="mythique"]    .cbtn-danger { color: var(--gold-bright); }
+
+  /* ── DETAIL PANEL ── */
+  .info-panel {
+    flex: 1; overflow-y: auto; padding: 28px 40px 60px;
+  }
+  .info-panel::-webkit-scrollbar { width: 4px; }
+  .info-panel::-webkit-scrollbar-track { background: transparent; }
+  .info-panel::-webkit-scrollbar-thumb { background: rgba(167,139,250,0.18); border-radius: 2px; }
+
+  .info-welcome {
+    height: 100%; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; opacity: 0.4; gap: 14px;
+  }
+  .info-welcome-icon { font-size: 2.5rem; }
+  .info-welcome-text { font-family: 'Cinzel', serif; font-size: 0.72rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--ae-bright); line-height: 2; }
+
+  /* ── CREATURE DETAIL DISPLAY ── */
+  .detail-view { display: none; animation: slideIn .35s ease; }
+  .detail-view.active { display: block; }
+
+  @keyframes slideIn { from{opacity:0;transform:translateX(14px)} to{opacity:1;transform:none} }
+
+  /* Biome accent stripe at top */
+  .detail-stripe { height: 2px; width: 100%; margin-bottom: 22px; }
+  .stripe-lore        { background: linear-gradient(90deg, transparent, var(--ae-bright), transparent); }
+  .stripe-passage     { background: linear-gradient(90deg, transparent, var(--ice-blue), transparent); }
+  .stripe-desert      { background: linear-gradient(90deg, transparent, var(--sand-amber), transparent); }
+  .stripe-jungle      { background: linear-gradient(90deg, transparent, var(--jungle-green), transparent); }
+  .stripe-underground { background: linear-gradient(90deg, transparent, #c04a60, transparent); }
+  .stripe-ocean       { background: linear-gradient(90deg, transparent, #5a9fd4, transparent); }
+  .stripe-poles       { background: linear-gradient(90deg, transparent, #9ee870, transparent); }
+  .stripe-mythique    { background: linear-gradient(90deg, transparent, var(--gold), transparent); }
+
+  /* Detail header */
+  .detail-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 18px; padding-bottom: 16px; border-bottom: 1px solid var(--border-dim); }
+  .detail-name { font-family: 'Cinzel Decorative', serif; font-size: clamp(1.1rem, 2.5vw, 1.6rem); color: var(--text-main); text-shadow: 0 0 20px rgba(167,139,250,0.2); line-height: 1.2; margin-bottom: 5px; }
+  .detail-latin { font-style: italic; font-size: 0.92rem; color: var(--text-dim); font-family: 'EB Garamond', serif; }
+  .detail-biome-tag { font-family: 'Cinzel', serif; font-size: 0.58rem; letter-spacing: 0.3em; text-transform: uppercase; padding: 4px 12px; border: 1px solid; border-radius: 2px; white-space: nowrap; flex-shrink: 0; margin-top: 4px; }
+
+  /* Biome tag colors */
+  .btag-lore        { color: var(--ae-bright); border-color: var(--ae-glow); background: var(--ae-pale); }
+  .btag-passage     { color: var(--ice-blue); border-color: rgba(122,184,232,0.4); background: rgba(122,184,232,0.08); }
+  .btag-desert      { color: var(--sand-amber); border-color: rgba(212,160,85,0.4); background: rgba(212,160,85,0.08); }
+  .btag-jungle      { color: var(--jungle-green); border-color: rgba(74,158,106,0.4); background: rgba(74,158,106,0.08); }
+  .btag-underground { color: #c04a60; border-color: rgba(192,74,96,0.4); background: rgba(192,74,96,0.08); }
+  .btag-ocean       { color: #5a9fd4; border-color: rgba(90,159,212,0.4); background: rgba(90,159,212,0.08); }
+  .btag-poles       { color: #9ee870; border-color: rgba(158,232,112,0.4); background: rgba(158,232,112,0.08); }
+  .btag-mythique    { color: var(--gold-bright); border-color: var(--gold); background: var(--gold-pale); }
+
+  /* Danger display in detail */
+  .detail-danger { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; flex-shrink: 0; margin-top: 2px; }
+  .danger-label-d { font-family: 'Cinzel', serif; font-size: 0.52rem; letter-spacing: 0.2em; color: var(--text-dim); text-transform: uppercase; }
+  .danger-pips-d { display: flex; gap: 3px; }
+  .pip-d { width: 9px; height: 9px; border-radius: 1px; transform: rotate(45deg); }
+  .pip-d.filled { background: currentColor; }
+  .pip-d.empty  { background: transparent; border: 1px solid currentColor; opacity: 0.3; }
+  .danger-1-color { color: #4a9e4a; }
+  .danger-2-color { color: #9eb83a; }
+  .danger-3-color { color: #c49a30; }
+  .danger-4-color { color: #c05a28; }
+  .danger-5-color { color: #b01a30; }
+
+  /* Tags */
+  .detail-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 18px; }
+  .tag { font-family: 'Cinzel', serif; font-size: 0.58rem; letter-spacing: 0.15em; text-transform: uppercase; padding: 0.15rem 0.55rem; border-radius: 2px; border: 1px solid; }
+  .tag-size    { border-color: var(--border-mid); color: var(--text-dim); }
+  .tag-magic   { border-color: rgba(107,63,160,0.5); color: var(--ae-bright); background: var(--ae-pale); }
+  .tag-social  { border-color: rgba(74,158,106,0.4); color: #7ab870; }
+  .tag-time    { border-color: rgba(201,168,76,0.3); color: #c49a30; }
+
+  /* Section labels */
+  .card-section-title {
+    font-family: 'Cinzel', serif; font-size: 0.6rem; letter-spacing: 0.28em;
+    text-transform: uppercase; color: var(--text-dim); margin: 14px 0 5px;
+  }
+  .card-text { font-size: 1rem; color: var(--text-body); line-height: 1.75; }
+
+  /* Flux block */
+  .card-magic-row {
+    margin-top: 14px; padding: 10px 14px;
+    background: rgba(107,63,160,0.07);
+    border-left: 2px solid var(--border-ae);
+    border-radius: 0 4px 4px 0;
+  }
+  .card-magic-row .card-section-title { margin-top: 0; }
+  .card-magic-row .card-text { color: rgba(167,139,250,0.75); font-style: italic; }
+
+  /* Size row */
+  .card-size-row {
+    display: flex; flex-wrap: wrap; gap: 1.5rem; margin-top: 14px; padding-top: 12px;
+    border-top: 1px solid var(--border-dim); font-size: 0.88rem; color: var(--text-dim);
+  }
+  .size-item span { color: var(--text-main); }
+
+  /* ── HIDDEN CREATURE DATA ── */
+  #creature-data { display: none; }
+</style>
+</head>
+<body>
+
+<canvas id="starCanvas"></canvas>
+<div class="overlay"></div>
+
+<nav class="site-nav">
+  <a href="index.html">← Mythologia</a>
+  <span class="nav-sep">✦</span>
+  <span class="nav-curr">Bestiaire</span>
+</nav>
+
+<div class="page">
+
+  <!-- EN-TÊTE -->
+  <div class="page-header">
+    <h1>BESTIAIRE</h1>
+    <p class="sous-titre">Faune connue &amp; créatures du Flux</p>
+    <div class="ornement">
+      <div class="ornement-line"></div>
+      <div class="ornement-gem-s"></div>
+      <div class="ornement-gem"></div>
+      <div class="ornement-gem-s"></div>
+      <div class="ornement-line"></div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-strip">
+    <div class="stat-item"><span class="stat-value">41</span><span class="stat-label">Espèces répertoriées</span></div>
+    <div class="stat-item"><span class="stat-value">8</span><span class="stat-label">Biomes couverts</span></div>
+    <div class="stat-item"><span class="stat-value">1,9g</span><span class="stat-label">Gravité planétaire</span></div>
+    <div class="stat-item"><span class="stat-value">~447</span><span class="stat-label">Jours par an</span></div>
+    <div class="stat-item"><span class="stat-value ae">15</span><span class="stat-label">Espèces Ae-actives</span></div>
+  </div>
+
+  <!-- TABS BIOMES -->
+  <div class="biome-tabs">
+    <button class="btab active"           onclick="setBiome('all',this)">Tous les biomes</button>
+    <button class="btab"                  onclick="setBiome('lore',this)">⚔ Pays de Lore</button>
+    <button class="btab"                  onclick="setBiome('passage',this)">❄ Passage Impossible</button>
+    <button class="btab"                  onclick="setBiome('desert',this)">☀ Désert / Kamses</button>
+    <button class="btab"                  onclick="setBiome('jungle',this)">🌿 Jungle C3</button>
+    <button class="btab"                  onclick="setBiome('underground',this)">⬇ Souterrain</button>
+    <button class="btab"                  onclick="setBiome('ocean',this)">≋ Océan Infini</button>
+    <button class="btab"                  onclick="setBiome('poles',this)">◎ Pôles</button>
+    <button class="btab"                  onclick="setBiome('mythique',this)">✦ Créatures Mythiques</button>
+  </div>
+
+  <!-- CONTENU -->
+  <div class="content-area">
+
+    <!-- SIDEBAR -->
+    <div class="creature-list" id="sidebar"></div>
+
+    <!-- PANNEAU DÉTAIL -->
+    <div class="info-panel" id="infoPanel">
+      <div class="info-welcome" id="infoWelcome">
+        <div class="info-welcome-icon">🐉</div>
+        <div class="info-welcome-text">Sélectionnez une créature<br>pour consulter sa fiche</div>
+      </div>
+      <div id="detailContainer"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     DONNÉES CACHÉES — FICHES CRÉATURES
+═══════════════════════════════════════════════ -->
+<div id="creature-data">
+
+  <div class="creature-card" data-biome="lore">
+    <div class="card-names"><div class="card-name">Corven Noir</div><div class="card-latin">Corvus gravitalis</div></div>
+    <div class="danger-badge danger-3-color"><div class="danger-pips"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip empty"></div><div class="pip empty"></div></div></div>
+    <div class="card-body">
+      <div class="card-tags"><span class="tag tag-size">1,2 m au garrot</span><span class="tag tag-size">Envergure 2,4 m</span><span class="tag tag-social">Meute de 4–9</span><span class="tag tag-time">Crépusculaire</span></div>
+      <p class="card-section-title">Morphologie</p>
+      <p class="card-text">Corvide géant à la silhouette trapue, rendu robuste par la gravité de 1,9g. Les ailes puissantes et courtes permettent des rafales de vol en piqué mais pas le vol soutenu — le Corven est principalement terrestre, chassant au sol à grande vitesse sur ses pattes arrière développées. Le plumage est d'un noir huileux aux reflets d'indigo, tirant sur le bleu métallique à la lumière de Séraph.</p>
+      <p class="card-section-title">Comportement</p>
+      <p class="card-text">Intelligence sociale remarquable. Les meutes développent des tactiques coordonnées, certains individus jouant le rôle d'appelant pendant que d'autres encerclent la proie. Les membres de l'Ordre ont documenté une capacité à mémoriser les visages humains sur plusieurs années et à se venger d'individus leur ayant causé du tort.</p>
+      <div class="card-magic-row"><p class="card-section-title">Flux d'Ombrath</p><p class="card-text">Aucune résonance Aetherium active. Cependant, les Corvens noirs sont attirés par les dépôts d'Aetherium brut et les collectionnent dans leurs nids, probablement en raison d'un instinct magnétique primitif. Les nids anciens constituent parfois des gisements secondaires d'Aetherium.</p></div>
+      <div class="card-size-row"><div class="size-item">Poids : <span>38–65 kg</span></div><div class="size-item">Espérance : <span>~40 ans</span></div></div>
+    </div>
+  </div>
+
+  <div class="creature-card" data-biome="lore">
+    <div class="card-names"><div class="card-name">Glaciel</div><div class="card-latin">Ursolupos silvestris</div></div>
+    <div class="danger-badge danger-4-color"><div class="danger-pips"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip empty"></div></div></div>
+    <div class="card-body">
+      <div class="card-tags"><span class="tag tag-size">2,1 m au garrot</span><span class="tag tag-size">Masse 420–680 kg</span><span class="tag tag-social">Solitaire</span><span class="tag tag-time">Nocturne / hivernal</span></div>
+      <p class="card-section-title">Morphologie</p>
+      <p class="card-text">Prédateur apex des forêts de Lore, le Glaciel combine la morphologie d'un ours et d'un loup — corps massif monté sur quatre pattes musclées extrêmement courtes et larges, parfaitement adaptées à 1,9g. Sa fourrure dense, gris-blanc en hiver et gris ardoise en été, lui confère un camouflage naturel dans les forêts brumeuses. Les mâchoires exercent une pression de 1 400 kg/cm², assez pour broyer les os les plus solides connus.</p>
+      <p class="card-section-title">Comportement</p>
+      <p class="card-text">Solitaire et territorial. Le Glaciel délimite un territoire de 200 à 400 km² selon la densité de proies. Hiberne pendant les 135 jours d'hiver dans des tanières profondes. Le printemps violent — période de transition de 30 jours — marque sa saison de chasse la plus intense. Évite les zones humaines établies depuis des siècles, mais s'approche des villages en période de disette.</p>
+      <div class="card-magic-row"><p class="card-section-title">Flux d'Ombrath</p><p class="card-text">Résonance passive Ae+Si (terre). Les Glaciels dorment préférentiellement sur des filons d'Aetherium silicaté, et leurs griffes, après des années de contact, présentent de légers dépôts cristallins. Les plus vieux individus laissent des empreintes légèrement lumineuses dans la terre molle.</p></div>
+      <div class="card-size-row"><div class="size-item">Longévité : <span>60–90 ans</span></div><div class="size-item">Statut : <span>Espèce protégée (Ordre)</span></div></div>
+    </div>
+  </div>
+
+  <div class="creature-card" data-biome="lore">
+    <div class="card-names"><div class="card-name">Serpent d'Opale</div><div class="card-latin">Ophidius aetherialis</div></div>
+    <div class="danger-badge danger-2-color"><div class="danger-pips"><div class="pip filled"></div><div class="pip filled"></div><div class="pip empty"></div><div class="pip empty"></div><div class="pip empty"></div></div></div>
+    <div class="card-body">
+      <div class="card-tags"><span class="tag tag-size">3–6 m de long</span><span class="tag tag-social">Solitaire</span><span class="tag tag-magic">Ae-actif</span><span class="tag tag-time">Diurne</span></div>
+      <p class="card-section-title">Morphologie</p>
+      <p class="card-text">Serpent constrictor non-venimeux aux écailles iridescentes blanc-opale traversées de veinures violettes visibles à l'œil nu. Les écailles contiennent des micro-inclusions d'Aetherium bonded avec de l'oxygène (Ae+O), qui lui confèrent cet aspect lumineux caractéristique, surtout au crépuscule. Le corps est nettement plus trapu qu'un serpent terrestre équivalent, avec un diamètre thoracique important pour résister à 1,9g.</p>
+      <p class="card-section-title">Comportement</p>
+      <p class="card-text">Holarctique de Lore, particulièrement concentré dans un rayon de 80 km autour de la Tour d'Opale, là où les dépôts d'Aetherium de surface sont les plus denses. L'Ordre le considère comme un indicateur naturel de filons d'Aetherium. Non agressif envers les humains sauf en cas de menace directe.</p>
+      <div class="card-magic-row"><p class="card-section-title">Flux d'Ombrath</p><p class="card-text">Résonance active Ae+O passive — le Serpent d'Opale émet une légère chaleur constante via son Aetherium cutané, et peut projeter de brèves impulsions lumineuses lors de stress intense. Les mages de bas rang utilisent ses mues d'écailles comme réactifs alchimiques (Ae+Au).</p></div>
+      <div class="card-size-row"><div class="size-item">Poids : <span>12–28 kg</span></div><div class="size-item">Usage : <span>Réactif alchimique</span></div></div>
+    </div>
+  </div>
+
+  <div class="creature-card" data-biome="lore">
+    <div class="card-names"><div class="card-name">Grand Thyrak des Forêts</div><div class="card-latin">Cervinus aetherialis silvestris</div></div>
+    <div class="danger-badge danger-1-color"><div class="danger-pips"><div class="pip filled"></div><div class="pip empty"></div><div class="pip empty"></div><div class="pip empty"></div><div class="pip empty"></div></div></div>
+    <div class="card-body">
+      <div class="card-tags"><span class="tag tag-size">1,4 m au garrot</span><span class="tag tag-social">Troupeau 15–40</span><span class="tag tag-magic">Ae-actif</span><span class="tag tag-time">Crépusculaire / saison chaude</span></div>
+      <p class="card-section-title">Morphologie</p>
+      <p class="card-text">Ancêtre probable de la race Thyrak, ce cervidé massif aux pattes courtes porte des bois creux d'Aetherium pur qui poussent et tombent annuellement lors du Grand Rituel de Mue (automne). Les bois mâtures créent des harmoniques audibles pendant les nuits calmes — un son décrit comme un chant de cristal grave. La robe est brun-ardoise avec des taches blanc-bleu le long de la colonne.</p>
+      <p class="card-section-title">Comportement</p>
+      <p class="card-text">Herbivore paisible. Cependant, les mâles en période de rut utilisent leurs bois chargés d'Aetherium pour des duels rituels qui provoquent des éclairs de lumière violette visibles à plusieurs kilomètres. Les troupeaux migrent sur des routes fixes immémoriales, et certains couloirs de migration sont des routes commerciales pour les humains de Lore.</p>
+      <div class="card-magic-row"><p class="card-section-title">Flux d'Ombrath</p><p class="card-text">Résonance naturelle multiple : les bois creux amplifient les fréquences du Flux environnant comme des antennes passives. Les bois tombés lors de la mue sont très recherchés comme catalyseurs et matériau de construction pour les bâtons de mage.</p></div>
+      <div class="card-size-row"><div class="size-item">Mue annuelle : <span>automne</span></div><div class="size-item">Commerce : <span>Bois = haute valeur</span></div></div>
+    </div>
+  </div>
+
+  <div class="creature-card" data-biome="lore">
+    <div class="card-names"><div class="card-name">Nuagriff Côtier</div><div class="card-latin">Aquila maritimus densus</div></div>
+    <div class="danger-badge danger-2-color"><div class="danger-pips"><div class="pip filled"></div><div class="pip filled"></div><div class="pip empty"></div><div class="pip empty"></div><div class="pip empty"></div></div></div>
+    <div class="card-body">
+      <div class="card-tags"><span class="tag tag-size">Envergure 3,8 m</span><span class="tag tag-social">Couple territorial</span><span class="tag tag-time">Diurne</span></div>
+      <p class="card-section-title">Morphologie</p>
+      <p class="card-text">Rapace côtier le plus grand de Lore, le Nuagriff compense la gravité élevée par une musculature pectorale démesurée — le sternum keel est trois fois plus développé que chez un raptor de masse équivalente sur une planète à 1g. Vol en planant sur les courants marins chauds ; décollage depuis les falaises par plongée en chute contrôlée. Plumage gris-fer avec masque facial blanc et queue écaillée tachée de brun.</p>
+      <p class="card-section-title">Comportement</p>
+      <p class="card-text">Pêcheur hauturier spécialisé dans les espèces marines de surface. Un couple territorial contrôle 30 à 50 km de côte. La femelle, 30% plus grande que le mâle, prend en charge la défense du territoire. Les marins de Lore considèrent leur présence comme signe de bancs de poissons et de temps calme.</p>
+      <div class="card-size-row"><div class="size-item">Masse : <span>18–28 kg</span></div><div class="size-item">Altitude max : <span>~1 200 m</span></div></div>
+    </div>
+  </div>
+
+  <div class="creature-card" data-biome="lore">
+    <div class="card-names"><div class="card-name">Garou des Cimes</div><div class="card-latin">Lupus titanicus montanus</div></div>
+    <div class="danger-badge danger-4-color"><div class="danger-pips"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip empty"></div></div></div>
+    <div class="card-body">
+      <div class="card-tags"><span class="tag tag-size">2,0–2,5 m au garrot</span><span class="tag tag-size">Masse 600–1 000 kg</span><span class="tag tag-social">Meute de 5–12</span><span class="tag tag-time">Crépusculaire / nocturne</span></div>
+      <p class="card-section-title">Morphologie</p>
+      <p class="card-text">Loup géant des contreforts méridionaux du Pays de Lore. À 1,9g, l'évolution a façonné un prédateur radicalement différent : le Garou des Cimes est trapu, quasiment bas sur pattes, avec une ossature cinq fois plus dense. Sa carrure dépasse largement celle d'un Durgoth adulte — les épaules, larges d'un mètre cinquante, portent une tête démesurée aux mâchoires capables de broyer la roche tendre. La fourrure est gris-ardoise en été, blanche en hiver.</p>
+      <p class="card-section-title">Comportement</p>
+      <p class="card-text">La meute chasse sur un territoire de 150 à 400 km². Le Garou est le prédateur naturel du Glaciel et de l'Yvarr des Glaces. Les meutes ont des rôles spécialisés : rabatteurs, encercleurs, et un alpha donnant le signal d'attaque par un hurlement grave portant à 15 km. Les villages de Lore à moins de 80 km du Passage maintiennent des veilleurs nocturnes durant les 30 jours d'équinoxe.</p>
+      <div class="card-size-row"><div class="size-item">Longévité : <span>~70 ans</span></div><div class="size-item">Magie : <span>Aucune résonance Ae</span></div></div>
+    </div>
+  </div>
+
+  <div class="creature-card" data-biome="lore">
+    <div class="card-names"><div class="card-name">Tauroc de Lore</div><div class="card-latin">Bos herculeus lorensis</div></div>
+    <div class="danger-badge danger-2-color"><div class="danger-pips"><div class="pip filled"></div><div class="pip filled"></div><div class="pip empty"></div><div class="pip empty"></div><div class="pip empty"></div></div></div>
+    <div class="card-body">
+      <div class="card-tags"><span class="tag tag-size">1,6–2,1 m au garrot</span><span class="tag tag-size">Masse 1 200–2 800 kg</span><span class="tag tag-social">Troupeau 10–60 — répandu</span><span class="tag tag-time">Diurne</span></div>
+      <p class="card-section-title">Morphologie — deux sous-espèces</p>
+      <p class="card-text">Bovin dominant du Pays de Lore, notablement plus massif que tout bovin terrestre par adaptation à 1,9g. Deux sous-espèces coexistent : le <em>Grand Tauroc des Plaines</em> (robe fauve-brun, cornes larges de 1,8 m, jusqu'à 2 800 kg) et le <em>Tauroc des Brumes</em> (toison laineuse, brun-noir, adapté aux forêts brumeuses). Corps court en proportion, pattes massives et basses, dos plat supportant le poids sous haute gravité.</p>
+      <p class="card-section-title">Comportement &amp; usage</p>
+      <p class="card-text">Herbivores paisibles, domestiqués depuis les origines de la civilisation de Lore. Absolument non-réceptifs au Flux d'Aetherium — aucune résonance n'a jamais été détectée même sur des individus élevés à proximité de dépôts massifs. Cette imperméabilité totale les rend précieux comme animaux de trait dans les zones magiquement instables. Un Tauroc adulte peut tirer 4 à 8 tonnes sur terrain plat.</p>
+      <div class="card-size-row"><div class="size-item">Usage : <span>Trait, lait, viande, cuir</span></div><div class="size-item">Magie : <span>Résonance Ae : zéro absolu</span></div></div>
+    </div>
+  </div>
+
+  <div class="creature-card" data-biome="lore">
+    <div class="card-names"><div class="card-name">Coursier de Lore</div><div class="card-latin">Equus densus bellator</div></div>
+    <div class="danger-badge danger-1-color"><div class="danger-pips"><div class="pip filled"></div><div class="pip empty"></div><div class="pip empty"></div><div class="pip empty"></div><div class="pip empty"></div></div></div>
+    <div class="card-body">
+      <div class="card-tags"><span class="tag tag-size">1,2–1,4 m au garrot</span><span class="tag tag-size">Masse 450–700 kg</span><span class="tag tag-social">Domestiqué — très répandu</span><span class="tag tag-time">Diurne</span></div>
+      <p class="card-section-title">Morphologie</p>
+      <p class="card-text">Monture officielle du Trône Élindor et principale monture de Lore. À 1,9g, un équidé à longues pattes s'effondrerait sous son propre poids — le Coursier est large, très bas sur pattes, avec un torse en tonneau et une encolure courte et musculeuse. Vitesse de pointe modeste (~40 km/h) mais endurance exceptionnelle : 6 à 8 heures de trot soutenu à 25 km/h. Trois races : guerre, course et trait léger.</p>
+      <p class="card-section-title">Comportement &amp; usage</p>
+      <p class="card-text">Domestiqué depuis au moins 2 000 ans. La cavalerie de Lore est redoutable — un Coursier de guerre lancé en 1,9g développe une énergie cinétique colossale. Monture d'apparat pour les nobles, de campagne pour les chevaliers, de poste pour les messagers. Légèrement sensibles aux zones de Flux intense mais sans résonance Ae active.</p>
+      <div class="card-size-row"><div class="size-item">Longévité : <span>30–45 ans</span></div><div class="size-item">Charge max : <span>200–280 kg</span></div></div>
+    </div>
+  </div>
+
+  <div class="creature-card" data-biome="lore">
+    <div class="card-names"><div class="card-name">Axe</div><div class="card-latin">Umbraculum carnis lorensis orientalis</div></div>
+    <div class="danger-badge danger-4-color"><div class="danger-pips"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip empty"></div></div></div>
+    <div class="card-body">
+      <div class="card-tags"><span class="tag tag-size">Forme variable (1,8–3 m)</span><span class="tag tag-social">Solitaire / territorial</span><span class="tag tag-magic">Ae+neural passif (vapeurs)</span><span class="tag tag-time">Nocturne — grottes côtières est</span></div>
+      <p class="card-section-title">Morphologie</p>
+      <p class="card-text">Entité de chair et d'Aetherium des grottes côtières orientales de Lore. Corps amorphe de base, capable de prendre la forme de personnes connues de la victime en lisant les traces Ae+neural laissées dans l'air par le passage humain. La forme d'imitation est suffisamment précise pour tromper visuellement dans l'obscurité et à voix basse. La peau est une membrane gris-bleuâtre à la texture de poulpe, dégageant des vapeurs Ae+neural en continu.</p>
+      <p class="card-section-title">Comportement</p>
+      <p class="card-text">Prédateur d'embuscade par imitation. Attire sa proie en imitant voix et silhouette d'un proche, puis l'immobilise par contact (transmission Ae+neural directe provoquant paralysie et confusion). Se nourrit lentement par absorption cutanée. Les Aevhari orthodoxes considèrent l'Axe comme l'insulte suprême au code qui interdit l'usage non-consenti du mental.</p>
+      <div class="card-magic-row"><p class="card-section-title">Flux d'Ombrath</p><p class="card-text">Résonance Ae+neural passive et active. Peut être détecté par tout mage Ae+neural expérimenté — les vapeurs sont reconnaissables. Le Voile Blanc (faction Aevhari exilée) aurait déjà recruté des individus capables de communiquer avec les Axes pour des opérations de reconnaissance.</p></div>
+      <div class="card-size-row"><div class="size-item">Habitat : <span>Grottes marines est</span></div><div class="size-item">Classification : <span>Menace de classe III (Ordre)</span></div></div>
+    </div>
+  </div>
+
+  <!-- PASSAGE -->
+  <div class="creature-card" data-biome="passage">
+    <div class="card-names"><div class="card-name">Yvarr des Glaces</div><div class="card-latin">Bos glacialis aethercrista</div></div>
+    <div class="danger-badge danger-2-color"><div class="danger-pips"><div class="pip filled"></div><div class="pip filled"></div><div class="pip empty"></div><div class="pip empty"></div><div class="pip empty"></div></div></div>
+    <div class="card-body">
+      <div class="card-tags"><span class="tag tag-size">1,6 m au garrot</span><span class="tag tag-size">Masse 350–500 kg</span><span class="tag tag-social">Troupeau 10–30</span><span class="tag tag-time">Résistant au froid extrême</span></div>
+      <p class="card-section-title">Morphologie</p>
+      <p class="card-text">Bovidé montagnard au corps hyper-massif, les quatre sabots larges et préhensiles armés de crampons osseux naturels pour s'accrocher au granit vertical. La fourrure, blanche avec des veines bleues d'Aetherium, agit comme isolation thermique quasi parfaite. La bosse dorsale stocke des réserves lipidiques pour les 135 jours d'hiver.</p>
+      <p class="card-section-title">Comportement</p>
+      <p class="card-text">Herbivore broutant les mousses et lichens cryophiles. Les troupeaux descendent en altitude pendant les équinoxes de printemps et d'automne. Les mâles se battent au bélier avec une force suffisante pour ébranler les parois rocheuses.</p>
+      <div class="card-magic-row"><p class="card-section-title">Flux d'Ombrath</p><p class="card-text">Les veines bleutées de leur fourrure contiennent des fibres d'Aetherium+Si naturellement intégrées dans les poils, les rendant semi-conductrices du Flux. Les troupeaux génèrent collectivement une résonance basse pulsée audible par les mages proches.</p></div>
+      <div class="card-size-row"><div class="size-item">Altitude : <span>2 000–6 000 m</span></div><div class="size-item">Endurance : <span>Extrême</span></div></div>
+    </div>
+  </div>
+
+  <div class="creature-card" data-biome="passage">
+    <div class="card-names"><div class="card-name">Lémure Cristallin</div><div class="card-latin">Spectrum glaciaetherialis</div></div>
+    <div class="danger-badge danger-3-color"><div class="danger-pips"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip empty"></div><div class="pip empty"></div></div></div>
+    <div class="card-body">
+      <div class="card-tags"><span class="tag tag-size">Forme variable</span><span class="tag tag-social">Solitaire</span><span class="tag tag-magic">Ae-corps</span><span class="tag tag-time">Nuit polaire</span></div>
+      <p class="card-section-title">Morphologie</p>
+      <p class="card-text">Entité semi-corporelle dont le corps est constitué d'Aetherium cristallisé dans la glace millénaire, animé par le Flux d'Ombrath. N'est pas un fantôme mais un organisme minéral vivant, classé faune par l'Ordre après de vifs débats. La forme de base est humanoïde diffuse, 2 à 4 mètres, translucide, émettant une lumière bleue froide. Peut se fragmenter et se reconstituer si l'Aetherium environnant est suffisant.</p>
+      <p class="card-section-title">Comportement</p>
+      <p class="card-text">Se nourrit de la chaleur bioélectrique des organismes vivants. L'approche d'un Lémure Cristallin provoque un froid brutal localisé, une confusion mentale (Ae+neural passif), et dans les cas d'exposition prolongée, une hypothermie fatale. Fuit la lumière directe d'Aurys mais tolère celle de Séraph.</p>
+      <div class="card-magic-row"><p class="card-section-title">Flux d'Ombrath</p><p class="card-text">Corps constitué à 100% d'Aetherium+O instable. Peut être dispersé temporairement par un feu magique intense mais se reconstitue si la glace environnante est intacte. Les Sites de l'Ordre en altitude disposent de contremesures Ae+O pour repousser les Lémures lors des hivers longs.</p></div>
+      <div class="card-size-row"><div class="size-item">Reproduction : <span>Fission lors des grands froids</span></div></div>
+    </div>
+  </div>
+
+  <div class="creature-card" data-biome="passage">
+    <div class="card-names"><div class="card-name">Ver-Glaciaire</div><div class="card-latin">Vermis crystallinus profundis</div></div>
+    <div class="danger-badge danger-3-color"><div class="danger-pips"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip empty"></div><div class="pip empty"></div></div></div>
+    <div class="card-body">
+      <div class="card-tags"><span class="tag tag-size">12–25 m de long</span><span class="tag tag-size">Ø 1,5–2,5 m</span><span class="tag tag-social">Solitaire</span></div>
+      <p class="card-section-title">Morphologie</p>
+      <p class="card-text">Ver géant à exosquelette segmenté cristallin, capable de creuser dans la glace compacte et le granit mou à vitesse lente. Aveugle — détecte les vibrations via des organes mécanosensoriels le long des flancs. Les anneaux de l'exosquelette contiennent de l'Aetherium+Si naturel, les rendant partiellement conducteurs. La tête est une masse de lamelles tranchantes capables de déchiqueter la roche et la glace.</p>
+      <p class="card-section-title">Comportement</p>
+      <p class="card-text">Charognard et prédateur de glaciers : se nourrit de la matière organique piégée dans la glace ancienne. La présence de galeries de Ver-Glaciaire dans le Passage Impossible rend l'exploration pédestre extrêmement périlleuse : le sol peut s'effondrer sans préavis.</p>
+      <div class="card-magic-row"><p class="card-section-title">Flux d'Ombrath</p><p class="card-text">Les déplacements d'un Ver-Glaciaire génèrent des micro-séismes détectables à 2 km de distance. L'Ordre a tenté sans succès d'utiliser ces vibrations comme système d'alerte précoce dans les stations de haute altitude.</p></div>
+      <div class="card-size-row"><div class="size-item">Vitesse de forage : <span>~3 m/heure (glace)</span></div></div>
+    </div>
+  </div>
+
+  <!-- DÉSERT -->
+  <div class="creature-card" data-biome="desert">
+    <div class="card-names"><div class="card-name">Kha'sara</div><div class="card-latin">Scorpio imperialis arenae</div></div>
+    <div class="danger-badge danger-4-color"><div class="danger-pips"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip empty"></div></div></div>
+    <div class="card-body">
+      <div class="card-tags"><span class="tag tag-size">Corps 2,8–4,5 m</span><span class="tag tag-size">Masse 180–320 kg</span><span class="tag tag-social">Solitaire</span><span class="tag tag-time">Nocturne</span></div>
+      <p class="card-section-title">Morphologie</p>
+      <p class="card-text">Scorpion géant dont l'exosquelette de chitine-Aetherium est quasi-impénétrable aux armes non-enchantées. Le corps massif et aplati est une adaptation parfaite à 1,9g — le centre de gravité est au niveau du sol. La queue recourbée porte deux aiguillons : l'un venimeux (paralysie), l'autre secrète un acide dissolvant les armures.</p>
+      <p class="card-section-title">Comportement</p>
+      <p class="card-text">Embuscadier sous le sable pendant le jour, émergeant la nuit pour chasser. Les Grauth connaissent ses tunnels de prédilection et évitent ces zones. L'Empire Kamses a développé des techniques de détection par percussion — le son de creusement se transmet dans le sable jusqu'à 150 mètres.</p>
+      <div class="card-magic-row"><p class="card-section-title">Flux d'Ombrath</p><p class="card-text">L'exosquelette contient des dépôts Ae+Fe naturels qui le rendent légèrement magnétique. Les pièges alchimiques à base de fer inversé sont la méthode de chasse efficace documentée par les Grauth et adoptée par l'armée de Kamses.</p></div>
+      <div class="card-size-row"><div class="size-item">Venin : <span>Paralysant 4–8h</span></div><div class="size-item">Longévité : <span>~150 ans</span></div></div>
+    </div>
+  </div>
+
+  <div class="creature-card" data-biome="desert">
+    <div class="card-names"><div class="card-name">Faucon de Séraph</div><div class="card-latin">Falco solaris aetherphos</div></div>
+    <div class="danger-badge danger-2-color"><div class="danger-pips"><div class="pip filled"></div><div class="pip filled"></div><div class="pip empty"></div><div class="pip empty"></div><div class="pip empty"></div></div></div>
+    <div class="card-body">
+      <div class="card-tags"><span class="tag tag-size">Envergure 2,6 m</span><span class="tag tag-social">Couple territorial</span><span class="tag tag-magic">Ae+P actif</span><span class="tag tag-time">Diurne (lumière de Séraph)</span></div>
+      <p class="card-section-title">Morphologie</p>
+      <p class="card-text">Rapace du désert dont le plumage présente un phénomène unique à Mythologia : les barbes des plumes sont incrustées de micro-particules d'Aetherium+P, les rendant capables d'absorber et de rediffuser la lumière de Séraph en rose-orangé. En plein vol sous la lumière de la naine rose, le Faucon de Séraph brille d'une aura lumineuse caractéristique, utilisée par la culture Kamses comme symbole solaire dans son héraldique impériale.</p>
+      <p class="card-section-title">Comportement</p>
+      <p class="card-text">Prédateur d'oasis et de bordures de désert. La lumière renvoyée par son plumage lors du piqué de chasse éblouit temporairement ses proies. Oiseau de prestige pour l'Empire Kamses ; la fauconnerie au Faucon de Séraph est réservée à la famille impériale.</p>
+      <div class="card-magic-row"><p class="card-section-title">Flux d'Ombrath</p><p class="card-text">Résonance passive Ae+P : la lumière émise lors du stress ou du piqué peut provoquer une désorientation légère chez les humains non protégés. Utilisé comme oiseau messager pour les Sites de l'Ordre en territoire désertique.</p></div>
+      <div class="card-size-row"><div class="size-item">Masse : <span>8–14 kg</span></div><div class="size-item">Vitesse plongeon : <span>&gt;280 km/h</span></div></div>
+    </div>
+  </div>
+
+  <div class="creature-card" data-biome="desert">
+    <div class="card-names"><div class="card-name">Mekhet</div><div class="card-latin">Serpens desiccatus seismicus</div></div>
+    <div class="danger-badge danger-4-color"><div class="danger-pips"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip empty"></div></div></div>
+    <div class="card-body">
+      <div class="card-tags"><span class="tag tag-size">18–35 m de long</span><span class="tag tag-size">Ø 1–2 m</span><span class="tag tag-social">Solitaire</span><span class="tag tag-time">Nocturne / saison chaude</span></div>
+      <p class="card-section-title">Morphologie</p>
+      <p class="card-text">Boa des sables colossal dont les écailles ventrales, imbibées d'Aetherium+Si, lui permettent de « lire » les vibrations du sol avec une précision de l'ordre du millimètre. La peau est d'un beige-doré qui mime parfaitement les dunes. La gueule peut avaler un Durgoth adulte. La musculature est trois fois plus dense que chez un serpent terrestre équivalent.</p>
+      <p class="card-section-title">Comportement</p>
+      <p class="card-text">Détecte ses proies via des séismes infimes causés par la marche — un humain isolé dans le sable est repérable à 300 mètres. Les caravanes de Kamses portent des bâtons ferrés à rythme irrégulier pour brouiller cette détection sismique. Le Mekhet est vénéré dans certains rites d'initiation Grauth comme symbole de patience absolue.</p>
+      <div class="card-magic-row"><p class="card-section-title">Flux d'Ombrath</p><p class="card-text">Les écailles Ae+Si génèrent un champ électrostatique passif qui désoriente les boussoles alchimiques dans un rayon de 50 m. Lorsqu'un Mekhet meurt, l'Aetherium de ses écailles se libère en impulsion — les mages Kamses utilisent des carcasses de Mekhet comme pièges anti-intrusion alchimiques.</p></div>
+      <div class="card-size-row"><div class="size-item">Poids : <span>800–2 400 kg</span></div><div class="size-item">Longévité : <span>~200 ans</span></div></div>
+    </div>
+  </div>
+
+  <div class="creature-card" data-biome="desert">
+    <div class="card-names"><div class="card-name">Gorak de Pierre</div><div class="card-latin">Cancer lapideus indestructus</div></div>
+    <div class="danger-badge danger-2-color"><div class="danger-pips"><div class="pip filled"></div><div class="pip filled"></div><div class="pip empty"></div><div class="pip empty"></div><div class="pip empty"></div></div></div>
+    <div class="card-body">
+      <div class="card-tags"><span class="tag tag-size">1,4–2,2 m (carapace)</span><span class="tag tag-size">Masse 200–400 kg</span><span class="tag tag-social">Colonie 5–20</span><span class="tag tag-time">Crépusculaire</span></div>
+      <p class="card-section-title">Morphologie</p>
+      <p class="card-text">Crabe terrestre géant dont la carapace est minéralisée à l'Aetherium+Si, lui donnant la dureté et la texture du granite rouge du désert. Pratiquement indiscernable d'un rocher au repos — démarcation visuelle nécessite de s'approcher à moins de 5 mètres. Les pinces exercent une pression suffisante pour sectionner un membre Durgoth. Totalement incombustible et résistant aux acides.</p>
+      <p class="card-section-title">Comportement</p>
+      <p class="card-text">Omnivore opportuniste, se nourrissant principalement de matière végétale et de charogne. Non agressif si non perturbé. Les colonies creusent des réseaux de galeries sous les zones rocheuses. Plusieurs voyageurs ont décrit des « rochers qui marchaient » lors de rencontres à la tombée de la nuit.</p>
+      <div class="card-size-row"><div class="size-item">Défense : <span>Repli complet → indestructible passif</span></div></div>
+    </div>
+  </div>
+
+  <div class="creature-card" data-biome="desert">
+    <div class="card-names"><div class="card-name">Hyène de Sable</div><div class="card-latin">Hyaena venatoris arealis</div></div>
+    <div class="danger-badge danger-3-color"><div class="danger-pips"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip empty"></div><div class="pip empty"></div></div></div>
+    <div class="card-body">
+      <div class="card-tags"><span class="tag tag-size">1,1 m au garrot</span><span class="tag tag-size">Masse 90–140 kg</span><span class="tag tag-social">Clan 8–25</span><span class="tag tag-time">Nocturne / crépusculaire</span></div>
+      <p class="card-section-title">Morphologie</p>
+      <p class="card-text">Charognard-chasseur à fourrure sable-tachée, les membres antérieurs notablement plus robustes que les postérieurs — adaptation à la marche sur sable meuble en haute gravité. Le crâne et les mâchoires sont démesurément développés, capables de broyer les carapaces du Kha'sara juvénile. La voix — un rire grave et strident — porte à 8 km dans le silence du désert nocturne.</p>
+      <p class="card-section-title">Comportement</p>
+      <p class="card-text">Chasseur social à stratégies complexes. Les clans ont leurs propres territoires, soigneusement évités par l'Empire Kamses lors du tracé des routes caravanières. Ennemis naturels du Mekhet adulte — ils repèrent les carcasses à plus de 20 km grâce à une olfaction exceptionnelle.</p>
+      <div class="card-size-row"><div class="size-item">Vitesse : <span>~65 km/h (rafale)</span></div><div class="size-item">Endurance : <span>8h de poursuite continue</span></div></div>
+    </div>
+  </div>
+
+  <div class="creature-card" data-biome="desert">
+    <div class="card-names"><div class="card-name">Méhara de Kamses</div><div class="card-latin">Camelus regalis gravitalis</div></div>
+    <div class="danger-badge danger-1-color"><div class="danger-pips"><div class="pip filled"></div><div class="pip empty"></div><div class="pip empty"></div><div class="pip empty"></div><div class="pip empty"></div></div></div>
+    <div class="card-body">
+      <div class="card-tags"><span class="tag tag-size">1,3–1,6 m au garrot</span><span class="tag tag-size">Masse 600–900 kg</span><span class="tag tag-social">Domestiqué — très répandu</span><span class="tag tag-time">Diurne — zones désertiques</span></div>
+      <p class="card-section-title">Morphologie</p>
+      <p class="card-text">Monture officielle de l'Empire Kamses et des Grauth nomades. Camélidé adapté à 1,9g : corps bas et large, quatre pattes courtes et robustes dont les coussinets plantaires exceptionnellement larges répartissent le poids sur le sable meuble. Deux bosses graisseuses stockent réserves lipidiques et eau — un Méhara adulte peut traverser 12 à 20 jours sans eau. Deux races : Méhara de Course (messagerie, cavalerie légère) et Méhara des Sables (caravanes longues distances).</p>
+      <p class="card-section-title">Comportement &amp; usage</p>
+      <p class="card-text">Domestiqué depuis l'origine de l'Empire Kamses. Monture de prestige absolue — la richesse d'un noble kamses se mesure en nombre de Méharas. La cavalerie légère de l'Empire monte exclusivement des Méharas de Course.</p>
+      <div class="card-size-row"><div class="size-item">Autonomie eau : <span>12–20 jours</span></div><div class="size-item">Vitesse : <span>35–55 km/h (race)</span></div></div>
+    </div>
+  </div>
+
+  <div class="creature-card" data-biome="desert">
+    <div class="card-names"><div class="card-name">Bœuf de Sable</div><div class="card-latin">Bos sahelianus gravitalis</div></div>
+    <div class="danger-badge danger-2-color"><div class="danger-pips"><div class="pip filled"></div><div class="pip filled"></div><div class="pip empty"></div><div class="pip empty"></div><div class="pip empty"></div></div></div>
+    <div class="card-body">
+      <div class="card-tags"><span class="tag tag-size">1,5–1,8 m au garrot</span><span class="tag tag-size">Masse 1 500–2 500 kg</span><span class="tag tag-social">Domestiqué — caravanes</span><span class="tag tag-time">Diurne (heures fraîches)</span></div>
+      <p class="card-section-title">Morphologie</p>
+      <p class="card-text">Animal de trait colossal des caravanes de l'Empire Kamses. La peau épaisse et grisâtre porte de larges plaques cornées sur le dos qui dissipent la chaleur par rayonnement. Un fanon énorme pend sous la gorge — réservoir de chaleur et régulateur de température. Les naseaux, munis d'une membrane filtrante, permettent de respirer dans les tempêtes de sable. Résistance thermique extraordinaire : opère jusqu'à 55°C ambiants sans défaillance.</p>
+      <p class="card-section-title">Comportement &amp; usage</p>
+      <p class="card-text">Pilier logistique des grandes caravanes transcontinentales. Un attelage de six Bœufs de Sable peut tirer 30 à 40 tonnes sur sable compact. Vitesse faible (~6 km/h) mais 10 à 14 heures de marche quotidienne. Non-réceptif à l'Aetherium, comme tous les bovidés de Mythologia.</p>
+      <div class="card-size-row"><div class="size-item">Charge de trait : <span>4–7 tonnes (individu)</span></div><div class="size-item">Magie : <span>Résonance Ae : zéro</span></div></div>
+    </div>
+  </div>
+
+  <!-- JUNGLE -->
+  <div class="creature-card" data-biome="jungle">
+    <div class="card-names"><div class="card-name">Ara'koth Lumineux</div><div class="card-latin">Insecta aetherlux gregarius</div></div>
+    <div class="danger-badge danger-3-color"><div class="danger-pips"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip empty"></div><div class="pip empty"></div></div></div>
+    <div class="card-body">
+      <div class="card-tags"><span class="tag tag-size">Corps 35–55 cm</span><span class="tag tag-size">Essaim de 500–5000</span><span class="tag tag-magic">Ae+P actif (essaim)</span><span class="tag tag-time">Nocturne</span></div>
+      <p class="card-section-title">Morphologie</p>
+      <p class="card-text">Insecte volant à carapace d'un vert-noir métallique, les élytres incrustés d'Aetherium+P qui les rendent bioluminescents en bleu-vert pulsé. Le corps est dense et compact pour le vol en gravité forte — les ailes battent à 80 Hz. Individuellement peu dangereux. En essaim, la lumière combinée peut atteindre l'intensité d'une torche et la cacophonie d'ailes provoque la désorientation.</p>
+      <p class="card-section-title">Comportement</p>
+      <p class="card-text">Les essaims d'Ara'koth migrent selon les saisons — pendant l'été de l'hémisphère nord (C3), la jungle est traversée de rivières lumineuses la nuit. Les essaims attaquent si une source de chaleur ou de lumière magique intense est présente — ils sont attirés par les résonances Aetherium.</p>
+      <div class="card-magic-row"><p class="card-section-title">Flux d'Ombrath</p><p class="card-text">Un essaim compact génère une résonance Ae+P collective équivalente à un sort d'illusion de faible puissance — les arbres autour d'un nid d'Ara'koth semblent légèrement déformés à la vue, des mirages lumineux émergeant à leur périphérie.</p></div>
+      <div class="card-size-row"><div class="size-item">Nid : <span>Canopée haute (35–45 m)</span></div><div class="size-item">Longévité : <span>3 ans</span></div></div>
+    </div>
+  </div>
+
+  <div class="creature-card" data-biome="jungle">
+    <div class="card-names"><div class="card-name">Boa de Vie</div><div class="card-latin">Boa vitaetherialis</div></div>
+    <div class="danger-badge danger-3-color"><div class="danger-pips"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip empty"></div><div class="pip empty"></div></div></div>
+    <div class="card-body">
+      <div class="card-tags"><span class="tag tag-size">8–15 m de long</span><span class="tag tag-social">Solitaire</span><span class="tag tag-magic">Ae+C passif</span><span class="tag tag-time">Diurne</span></div>
+      <p class="card-section-title">Morphologie</p>
+      <p class="card-text">Constrictor géant aux écailles d'un vert émeraude traversé de motifs de feuilles parfaitement mimétiques — camouflage Ae+C qui adapte la couleur des écailles aux feuillages environnants en quelques minutes. Le corps enroulé autour d'une branche maîtresse de 2 mètres de diamètre peut immobiliser sa proie en exerçant une pression de 800 kg par anneau musculaire.</p>
+      <p class="card-section-title">Comportement</p>
+      <p class="card-text">Chasseur d'embuscade stationnaire. Peut rester immobile 30 à 90 jours entre deux repas. Les Vahryn (race léonine arboricole) l'évitent soigneusement et ont développé un sens du danger spécifique à la présence d'un Boa de Vie — légère modification de l'air due à sa respiration chargée d'Aetherium.</p>
+      <div class="card-magic-row"><p class="card-section-title">Flux d'Ombrath</p><p class="card-text">La résonance Ae+C passive du Boa de Vie favorise la croissance végétale extraordinaire autour de son territoire — les arbres dans son aire sont 20 à 30% plus grands que la norme. Les Vahryn considèrent ces zones comme sacrées.</p></div>
+      <div class="card-size-row"><div class="size-item">Poids : <span>300–800 kg</span></div><div class="size-item">Longévité : <span>~180 ans</span></div></div>
+    </div>
+  </div>
+
+  <div class="creature-card" data-biome="jungle">
+    <div class="card-names"><div class="card-name">Singe de Jade</div><div class="card-latin">Simia sapientia aethercultor</div></div>
+    <div class="danger-badge danger-2-color"><div class="danger-pips"><div class="pip filled"></div><div class="pip filled"></div><div class="pip empty"></div><div class="pip empty"></div><div class="pip empty"></div></div></div>
+    <div class="card-body">
+      <div class="card-tags"><span class="tag tag-size">90 cm–1,2 m (debout)</span><span class="tag tag-size">Masse 35–60 kg</span><span class="tag tag-social">Troupe 20–60</span><span class="tag tag-magic">Ae+Si passif</span></div>
+      <p class="card-section-title">Morphologie</p>
+      <p class="card-text">Primate arboricole à la fourrure jade-vert dense, corps trapu et bras puissants pour l'accrochage en haute gravité. Les doigts, légèrement allongés, possèdent des micro-dépôts d'Aetherium+Si dans les coussinets — leur permettant de sentir et d'interagir avec les filons d'Aetherium de surface. Les yeux grand-ouverts à pupilles verticales indiquent une vision nocturne exceptionnelle.</p>
+      <p class="card-section-title">Comportement</p>
+      <p class="card-text">Le Singe de Jade est le seul animal de Mythologia documenté comme pratiquant une forme d'extraction minérale délibérée : les troupes repèrent les affleurements d'Aetherium silicaté et en extraient des éclats qu'elles intègrent à leurs nids. Comportement probablement lié à la réduction des infections — l'Aetherium inhibe certaines moisissures tropicales.</p>
+      <div class="card-magic-row"><p class="card-section-title">Flux d'Ombrath</p><p class="card-text">Résonance Ae+Si passive : les vieux mâles alpha accumulent des dépôts d'Aetherium suffisants pour émettre une légère lumière verte nocturne — signe de statut dans la hiérarchie sociale. Les Vahryn les considèrent comme des gardiens semi-sacrés des gisements d'Aetherium.</p></div>
+      <div class="card-size-row"><div class="size-item">Longévité : <span>~40 ans</span></div><div class="size-item">Statut : <span>Semi-sacré (culture Vahryn)</span></div></div>
+    </div>
+  </div>
+
+  <div class="creature-card" data-biome="jungle">
+    <div class="card-names"><div class="card-name">Panthère d'Ombre</div><div class="card-latin">Panthera aetherneural furtiva</div></div>
+    <div class="danger-badge danger-4-color"><div class="danger-pips"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip empty"></div></div></div>
+    <div class="card-body">
+      <div class="card-tags"><span class="tag tag-size">1,1 m au garrot</span><span class="tag tag-size">Masse 140–220 kg</span><span class="tag tag-social">Solitaire</span><span class="tag tag-magic">Ae+neural passif</span><span class="tag tag-time">Nocturne</span></div>
+      <p class="card-section-title">Morphologie</p>
+      <p class="card-text">Félin apex de la jungle C3, le pelage noir-charbon est parcouru de motifs géométriques visibles uniquement sous certains angles d'Aetherium — des marques d'Ae+neural passif qui interfèrent légèrement avec la perception des proies au moment de l'attaque. Corps massif et trapu, pattes courtes et musclées, queue de contrepoids longue de 90 cm. Crocs et griffes naturellement imprégnés d'Aetherium+Fe par absorption alimentaire.</p>
+      <p class="card-section-title">Comportement</p>
+      <p class="card-text">Prédateur solitaire apex. Le moment de l'attaque génère une brève impulsion Ae+neural qui provoque une fraction de seconde de paralysie chez la proie — suffisant pour garantir la prise. Ennemis naturels des Vahryn, qui ont développé des rituels de protection spécifiques (bracelets d'Aetherium+P qui contrecarrent l'impulsion neural).</p>
+      <div class="card-magic-row"><p class="card-section-title">Flux d'Ombrath</p><p class="card-text">Les griffes et crocs d'un individu mort conservent leur charge Ae+neural jusqu'à 48 heures. Les Vahryn chamans les utilisent comme catalyseurs pour les soins Ae+C d'urgence — la charge résiduelle amplifiant temporairement leur résonance.</p></div>
+      <div class="card-size-row"><div class="size-item">Longévité : <span>~35 ans</span></div><div class="size-item">Magie : <span>Ae+neural passif (impulsion chasse)</span></div></div>
+    </div>
+  </div>
+
+  <div class="creature-card" data-biome="jungle">
+    <div class="card-names"><div class="card-name">Tortue Ancestrale</div><div class="card-latin">Testudo veteris aethermemoria</div></div>
+    <div class="danger-badge danger-1-color"><div class="danger-pips"><div class="pip filled"></div><div class="pip empty"></div><div class="pip empty"></div><div class="pip empty"></div><div class="pip empty"></div></div></div>
+    <div class="card-body">
+      <div class="card-tags"><span class="tag tag-size">2,4–3,8 m (carapace)</span><span class="tag tag-size">Masse 800–2 400 kg</span><span class="tag tag-social">Solitaire</span><span class="tag tag-magic">Ae-mémoire (passif)</span></div>
+      <p class="card-section-title">Morphologie</p>
+      <p class="card-text">Tortue terrestre géante parfaitement adaptée à 1,9g — membres colonnaires courts et massifs, carapace en dôme plat pour résister à la compression gravitationnelle. La carapace est stratifiée d'Aetherium+Si accumulé sur des siècles, lui donnant l'apparence et presque la dureté de la pierre. Des mousses et lichens Ae-actifs poussent sur sa carapace et entretiennent son métabolisme lent.</p>
+      <p class="card-section-title">Comportement</p>
+      <p class="card-text">Herbivore lent. Durée de vie supposée de 500 à 2 000 ans — aucune tortue ancestrale n'a jamais été observée mourir de vieillesse. Les plus anciennes portent des inscriptions Vahryn sur leur carapace, ce qui implique des individus de plus de 400 ans. Leur déplacement lent (20 m/jour) crée des chemins immuables dans la jungle — certains correspondent aux routes commerciales de C3.</p>
+      <div class="card-magic-row"><p class="card-section-title">Flux d'Ombrath</p><p class="card-text">L'Aetherium accumulé sur des siècles dans la carapace contient des « impressions » des événements majeurs vécus à proximité — un phénomène que l'Ordre appelle la mémoire minérale passive. Un Grand Maître Ae+Si expérimenté peut « lire » des fragments de ces impressions au contact de la carapace.</p></div>
+      <div class="card-size-row"><div class="size-item">Longévité : <span>500–2 000 ans (estimé)</span></div><div class="size-item">Statut : <span>Protégée absolue (Ordre + Vahryn)</span></div></div>
+    </div>
+  </div>
+
+  <!-- SOUTERRAIN -->
+  <div class="creature-card" data-biome="underground">
+    <div class="card-names"><div class="card-name">Ver des Profondeurs</div><div class="card-latin">Vermis abyssus titanicus</div></div>
+    <div class="danger-badge danger-5-color"><div class="danger-pips"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div></div></div>
+    <div class="card-body">
+      <div class="card-tags"><span class="tag tag-size">100–1 000 m de long (estimé)</span><span class="tag tag-magic">Ae+Si (dents)</span><span class="tag tag-social">Solitaire (territorial)</span></div>
+      <p class="card-section-title">Morphologie</p>
+      <p class="card-text">L'une des créatures les plus grandes jamais répertoriées sur Mythologia. Non observé directement — connu uniquement par ses galeries (diamètre 15–80 m), par des fragments de dents Ae+Si retrouvés lors de forages Durgoth, et par des séismes régionaux lui étant attribués. La structure de ses galeries indique un animal vermiforme capable de creuser dans le basalte. Les dents retrouvées sont des cristaux d'Aetherium+Si d'une dureté inconnue.</p>
+      <p class="card-section-title">Comportement</p>
+      <p class="card-text">Détecte les vibrations à très longue distance dans la roche. En haute gravité, chaque pas à la surface crée des ondes sismiques détectables en profondeur. Le réseau de galeries est utilisé — et soigneusement évité en zones actives — par les Veth'ari pour leurs propres tunnels. Un Ver actif dans une zone Veth'ari est une catastrophe civique.</p>
+      <div class="card-magic-row"><p class="card-section-title">Flux d'Ombrath</p><p class="card-text">Les dents d'Aetherium du Ver des Profondeurs sont les outils de forage les plus efficaces jamais documentés. Les Veth'kol (caste exploratrice) collectent les dents perdues lors de la mue — matériau quasi-indestructible, hautement recherché par les forgerons Durgoth.</p></div>
+      <div class="card-size-row"><div class="size-item">Poids estimé : <span>500–4 000 tonnes</span></div><div class="size-item">Longévité : <span>Inconnue (millénaire ?)</span></div></div>
+    </div>
+  </div>
+
+  <div class="creature-card" data-biome="underground">
+    <div class="card-names"><div class="card-name">Araignée du Flux</div><div class="card-latin">Aranea aetherweaver crystallis</div></div>
+    <div class="danger-badge danger-4-color"><div class="danger-pips"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip empty"></div></div></div>
+    <div class="card-body">
+      <div class="card-tags"><span class="tag tag-size">Corps 60–90 cm, pattes 2,4 m</span><span class="tag tag-social">Solitaire</span><span class="tag tag-magic">Ae-actif (Ae+neural)</span><span class="tag tag-time">Atemporel (no lumière)</span></div>
+      <p class="card-section-title">Morphologie</p>
+      <p class="card-text">Araignée translucide dont les filières sécrètent de la soie cristallisée d'Aetherium — des fils rigides en réseau quasi-invisibles dans l'obscurité souterraine. La soie d'Aetherium conduit le Flux : quiconque touche une toile reçoit une impulsion Ae+neural, provoquant hallucinations ou paralysie selon la surface de contact. Huit yeux vestigiaux — navigation par soie-sismique totale.</p>
+      <p class="card-section-title">Comportement</p>
+      <p class="card-text">Tisse des réseaux de plusieurs centaines de mètres entre les colonnes de stalagmites. Les Veth'ari ont développé une technique de détection par lumière bioluminescente. Les Veth'mara (caste intellectuelle) étudient ses toiles comme modèles de réseaux de communication.</p>
+      <div class="card-magic-row"><p class="card-section-title">Flux d'Ombrath</p><p class="card-text">La soie d'Aetherium récoltée après la mort d'une Araignée du Flux est l'un des matériaux les plus précieux de Mythologia — conductrice du Flux, quasi-indestructible, souple à température ambiante. Commercialisée exclusivement avec l'Ordre des Mages et les Durgoth forgerons.</p></div>
+      <div class="card-size-row"><div class="size-item">Toile : <span>jusqu'à 400 m de réseau</span></div></div>
+    </div>
+  </div>
+
+  <div class="creature-card" data-biome="underground">
+    <div class="card-names"><div class="card-name">Champignon Chasseur</div><div class="card-latin">Mycelium predatoris aethericus</div></div>
+    <div class="danger-badge danger-3-color"><div class="danger-pips"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip empty"></div><div class="pip empty"></div></div></div>
+    <div class="card-body">
+      <div class="card-tags"><span class="tag tag-size">Réseau mycelien : 1–50 km²</span><span class="tag tag-social">Entité unique distribuée</span><span class="tag tag-magic">Ae+neural (réseau)</span><span class="tag tag-time">Atemporel</span></div>
+      <p class="card-section-title">Morphologie</p>
+      <p class="card-text">Non pas une créature unique mais un réseau mycélien doté d'une forme de conscience distribuée. Les corps fructifères visibles (champignons bicolores violet-brun de 30 à 80 cm) ne sont que les organes sensoriels et de reproduction. Le vrai « cerveau » est un réseau de filaments d'Aetherium+neural entremêlé dans la roche sur des kilomètres. Vit des millions d'années selon les estimations des Veth'ari.</p>
+      <p class="card-section-title">Comportement</p>
+      <p class="card-text">Capture ses proies par spores narcotiques relâchées lorsqu'une créature touche un corps fructifère. La victime endormie est lentement décomposée sur place — un cadavre peut être entièrement assimilé en 6 à 12 heures. Les Veth'ari connaissent la cartographie exacte de chaque Champignon Chasseur et l'intègrent dans leurs plans de cité comme « zone naturelle sanctifiée ».</p>
+      <div class="card-magic-row"><p class="card-section-title">Flux d'Ombrath</p><p class="card-text">Certains archivistes avancent que les Champignons Chasseurs les plus anciens auraient développé une conscience Ae+neural suffisante pour cibler préférentiellement les mages à haute résonance Aetherium.</p></div>
+      <div class="card-size-row"><div class="size-item">Âge estimé : <span>100 000 – 5 000 000 ans</span></div></div>
+    </div>
+  </div>
+
+  <div class="creature-card" data-biome="underground">
+    <div class="card-names"><div class="card-name">Poisson-Abyssal</div><div class="card-latin">Piscis cavernae aethervolvo</div></div>
+    <div class="danger-badge danger-2-color"><div class="danger-pips"><div class="pip filled"></div><div class="pip filled"></div><div class="pip empty"></div><div class="pip empty"></div><div class="pip empty"></div></div></div>
+    <div class="card-body">
+      <div class="card-tags"><span class="tag tag-size">0,4–1,2 m de long</span><span class="tag tag-social">Bancs de 20–200</span><span class="tag tag-magic">Ae bioluminescent</span><span class="tag tag-time">Atemporel</span></div>
+      <p class="card-section-title">Morphologie</p>
+      <p class="card-text">Poisson aveugle des lacs et rivières souterrains, dont la ligne latérale étendue détecte les courants Aetherium dans l'eau avec la même précision qu'un magnétomètre. Les organes internes contiennent des vésicules d'Aetherium+P qui pulsent en bleu pâle selon son état émotionnel — rouge sous stress, vert en banc calme, bleu-blanc lors du frai. Totalement transparent : les organes internes sont visibles à l'œil nu.</p>
+      <p class="card-section-title">Comportement</p>
+      <p class="card-text">Herbivore des mousses et algues aquatiques des rivières souterraines. En banc, les pulsations lumineuses se synchronisent en quelques minutes, créant des vagues lumineuses traversant le groupe — l'une des plus belles visions naturelles de Mythologia. La cité-mère Veth'ari maintient des aquariums d'élevage à des fins rituelles et esthétiques.</p>
+      <div class="card-size-row"><div class="size-item">Usage Veth'ari : <span>Rituels, lumière naturelle</span></div></div>
+    </div>
+  </div>
+
+  <!-- OCÉAN -->
+  <div class="creature-card" data-biome="ocean">
+    <div class="card-names"><div class="card-name">Léviathan d'Umbrath</div><div class="card-latin">Leviathanus abyssalis umbraticus</div></div>
+    <div class="danger-badge danger-5-color"><div class="danger-pips"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div></div></div>
+    <div class="card-body">
+      <div class="card-tags"><span class="tag tag-size">Longueur estimée 200–600 m</span><span class="tag tag-social">Solitaire (rare)</span><span class="tag tag-magic">Ae-corps total (Flux direct)</span><span class="tag tag-time">Profondeurs absolues</span></div>
+      <p class="card-section-title">Morphologie</p>
+      <p class="card-text">Créature quasi-mythologique dont seulement trois rencontres documentées ont été rapportées, toutes par des marins miraculeux survivants. Description convergente : cétacé-serpentin noir absolu, aucune réflexion de lumière sur la peau, comme si l'animal absorbait toute lumière à la manière d'Umbrath lui-même. Des tentacules secondaires de 10 à 30 mètres. La tête serait disproportionnée, avec des structures lumineuses bleues autour des mâchoires.</p>
+      <p class="card-section-title">Comportement</p>
+      <p class="card-text">Vit dans les abysses au-delà de 8 000 mètres de profondeur. Remonte vers la surface uniquement lors des équinoxes, coïncidant avec les tempêtes cataclysmiques. Les marins évitent l'Océan Infini pendant les 30 jours d'équinoxe — la combinaison des tempêtes et d'une possible remontée est considérée comme un risque existentiel.</p>
+      <div class="card-magic-row"><p class="card-section-title">Flux d'Ombrath</p><p class="card-text">L'hypothèse dominante à l'Ordre est que le Léviathan d'Umbrath est un organisme dont le métabolisme est directement couplé au Flux de Hawking d'Umbrath — une créature « nourrie » par la même source que la magie de Mythologia. Sa connexion au Flux distord les courants magiques locaux lors de ses rares présences en surface.</p></div>
+      <div class="card-size-row"><div class="size-item">Dossier Ordre : <span>OMEGA — 3 occurrences</span></div></div>
+    </div>
+  </div>
+
+  <div class="creature-card" data-biome="ocean">
+    <div class="card-names"><div class="card-name">Méduse Aéthérique</div><div class="card-latin">Medusa fluxalis translucens</div></div>
+    <div class="danger-badge danger-3-color"><div class="danger-pips"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip empty"></div><div class="pip empty"></div></div></div>
+    <div class="card-body">
+      <div class="card-tags"><span class="tag tag-size">Cloche Ø 3–12 m</span><span class="tag tag-size">Tentacules 40–80 m</span><span class="tag tag-magic">Ae+O + Ae+neural actif</span><span class="tag tag-social">Tempête de bancs (équinoxe)</span></div>
+      <p class="card-section-title">Morphologie</p>
+      <p class="card-text">Méduse géante dont la cloche est entièrement translucide, révélant un réseau vasculaire d'Aetherium pur d'un violet profond. La concentration d'Aetherium+O dans les fluides corporels génère une bioluminescence intense — une méduse adulte éclaire un rayon de 50 mètres sous l'eau. Les tentacules urticants transmettent une décharge Ae+neural qui provoque une paralysie musculaire complète en 8 à 15 secondes.</p>
+      <p class="card-section-title">Comportement</p>
+      <p class="card-text">Pélagique en solitaire la plupart de l'année. Lors des équinoxes, des bancs de milliers de Méduses Aéthériques remontent à la surface pour se reproduire — spectacle décrit comme une « aurore sous-marine » visible depuis les côtes. Ces rassemblements bloquent toute navigation et peuvent paralyser un équipage entier par contact.</p>
+      <div class="card-size-row"><div class="size-item">Venin : <span>Paralysie 20–40 min</span></div><div class="size-item">Remontée : <span>Equinoxe printemps + automne</span></div></div>
+    </div>
+  </div>
+
+  <div class="creature-card" data-biome="ocean">
+    <div class="card-names"><div class="card-name">Requin de Tempête</div><div class="card-latin">Squalus tempestarius electrus</div></div>
+    <div class="danger-badge danger-4-color"><div class="danger-pips"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip empty"></div></div></div>
+    <div class="card-body">
+      <div class="card-tags"><span class="tag tag-size">5–9 m de long</span><span class="tag tag-size">Masse 800–1 800 kg</span><span class="tag tag-social">Solitaire / meute de 3</span><span class="tag tag-magic">Ae+Fe bioélectrique</span><span class="tag tag-time">Actif en tempête</span></div>
+      <p class="card-section-title">Morphologie</p>
+      <p class="card-text">Requin dont la peau porte des plaques dermiques d'Aetherium+Fe agissant comme condensateurs bioélectriques — en période de tempête, les décharges électrostatiques de l'atmosphère chargent littéralement ses organes Ae+Fe. L'animal peut alors relâcher ces charges sous forme de décharges électriques actives, utilisées pour désorienter ses proies. La coloration est gris-bleu métallique avec des reflets d'éclairs le long des flancs lors des chasses.</p>
+      <p class="card-section-title">Comportement</p>
+      <p class="card-text">Préfère les eaux de surface pendant les tempêtes d'équinoxe, précisément quand les marins sont les plus vulnérables. Sa présence est détectée par les compas alchimiques des navigateurs — les décharges Ae+Fe perturbent les instruments de navigation sur 200 mètres.</p>
+      <div class="card-magic-row"><p class="card-section-title">Flux d'Ombrath</p><p class="card-text">Résonance Ae+Fe active — les Durgoth marins ont développé des carènes traitées à l'Aetherium-neutre pour réduire l'attractivité de leurs coques envers les Requins de Tempête lors des traversées.</p></div>
+      <div class="card-size-row"><div class="size-item">Décharge : <span>jusqu'à 800V (tempête)</span></div></div>
+    </div>
+  </div>
+
+  <div class="creature-card" data-biome="ocean">
+    <div class="card-names"><div class="card-name">Baleine Chant-Ae</div><div class="card-latin">Cetacea aethersonus cantor</div></div>
+    <div class="danger-badge danger-1-color"><div class="danger-pips"><div class="pip filled"></div><div class="pip empty"></div><div class="pip empty"></div><div class="pip empty"></div><div class="pip empty"></div></div></div>
+    <div class="card-body">
+      <div class="card-tags"><span class="tag tag-size">25–50 m de long</span><span class="tag tag-size">Masse 40–200 tonnes</span><span class="tag tag-social">Pod de 3–8</span><span class="tag tag-magic">Ae+neural actif (chant)</span></div>
+      <p class="card-section-title">Morphologie</p>
+      <p class="card-text">Cétacé géant dont les cordes vocales contiennent des cristaux d'Aetherium+neural naturels — leur chant génère des fréquences chargées qui peuvent être perçues par les mages sensibles à des milliers de kilomètres. Le corps est profilé pour la 1,9g océanique : nageoires pectorales larges, queue puissante. La peau est d'un bleu-noir profond avec des veines violettes d'Aetherium visibles sur les flancs.</p>
+      <p class="card-section-title">Comportement</p>
+      <p class="card-text">Migrateur de l'Océan Infini. Les pods de Baleines Chant-Ae se retrouvent lors des solstices dans des zones précises de l'océan, correspondant aux maxima du Flux de Hawking d'Umbrath selon les calculs de l'Ordre. L'Ordre a classifié leur chant comme le « baromètre Ae » le plus précis connu — une perturbation dans leurs routes migratoires prédit une instabilité magique régionale.</p>
+      <div class="card-magic-row"><p class="card-section-title">Flux d'Ombrath</p><p class="card-text">Le chant d'une Baleine Chant-Ae peut provoquer chez un mage réceptif une transe de contemplation — les rapports de l'Ordre décrivent une perception directe du Flux d'Ombrath pendant les séances d'écoute. L'Ordre a classé cette interaction comme « phénomène d'intérêt théologique majeur ».</p></div>
+      <div class="card-size-row"><div class="size-item">Portée du chant : <span>&gt;3 000 km (Flux)</span></div><div class="size-item">Longévité : <span>Inconnue (&gt;500 ans)</span></div></div>
+    </div>
+  </div>
+
+  <!-- PÔLES -->
+  <div class="creature-card" data-biome="poles">
+    <div class="card-names"><div class="card-name">Ours Solaire</div><div class="card-latin">Ursus thermalis aethericus</div></div>
+    <div class="danger-badge danger-4-color"><div class="danger-pips"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip empty"></div></div></div>
+    <div class="card-body">
+      <div class="card-tags"><span class="tag tag-size">2,4–3,2 m au garrot</span><span class="tag tag-size">Masse 800–1 600 kg</span><span class="tag tag-social">Solitaire</span><span class="tag tag-magic">Ae+O passif (chaleur)</span><span class="tag tag-time">Diurne — pôle tropical</span></div>
+      <p class="card-section-title">Morphologie</p>
+      <p class="card-text">Ursidé du pôle nord tropical — la plus grande espèce de son genre sur Mythologia. Sa fourrure courte et cuivrée agit comme collecteur d'énergie thermique, captant et redistribuant la chaleur du pôle tropical via un réseau de vaisseaux Aetherium+O sous-cutanés. Le pelage brille d'un orangé pâle en plein soleil d'Aurys. Corps bas et large, muscles adaptés à la marche sur terrain rocheux en 1,9g.</p>
+      <p class="card-section-title">Comportement</p>
+      <p class="card-text">Omnivore dominant du pôle nord. Territorial sur 100 à 300 km² de plaines rocheuses tropicales. Actif uniquement le jour — la nuit polaire (lors des grandes inclinaisons saisonnières) le plonge dans une hibernation profonde. Les Grauth nomades dont les routes passent par les zones polaires nord ont développé des rituels de reconnaissance avec les Ours Solaires anciens, certains individus ayant été rencontrés par plusieurs générations.</p>
+      <div class="card-magic-row"><p class="card-section-title">Flux d'Ombrath</p><p class="card-text">Résonance Ae+O passive : l'Ours Solaire peut redistribuer de la chaleur corporelle vers l'extérieur en cas de menace — un adulte en alerte élève la température ambiante locale de 8 à 15°C dans un rayon de 3 mètres. Les Grauth utilisent ce phénomène comme source de chaleur lors des bivouacs polaires froids.</p></div>
+      <div class="card-size-row"><div class="size-item">Longévité : <span>~120 ans</span></div><div class="size-item">Statut : <span>Totem Grauth (nord)</span></div></div>
+    </div>
+  </div>
+
+  <div class="creature-card" data-biome="poles">
+    <div class="card-names"><div class="card-name">Varan des Sables Rouges</div><div class="card-latin">Varanus australis igneus</div></div>
+    <div class="danger-badge danger-3-color"><div class="danger-pips"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip empty"></div><div class="pip empty"></div></div></div>
+    <div class="card-body">
+      <div class="card-tags"><span class="tag tag-size">2,8–4,2 m de long</span><span class="tag tag-size">Masse 120–240 kg</span><span class="tag tag-social">Solitaire</span><span class="tag tag-time">Diurne — pôle sud aride</span></div>
+      <p class="card-section-title">Morphologie</p>
+      <p class="card-text">Lézard apex du pôle sud aride — en 1,9g, l'évolution a aplati et durci son corps au maximum. Le dos porte des écailles d'Aetherium+Fe naturellement intégrées formant une cuirasse dorsale dont la dureté dépasse l'acier trempé. La langue bifide capte les traces de Flux dans l'air à 2 km de distance. La coloration rouge-brun s'accorde parfaitement aux grès oxydés du pôle sud.</p>
+      <p class="card-section-title">Comportement</p>
+      <p class="card-text">Prédateur-charognard. La haute gravité et la chaleur extrême du pôle sud (amplifiée par le périhélie) sont son habitat naturel — les autres espèces y étant rares, il est l'apex absolu sur son territoire. Les Keth'Ahrak (confédération nomade Grauth) les repèrent de loin et considèrent leur présence comme signe d'une source d'eau proche.</p>
+      <div class="card-magic-row"><p class="card-section-title">Flux d'Ombrath</p><p class="card-text">La cuirasse d'Ae+Fe stocke les décharges électrostatiques des tempêtes de sable — phénomène fréquent au pôle sud. Un grand individu après une tempête peut relâcher une décharge statique de 200 à 400V au contact. Les Grauth portent des sandales à semelles d'Aetherium-neutre dans ces zones pour protection.</p></div>
+      <div class="card-size-row"><div class="size-item">Longévité : <span>~80 ans</span></div><div class="size-item">Habitat : <span>Pôle sud aride, 75°S–90°S</span></div></div>
+    </div>
+  </div>
+
+  <div class="creature-card" data-biome="poles">
+    <div class="card-names"><div class="card-name">Manchot des Vents</div><div class="card-latin">Pinguinus tempestarius aetherplanus</div></div>
+    <div class="danger-badge danger-1-color"><div class="danger-pips"><div class="pip filled"></div><div class="pip empty"></div><div class="pip empty"></div><div class="pip empty"></div><div class="pip empty"></div></div></div>
+    <div class="card-body">
+      <div class="card-tags"><span class="tag tag-size">1,1 m de haut</span><span class="tag tag-size">Masse 40–60 kg</span><span class="tag tag-social">Colonie 1 000–50 000</span><span class="tag tag-magic">Ae+N passif (vents)</span></div>
+      <p class="card-section-title">Morphologie</p>
+      <p class="card-text">Oiseau non-volant des pôles, le plus dense de Mythologia par rapport à sa taille. Les plumes sont micro-cristallisées d'Aetherium+N, leur conférant une imperméabilité absolue et une légère interaction passive avec les vents chargés d'Ae. En colonie, le phénomène collectif produit une atmosphère localement modifiée — les grandes colonies peuvent dévier les vents polaires sur plusieurs kilomètres.</p>
+      <p class="card-section-title">Comportement</p>
+      <p class="card-text">Pêcheur marin dans les eaux polaires côtières. Les colonies sont des structures sociales complexes de plusieurs milliers d'individus. Lors des grandes tempêtes d'équinoxe, les colonies forment des sphères compactes de plusieurs centaines de mètres de diamètre — la rotation collective de la sphère crée un corridor d'air calme protégé au centre. L'Ordre étudie ce phénomène pour des applications architecturales.</p>
+      <div class="card-magic-row"><p class="card-section-title">Flux d'Ombrath</p><p class="card-text">Une colonie de &gt;10 000 individus génère collectivement une résonance Ae+N suffisante pour être perçue par les mages à 30 km de distance — signe précieux d'approche d'une zone polaire habitée. Les Aevhari en migration utilisent ces signaux comme balises naturelles.</p></div>
+      <div class="card-size-row"><div class="size-item">Longévité : <span>~60 ans</span></div><div class="size-item">Habitat : <span>Pôles, zones côtières</span></div></div>
+    </div>
+  </div>
+
+  <div class="creature-card" data-biome="poles">
+    <div class="card-names"><div class="card-name">Renard de Givre</div><div class="card-latin">Vulpes crystallis aethertracker</div></div>
+    <div class="danger-badge danger-2-color"><div class="danger-pips"><div class="pip filled"></div><div class="pip filled"></div><div class="pip empty"></div><div class="pip empty"></div><div class="pip empty"></div></div></div>
+    <div class="card-body">
+      <div class="card-tags"><span class="tag tag-size">60–80 cm au garrot</span><span class="tag tag-size">Masse 25–40 kg</span><span class="tag tag-social">Solitaire / couple</span><span class="tag tag-magic">Ae+Si (détection)</span></div>
+      <p class="card-section-title">Morphologie</p>
+      <p class="card-text">Canidé polaire à fourrure blanche d'hiver / gris-ardoise d'été. Taille compacte mais solidement bâti pour la 1,9g. Le museau porte des moustaches Aetherium+Si extraordinairement sensibles — des vibrisses cristallisées capables de détecter les gisements d'Ae dans le sol à 5 mètres de profondeur. Les coussinets plantaires sont recouverts d'une membrane Ae+Si naturelle assurant une traction parfaite sur la glace et le granite poli.</p>
+      <p class="card-section-title">Comportement</p>
+      <p class="card-text">Charognard opportuniste et chasseur de petits mammifères. Particulièrement agile pour sa taille. Les Keth'Ahrak les utilisent comme détecteurs naturels de sources d'eau et de gisements Ae en suivant leurs déplacements de loin — le Renard de Givre s'immobilise et gratte le sol au-dessus des dépôts souterrains. L'Ordre a testé sans succès leur dressage comme chiens de prospection.</p>
+      <div class="card-magic-row"><p class="card-section-title">Flux d'Ombrath</p><p class="card-text">La détection Ae+Si passive est d'une précision remarquable : un Renard de Givre peut distinguer entre différents types de gisements d'Aetherium par la composition de leur empreinte de Flux — les Durgoth ont nommé cette capacité « odorat minéral » dans leur catalogue ethnographique des espèces.</p></div>
+      <div class="card-size-row"><div class="size-item">Longévité : <span>~25 ans</span></div><div class="size-item">Usage : <span>Indicateur naturel de gisements Ae</span></div></div>
+    </div>
+  </div>
+
+  <!-- MYTHIQUE -->
+  <div class="creature-card" data-biome="mythique">
+    <div class="card-names"><div class="card-name">Élémentaire d'Aetherium</div><div class="card-latin">Spiritus aethericus purus</div></div>
+    <div class="danger-badge danger-3-color"><div class="danger-pips"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip empty"></div><div class="pip empty"></div></div></div>
+    <div class="card-body">
+      <div class="card-tags"><span class="tag tag-size">Forme variable (0,5–8 m)</span><span class="tag tag-magic">Ae pur — toutes liaisons</span><span class="tag tag-social">Solitaire</span></div>
+      <p class="card-section-title">Nature</p>
+      <p class="card-text">L'Élémentaire d'Aetherium est un cas unique en zoologie mythologienne — un organisme dont le corps est entièrement constitué d'Aetherium libre lié par une conscience diffuse générée par le Flux. N'est pas une créature au sens biologique, mais pas non plus une simple manifestation magique : l'Ordre l'a classé « entité semi-consciente Ae » après que des observations répétées ont documenté des comportements reproductibles, une mémoire à court terme, et une réponse émotionnelle primitive aux interactions magiques.</p>
+      <p class="card-section-title">Comportement</p>
+      <p class="card-text">Attirés par les zones de forte concentration Ae, les Élémentaires se manifestent principalement dans les gorges Eryndor, les mines Durgoth profondes, et lors des grands rituels de l'Ordre. Ils n'attaquent pas délibérément, mais leur simple présence perturbe tout sort actif dans un rayon de 20 mètres — un Élémentaire qui traverse une salle de pratique de l'Ordre cause des dégâts comparables à un sort raté de haut niveau.</p>
+      <div class="card-magic-row"><p class="card-section-title">Flux d'Ombrath</p><p class="card-text">L'Élémentaire est directement alimenté par le Flux local — plus le Flux est dense, plus l'Élémentaire est stable et puissant. Il peut absorber un sort Ae actif et le re-émettre amplifié de manière imprévisible. Les seules méthodes de dispersion documentées impliquent un drain Ae+N ciblé ou l'interruption physique du Flux local.</p></div>
+      <div class="card-size-row"><div class="size-item">Formation : <span>Décès de mage en zone Ae dense</span></div></div>
+    </div>
+  </div>
+
+  <div class="creature-card" data-biome="mythique">
+    <div class="card-names"><div class="card-name">Golem d'Aetherium</div><div class="card-latin">Artificium aetherferrum animatum</div></div>
+    <div class="danger-badge danger-4-color"><div class="danger-pips"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip empty"></div></div></div>
+    <div class="card-body">
+      <div class="card-tags"><span class="tag tag-size">2,5–4 m de haut</span><span class="tag tag-size">Masse 800–2 000 kg</span><span class="tag tag-magic">Ae+Fe animé</span><span class="tag tag-social">Singulier (construit)</span></div>
+      <p class="card-section-title">Nature</p>
+      <p class="card-text">Créature artificielle — la seule de ce bestiaire. Construit par les maîtres forgerons Durgoth à partir d'alliages Ae+Fe ancrés, animé par une résonance Ae+neural implantée (une empreinte de conscience, jamais une conscience complète). Le débat sur leur statut — outil ou être — est central dans la philosophie Durgoth depuis des siècles.</p>
+      <p class="card-section-title">Comportement</p>
+      <p class="card-text">Garde du corps, gardien de mines, assistant de forge. Capacité de compréhension d'ordres complexes. Les Golems vieux de plusieurs siècles, ayant absorbé des décennies de résonances Ae+neural, peuvent développer des comportements non-programmés — émotions rudimentaires, préférences, refus d'ordre. Un Golem « éveillé » de plus de 300 ans est classé entité juridique partielle par le Trône Élindor.</p>
+      <div class="card-magic-row"><p class="card-section-title">Flux d'Ombrath</p><p class="card-text">Un Golem Durgoth en pleine résonance peut canaliser et rediriger des sorts dirigés contre lui via ses surfaces d'Ae+Fe — absorption et re-émission. Les plus anciens ont appris à moduler cette réflexion, utilisant la magie ennemie comme arme retournée. Secret de fabrication jalousement gardé par les clans Durgoth.</p></div>
+      <div class="card-size-row"><div class="size-item">Durée d'activation : <span>Indéterminée (Ae stable)</span></div><div class="size-item">Statut légal : <span>Outil → Entité (&gt;300 ans)</span></div></div>
+    </div>
+  </div>
+
+  <div class="creature-card" data-biome="mythique">
+    <div class="card-names"><div class="card-name">Drakon Lunaire</div><div class="card-latin">Draco veranicus aetherlunae</div></div>
+    <div class="danger-badge danger-5-color"><div class="danger-pips"><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div><div class="pip filled"></div></div></div>
+    <div class="card-body">
+      <div class="card-tags"><span class="tag tag-size">30–80 m de long</span><span class="tag tag-size">Envergure 60–140 m</span><span class="tag tag-magic">Ae toutes liaisons (maître)</span><span class="tag tag-social">Solitaire (3–5 individus connus)</span><span class="tag tag-time">Cycle de Véran — 21 jours</span></div>
+      <p class="card-section-title">Morphologie</p>
+      <p class="card-text">Dragon au sens le plus littéral — la seule créature ailée de grande taille capable de vol soutenu à 1,9g, possible uniquement grâce à une structure Ae+Fe dans les os creux qui génère une anti-gravité locale, réduisant effectivement son poids ressenti de 60%. Les écailles sont un composite Ae+Fe+Si+O naturel d'une dureté inconnue. La taille enregistrée pour l'individu « Aurvaris » (seul spécimen approché par l'Ordre) est de 53 mètres hors-queue.</p>
+      <p class="card-section-title">Comportement</p>
+      <p class="card-text">Niche dans les plus hautes chaînes de montagnes de Lore. Son activité suit le cycle de Véran — plus actif lors des pleines lunes (21 jours). Territorial à l'échelle d'un continent. Les 3 à 5 individus connus ne se sont jamais approchés à moins de 4 000 km les uns des autres. L'Ordre a un protocole de non-intervention absolu : toute interaction avec un Drakon Lunaire est une décision de conseil plénier.</p>
+      <div class="card-magic-row"><p class="card-section-title">Flux d'Ombrath</p><p class="card-text">Un Drakon Lunaire maîtrise toutes les liaisons Ae documentées de manière instinctive et simultanée — feu, terre, lumière, martial, nécromantique, vie, mental. L'hypothèse de l'Ordre Sigma est qu'un Drakon Lunaire est à la biologie ce qu'un Grand Maître Aelven est à la magie : un sommet évolutif du potentiel de résonance Ae que Mythologia peut produire. Aucun individu n'a jamais été tué par l'action délibérée d'une autre espèce.</p></div>
+      <div class="card-size-row"><div class="size-item">Individus connus : <span>3–5 (non confirmé)</span></div><div class="size-item">Statut : <span>Intouchable — protocole absolu</span></div></div>
+    </div>
+  </div>
+
+</div><!-- /creature-data -->
+
+<script>
+/* ═══════════════════════ ÉTOILES ═══════════════════════ */
+(function(){
+  const c = document.getElementById('starCanvas');
+  const ctx = c.getContext('2d');
+  const stars = [];
+  function resize(){ c.width = innerWidth; c.height = innerHeight; }
+  function init(){
+    stars.length = 0;
+    for(let i=0;i<260;i++) stars.push({
+      x:Math.random(), y:Math.random(),
+      r:Math.random()*1.4+0.2,
+      a:Math.random(), sp:Math.random()*0.003+0.001, ph:Math.random()*Math.PI*2,
+      col: Math.random()<0.08?'gold':Math.random()<0.1?'pink':'white'
+    });
+  }
+  function draw(){
+    ctx.clearRect(0,0,c.width,c.height);
+    const n=Date.now()*.001;
+    stars.forEach(s=>{
+      const al = s.a*(0.5+0.5*Math.sin(n*s.sp*10+s.ph));
+      ctx.beginPath();
+      ctx.arc(s.x*c.width, s.y*c.height, s.r, 0, Math.PI*2);
+      ctx.fillStyle = s.col==='gold'?`rgba(201,168,76,${al})`
+                    : s.col==='pink'?`rgba(232,122,154,${al})`
+                    : `rgba(200,210,255,${al})`;
+      ctx.fill();
+    });
+  }
+  init(); resize();
+  window.addEventListener('resize', resize);
+  setInterval(draw, 50);
+})();
+
+/* ═══════════════════════ DATA ═══════════════════════ */
+const biomeLabels = {
+  lore:        { icon:'⚔', label:'Pays de Lore' },
+  passage:     { icon:'❄', label:'Passage Impossible' },
+  desert:      { icon:'☀', label:'Désert / Kamses' },
+  jungle:      { icon:'🌿', label:'Jungle C3' },
+  underground: { icon:'⬇', label:'Souterrain' },
+  ocean:       { icon:'≋', label:'Océan Infini' },
+  poles:       { icon:'◎', label:'Pôles' },
+  mythique:    { icon:'✦', label:'Créatures Mythiques' }
+};
+
+const biomeOrder = ['lore','passage','desert','jungle','underground','ocean','poles','mythique'];
+
+/* Parse all creature cards from hidden data */
+const allCreatures = [];
+document.querySelectorAll('#creature-data .creature-card').forEach((card, i) => {
+  const biome  = card.dataset.biome;
+  const name   = card.querySelector('.card-name').textContent.trim();
+  const latin  = card.querySelector('.card-latin').textContent.trim();
+  const badge  = card.querySelector('.danger-badge');
+  const colorClass = badge ? [...badge.classList].find(c => c.startsWith('danger-') && c.endsWith('-color')) || '' : '';
+  const filled = badge ? badge.querySelectorAll('.pip.filled').length : 0;
+  const body   = card.querySelector('.card-body').innerHTML;
+  allCreatures.push({ id: i, biome, name, latin, colorClass, danger: filled, body });
+});
+
+/* ═══════════════════════ STATE ═══════════════════════ */
+let currentBiome = 'all';
+let currentId    = null;
+
+/* ═══════════════════════ SIDEBAR ═══════════════════════ */
+function renderSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  sidebar.innerHTML = '';
+
+  const filtered = currentBiome === 'all'
+    ? allCreatures
+    : allCreatures.filter(c => c.biome === currentBiome);
+
+  // Group by biome in canonical order
+  const grouped = {};
+  biomeOrder.forEach(b => { grouped[b] = []; });
+  filtered.forEach(c => { if(grouped[c.biome]) grouped[c.biome].push(c); });
+
+  biomeOrder.forEach(biome => {
+    const list = grouped[biome];
+    if (!list.length) return;
+
+    const bl = biomeLabels[biome];
+    const labelEl = document.createElement('div');
+    labelEl.className = 'sidebar-biome-label';
+    labelEl.innerHTML = `<span>${bl.icon}</span><span class="lbl-text">${bl.label}</span>`;
+    sidebar.appendChild(labelEl);
+
+    list.forEach(creature => {
+      const btn = document.createElement('button');
+      btn.className = `creature-btn${creature.id === currentId ? ' active' : ''}`;
+      btn.dataset.biome = creature.biome;
+
+      // Build pip HTML
+      const pips = Array.from({length:5}, (_,i) =>
+        `<div class="cdot ${i < creature.danger ? 'filled' : 'empty'}"></div>`).join('');
+
+      btn.innerHTML = `
+        <span class="cbtn-name">${creature.name}</span>
+        <span class="cbtn-latin">${creature.latin}</span>
+        <div class="cbtn-danger ${creature.colorClass}">${pips}</div>
+      `;
+      btn.addEventListener('click', () => selectCreature(creature.id));
+      sidebar.appendChild(btn);
+    });
+  });
+}
+
+/* ═══════════════════════ DISPLAY DETAIL ═══════════════════════ */
+function selectCreature(id) {
+  currentId = id;
+  renderSidebar();
+
+  const creature = allCreatures.find(c => c.id === id);
+  if (!creature) return;
+
+  document.getElementById('infoWelcome').style.display = 'none';
+  document.getElementById('infoPanel').scrollTop = 0;
+
+  const container = document.getElementById('detailContainer');
+  container.innerHTML = '';
+
+  const view = document.createElement('div');
+  view.className = 'detail-view active';
+
+  // Build pip HTML for detail
+  const pips = Array.from({length:5}, (_,i) =>
+    `<div class="pip-d ${i < creature.danger ? 'filled' : 'empty'}"></div>`).join('');
+
+  view.innerHTML = `
+    <div class="detail-stripe stripe-${creature.biome}"></div>
+    <div class="detail-head">
+      <div>
+        <div class="detail-name">${creature.name}</div>
+        <div class="detail-latin">${creature.latin}</div>
+        <div style="margin-top:8px">
+          <span class="detail-biome-tag btag-${creature.biome}">${biomeLabels[creature.biome].icon} ${biomeLabels[creature.biome].label}</span>
+        </div>
+      </div>
+      <div class="detail-danger ${creature.colorClass}">
+        <div class="danger-label-d">Danger</div>
+        <div class="danger-pips-d">${pips}</div>
+      </div>
+    </div>
+    ${creature.body}
+  `;
+
+  container.appendChild(view);
+}
+
+/* ═══════════════════════ BIOME FILTER ═══════════════════════ */
+function setBiome(biome, btn) {
+  currentBiome = biome;
+  currentId    = null;
+
+  document.querySelectorAll('.btab').forEach(b => b.className = 'btab');
+  const cls = biome === 'all' ? 'active' : `active-${biome}`;
+  btn.classList.add(cls);
+
+  document.getElementById('infoWelcome').style.display = '';
+  document.getElementById('detailContainer').innerHTML = '';
+  renderSidebar();
+}
+
+/* ═══════════════════════ INIT ═══════════════════════ */
+renderSidebar();
+</script>
+</body>
+</html>
