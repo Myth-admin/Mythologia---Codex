@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mythologia — Minerais & Métaux</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bleu-nuit: #0a1520;
+    --violet-ae: #6b3fa0;
+    --eclat-ae:  #a78bfa;
+    --or-ae:     #c9a84c;
+    --blanc-lune:#e8e4f0;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { height: 100%; overflow: hidden; }
+
+  body {
+    background: var(--bleu-nuit);
+    color: var(--blanc-lune);
+    font-family: 'EB Garamond', serif;
+  }
+
+  /* ── ÉTOILES ── */
+  #starCanvas { position:fixed; inset:0; z-index:0; }
+  .overlay {
+    position:fixed; inset:0;
+    background: radial-gradient(ellipse at center, rgba(10,21,32,0.3) 0%, rgba(10,21,32,0.85) 100%);
+    z-index:1;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed;
+    top:0; left:0; right:0;
+    height: 56px;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 0 36px;
+    background: linear-gradient(180deg, rgba(10,21,32,0.97) 0%, rgba(10,21,32,0.0) 100%);
+  }
+  .nav-back {
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    color: var(--eclat-ae);
+    text-decoration: none;
+    text-transform: uppercase;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+  }
+  .nav-back:hover { opacity: 1; }
+  .nav-sep { color: rgba(167,139,250,0.3); }
+  .nav-current {
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--blanc-lune);
+  }
+
+  /* ── PAGE ── */
+  .page {
+    position: relative;
+    z-index: 10;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── EN-TÊTE ── */
+  .page-header {
+    flex-shrink: 0;
+    text-align: center;
+    padding: 72px 20px 16px;
+    animation: fadeDown 1s ease both;
+  }
+  @keyframes fadeDown {
+    from { opacity:0; transform:translateY(-20px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  .page-header h1 {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(1.4rem, 3vw, 2.4rem);
+    color: var(--blanc-lune);
+    text-shadow: 0 0 40px rgba(167,139,250,0.5), 0 0 80px rgba(167,139,250,0.2);
+    letter-spacing: 0.1em;
+    margin-bottom: 6px;
+  }
+  .sous-titre {
+    font-family: 'Cinzel', serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.5em;
+    color: var(--eclat-ae);
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+  .ornement {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 12px auto 0;
+    width: min(400px, 80vw);
+  }
+  .ornement-line  { flex:1; height:1px; background:linear-gradient(90deg,transparent,var(--eclat-ae),transparent); }
+  .ornement-gem   { width:7px; height:7px; background:var(--eclat-ae); transform:rotate(45deg); box-shadow:0 0 10px var(--eclat-ae); flex-shrink:0; }
+  .ornement-gem-s { width:4px; height:4px; background:var(--eclat-ae); transform:rotate(45deg); opacity:0.5; flex-shrink:0; }
+
+  /* ── TABS ── */
+  .filter-tabs {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 36px 12px;
+    border-bottom: 1px solid rgba(167,139,250,0.1);
+    animation: fadeIn 1s 0.3s ease both;
+    flex-wrap: wrap;
+  }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+  .ftab {
+    font-family: 'Cinzel', serif;
+    font-size: 0.62rem;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    padding: 6px 20px;
+    background: transparent;
+    border: 1px solid rgba(167,139,250,0.18);
+    color: rgba(167,139,250,0.45);
+    cursor: pointer;
+    transition: all 0.22s;
+    border-radius: 2px;
+  }
+  .ftab:hover { color: var(--eclat-ae); border-color: rgba(167,139,250,0.4); }
+  .ftab.active {
+    color: var(--or-ae);
+    border-color: rgba(201,168,76,0.45);
+    background: rgba(201,168,76,0.06);
+    text-shadow: 0 0 12px rgba(201,168,76,0.3);
+  }
+  .ftab.active-ae {
+    color: var(--eclat-ae);
+    border-color: rgba(167,139,250,0.5);
+    background: rgba(107,63,160,0.12);
+    text-shadow: 0 0 12px rgba(167,139,250,0.3);
+  }
+
+  /* ── ZONE CONTENU ── */
+  .content-area {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    overflow: hidden;
+    animation: fadeIn 1s 0.4s ease both;
+  }
+
+  /* ── SIDEBAR ── */
+  .mineral-list {
+    width: 260px;
+    flex-shrink: 0;
+    overflow-y: auto;
+    border-right: 1px solid rgba(167,139,250,0.1);
+    padding-bottom: 40px;
+  }
+  .mineral-list::-webkit-scrollbar { width: 4px; }
+  .mineral-list::-webkit-scrollbar-track { background: transparent; }
+  .mineral-list::-webkit-scrollbar-thumb { background: rgba(167,139,250,0.18); border-radius:2px; }
+
+  .sidebar-cat-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.55rem;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--or-ae);
+    opacity: 0.6;
+    padding: 16px 18px 6px;
+    border-bottom: 1px solid rgba(201,168,76,0.1);
+  }
+
+  .mineral-btn {
+    width: 100%;
+    padding: 10px 18px;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(167,139,250,0.06);
+    border-left: 2px solid transparent;
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    transition: background 0.18s, border-left-color 0.18s;
+  }
+  .mineral-btn:hover { background: rgba(107,63,160,0.1); }
+  .mineral-btn.active { background: rgba(107,63,160,0.16); border-left-color: var(--eclat-ae); }
+
+  .btn-name {
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    color: rgba(232,228,240,0.7);
+    line-height: 1.35;
+    transition: color 0.18s;
+  }
+  .mineral-btn:hover .btn-name,
+  .mineral-btn.active .btn-name { color: var(--blanc-lune); }
+
+  .btn-sub {
+    font-size: 0.78rem;
+    color: rgba(167,139,250,0.45);
+    font-style: italic;
+  }
+
+  /* ── PANNEAU DÉTAIL ── */
+  .info-panel {
+    flex: 1;
+    overflow-y: auto;
+    padding: 32px 44px 60px;
+  }
+  .info-panel::-webkit-scrollbar { width: 4px; }
+  .info-panel::-webkit-scrollbar-track { background: transparent; }
+  .info-panel::-webkit-scrollbar-thumb { background: rgba(167,139,250,0.18); border-radius:2px; }
+
+  /* Placeholder */
+  .info-welcome {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    opacity: 0.45;
+    gap: 14px;
+  }
+  .info-welcome-icon { font-size: 2.5rem; }
+  .info-welcome-text {
+    font-family: 'Cinzel', serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--eclat-ae);
+    line-height: 2;
+  }
+
+  /* Cartes */
+  .info-card { display: none; animation: slideIn 0.4s ease; }
+  .info-card.active { display: block; }
+  @keyframes slideIn {
+    from { opacity:0; transform:translateX(16px); }
+    to   { opacity:1; transform:translateX(0); }
+  }
+
+  /* En-tête de carte */
+  .info-card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+    margin-bottom: 20px;
+  }
+  .info-card-icon {
+    width: 52px; height: 52px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+    border: 1px solid rgba(167,139,250,0.2);
+    background: rgba(107,63,160,0.1);
+  }
+  .info-card-name {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(1rem, 2vw, 1.4rem);
+    color: var(--blanc-lune);
+    text-shadow: 0 0 20px rgba(167,139,250,0.25);
+    line-height: 1.25;
+    margin-bottom: 4px;
+  }
+  .info-card-formula {
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    color: var(--eclat-ae);
+    opacity: 0.8;
+    margin-bottom: 3px;
+  }
+  .info-card-type {
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--or-ae);
+    opacity: 0.7;
+  }
+
+  /* Badges */
+  .badges-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-bottom: 6px;
+  }
+  .badge-pill {
+    font-family: 'Cinzel', serif;
+    font-size: 0.55rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 2px;
+    border: 1px solid rgba(167,139,250,0.25);
+    color: var(--eclat-ae);
+    background: rgba(107,63,160,0.1);
+  }
+  .badge-pill.ae-actif { border-color: rgba(167,139,250,0.5); background: rgba(107,63,160,0.18); }
+  .badge-pill.ae-passif { border-color: rgba(167,139,250,0.15); color: rgba(167,139,250,0.5); background: transparent; }
+  .badge-pill.ae-barriere { border-color: rgba(120,130,150,0.3); color: rgba(150,160,180,0.7); background: rgba(80,90,110,0.1); }
+  .badge-pill.myth { border-color: rgba(201,168,76,0.4); color: var(--or-ae); background: rgba(201,168,76,0.07); }
+  .badge-pill.rarity { border-color: rgba(167,139,250,0.15); color: rgba(232,228,240,0.5); background: transparent; }
+  .badge-pill.leg { border-color: rgba(167,139,250,0.5); color: var(--eclat-ae); background: rgba(107,63,160,0.18); }
+
+  /* Séparateur */
+  .info-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(167,139,250,0.3), transparent);
+    margin: 16px 0;
+  }
+
+  /* Label de section */
+  .section-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.58rem;
+    letter-spacing: 0.38em;
+    text-transform: uppercase;
+    color: var(--eclat-ae);
+    opacity: 0.65;
+    margin-bottom: 8px;
+  }
+
+  /* Texte descriptif */
+  .info-desc {
+    font-size: 1rem;
+    line-height: 1.85;
+    color: rgba(232,228,240,0.82);
+    font-style: italic;
+    margin-bottom: 18px;
+  }
+  .info-desc em { font-style: normal; color: rgba(232,228,240,0.95); }
+
+  /* Grille de stats */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .stat-box {
+    background: rgba(13,27,42,0.6);
+    border: 1px solid rgba(167,139,250,0.12);
+    border-radius: 10px;
+    padding: 11px 14px;
+  }
+  .stat-box.full { grid-column: 1 / -1; }
+  .stat-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.55rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--eclat-ae);
+    opacity: 0.65;
+    margin-bottom: 5px;
+  }
+  .stat-value {
+    font-size: 0.95rem;
+    color: var(--blanc-lune);
+    line-height: 1.5;
+  }
+  .stat-value.ae { color: var(--eclat-ae); }
+
+  /* Bloc Aetherium */
+  .info-lore {
+    padding: 14px 16px;
+    background: rgba(107,63,160,0.08);
+    border-left: 2px solid rgba(167,139,250,0.35);
+    border-radius: 0 8px 8px 0;
+    margin-bottom: 18px;
+  }
+  .info-lore-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.58rem;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--eclat-ae);
+    opacity: 0.7;
+    margin-bottom: 8px;
+  }
+  .info-lore-text {
+    font-size: 0.97rem;
+    line-height: 1.85;
+    color: rgba(232,228,240,0.75);
+    font-style: italic;
+  }
+  .info-lore-text em { font-style: normal; color: var(--eclat-ae); }
+
+  /* Ae stars */
+  .ae-stars { display:inline-flex; gap:3px; margin-left:8px; vertical-align:middle; }
+  .ae-star { font-size:0.7rem; color:var(--eclat-ae); }
+  .ae-star.off { color:rgba(167,139,250,0.2); }
+
+  /* Usages / Utilisateurs */
+  .tags-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
+  .tag-item {
+    font-size: 0.88rem;
+    font-style: italic;
+    color: rgba(232,228,240,0.65);
+    padding: 3px 10px;
+    border: 1px solid rgba(167,139,250,0.1);
+    border-radius: 8px;
+    background: rgba(13,27,42,0.5);
+  }
+  .tag-item.user { color: rgba(232,228,240,0.8); border-color: rgba(167,139,250,0.18); }
+</style>
+</head>
+<body>
+
+<canvas id="starCanvas"></canvas>
+<div class="overlay"></div>
+
+<nav>
+  <a class="nav-back" href="index.html">← Mythologia</a>
+  <span class="nav-sep">✦</span>
+  <span class="nav-current">Minerais & Métaux</span>
+</nav>
+
+<div class="page">
+
+  <!-- EN-TÊTE -->
+  <div class="page-header">
+    <h1>MINERAIS & MÉTAUX</h1>
+    <p class="sous-titre">Géologie, Ressources &amp; Aetherium · Gravité 1,9g · Ae Z=119</p>
+    <div class="ornement">
+      <div class="ornement-line"></div>
+      <div class="ornement-gem-s"></div>
+      <div class="ornement-gem"></div>
+      <div class="ornement-gem-s"></div>
+      <div class="ornement-line"></div>
+    </div>
+  </div>
+
+  <!-- FILTRES -->
+  <div class="filter-tabs">
+    <button class="ftab active" onclick="setFilter('all',this)">Tous les Minéraux</button>
+    <button class="ftab"        onclick="setFilter('ae',this)">✦ Ae Actif</button>
+  </div>
+
+  <!-- ZONE CONTENU -->
+  <div class="content-area">
+
+    <!-- SIDEBAR -->
+    <div class="mineral-list" id="sidebar"></div>
+
+    <!-- PANNEAU DÉTAIL -->
+    <div class="info-panel" id="infoPanel">
+      <div class="info-welcome" id="infoWelcome">
+        <div class="info-welcome-icon">💎</div>
+        <div class="info-welcome-text">Sélectionnez un minéral<br>pour consulter sa fiche</div>
+      </div>
+      <div id="cardsContainer"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════
+   ÉTOILES (identique factions.html)
+══════════════════════════════════ */
+const starCanvas = document.getElementById('starCanvas');
+const sCtx = starCanvas.getContext('2d');
+const stars = [];
+function resizeStarCanvas() {
+  starCanvas.width  = window.innerWidth;
+  starCanvas.height = window.innerHeight;
+}
+function initStars() {
+  stars.length = 0;
+  for (let i = 0; i < 260; i++) stars.push({
+    x: Math.random(), y: Math.random(),
+    r: Math.random() * 1.4 + 0.2,
+    a: Math.random() * 0.7 + 0.1,
+    speed: Math.random() * 0.003 + 0.001,
+    phase: Math.random() * Math.PI * 2
+  });
+}
+function drawStars() {
+  sCtx.clearRect(0, 0, starCanvas.width, starCanvas.height);
+  const now = Date.now() * 0.001;
+  stars.forEach(s => {
+    const alpha = s.a * (0.5 + 0.5 * Math.sin(now * s.speed * 10 + s.phase));
+    sCtx.beginPath();
+    sCtx.arc(s.x * starCanvas.width, s.y * starCanvas.height, s.r, 0, Math.PI * 2);
+    sCtx.fillStyle = `rgba(200,210,255,${alpha})`;
+    sCtx.fill();
+  });
+}
+initStars(); resizeStarCanvas();
+window.addEventListener('resize', resizeStarCanvas);
+setInterval(drawStars, 50);
+
+/* ══════════════════════════════════
+   DONNÉES
+══════════════════════════════════ */
+const CATS = {
+  'aetherium':      { label:'Aetherium & Dérivés',     icon:'◈' },
+  'metaux-base':    { label:'Métaux de base',           icon:'⚙' },
+  'metaux-precieux':{ label:'Métaux précieux',          icon:'◎' },
+  'silicates':      { label:'Minéraux silicatés',       icon:'◆' },
+  'gemmes':         { label:'Gemmes',                   icon:'✦' },
+  'phosphores':     { label:'Minéraux phosphorés',      icon:'◉' },
+  'ferreux':        { label:'Minéraux ferreux',         icon:'⬡' },
+  'carbones':       { label:'Minéraux carbonés',        icon:'⬢' },
+  'azotes':         { label:'Minéraux azotés',          icon:'⟡' },
+  'volcaniques':    { label:'Minéraux volcaniques',     icon:'⊕' },
+  'profondeurs':    { label:'Minéraux des profondeurs', icon:'⊗' },
+};
+const RAR = {
+  'tres-commun':{label:'Très commun', d:1},
+  'commun':     {label:'Commun',      d:2},
+  'peu-commun': {label:'Peu commun',  d:3},
+  'rare':       {label:'Rare',        d:4},
+  'tres-rare':  {label:'Très rare',   d:5},
+  'legendaire': {label:'Légendaire',  d:6},
+};
+
+const DATA = [
+  /* AETHERIUM */
+  {id:'aetherite',cat:'aetherium',icon:'🔷',name:'Aetherite Brute',formula:'Ae · [Og]8s¹',rarity:'rare',myth:true,ae:'actif',aeStr:3,aeRes:'Source — toutes liaisons',zones:['Gorges d\'Eryndor (Lore)','Mines Durgoth profondes','Zone Veth\'ari'],desc:'Minéral primordial de Mythologia, l\'Aetherite brute est l\'Aetherium à l\'état natif, non lié. Bleu-noir avec reflets violets intenses, il forme des filons dans les zones de forte concentration de Flux. <em>Instable à l\'état pur</em> (demi-vie ~6h sans liaison), il se stabilise instantanément au contact d\'un tissu neural sensible ou d\'un métal compatible. Les Durgoth le manipulent uniquement avec des gants d\'Ombrax.',aeTxt:'L\'Aetherite concentre la chiralité 8s héritée de l\'effet Kerr d\'Umbrath. Sa configuration [Og]8s¹ le rend extrêmement réactif à tout substrat — le contact prolongé sans encadrement entraîne une <em>sur-résonance</em> et la destruction du tissu neural. C\'est la matière première irréductible de tout Aetherium lié.',usages:['Matière première de toute magie forgée','Réactif alchimique universel','Extraction Durgoth'],users:['Durgoth ★★★','Ordre des Mages','Veth\'ari']},
+  {id:'veranite',cat:'aetherium',icon:'🌙',name:'Véranite',formula:'Ae·SiO₄ (composite lunaire)',rarity:'tres-rare',myth:true,ae:'actif',aeStr:2,aeRes:'Ae+Si modulé — pulsatile, cycle 21 jours',zones:['Berges des lacs glaciaires','Failles orientées vers Véran'],desc:'Cristal composite formé uniquement lors des <em>pleines lunes de Véran</em>, quand le flux gravitationnel lunaire aligne les couches d\'Aetherium dans certaines failles silicatées. Blanc irisé avec des veines bleues qui s\'intensifient à l\'approche de la pleine lune. La seule résonance cyclique et prévisible de Mythologia.',aeTxt:'La gravité de Véran, lors des phases pleines, force la cristallisation Ae+Si dans une configuration où la chiralité est <em>encodée à une fréquence de 21 jours</em>. Un mage portant de la Véranite ressent des variations de puissance correspondant exactement aux phases lunaires.',usages:['Calendriers rituels','Amplificateurs temporaires','Joaillerie magique'],users:['Ordre des Mages','Thyrak (bois rituels)','Aelven']},
+  {id:'umbratite',cat:'aetherium',icon:'🕳️',name:'Umbratite',formula:'Ae·Pb·X (composition partielle)',rarity:'legendaire',myth:true,ae:'actif',aeStr:3,aeRes:'Ae gravitationnel — aberrations locales de pesanteur',zones:['Profondeurs géologiques extrêmes — strates directes du rayonnement Umbrath'],desc:'Minéral ultra-rare formé dans les strates profondes exposées au rayonnement X/γ d\'Umbrath sur des milliards d\'années. <em>Noir absolu</em>, sans aucun reflet lumineux. Un fragment de 10g crée une légère distorsion gravitationnelle locale mesurable par les instruments de l\'Ordre.',aeTxt:'La couche 8s est ici couplée à des <em>propriétés gravitationnelles issues des ondes de Kerr</em>. Applications restent théoriques. <em>Dossier SIGMA — Conseil Plénier uniquement.</em>',usages:['Recherche théorique (Ordre)','Aucune application connue'],users:['Ordre des Mages — Dossier SIGMA']},
+
+  /* MÉTAUX DE BASE */
+  {id:'fer',cat:'metaux-base',icon:'⚙️',name:'Fer',formula:'Fe',rarity:'tres-commun',myth:false,ae:'actif',aeStr:3,aeRes:'Ae+Fe ★★★ — martial, forge, métal',zones:['Partout — abondant dans toute la croûte','Mines Durgoth en quantité industrielle'],desc:'Le métal structurant de la civilisation de Mythologia. À 1,9g, le fer est encore plus central que sur Terre. Sa <em>compatibilité orbitale unique avec l\'Aetherium</em> en fait la base de toute forge magique. Le Trône Elindor arme ses légions grâce aux forges Durgoth Ae+Fe.',aeTxt:'La configuration électronique <em>3d⁶</em> du fer crée une résonance magnétique naturelle avec la couche 8s de l\'Aetherium. La liaison Ae+Fe transmet la volonté du mage dans le métal sans perte synaptique — les Durgoth ont codifié cette propriété sur des millénaires.',usages:['Forge et armurerie ★★★','Architecture sous haute gravité','Base de forge Ae+Fe'],users:['Durgoth ★★★','Sauridh (guerriers-chamans)','Humains — Trône Elindor','Ordre des Mages']},
+  {id:'cuivre',cat:'metaux-base',icon:'🟤',name:'Cuivre',formula:'Cu',rarity:'commun',myth:false,ae:'passif',aeStr:0,aeRes:'Conducteur Ae neutre passif',zones:['Zones volcaniques de Lore','Gisements hydrothermaux de Kamses'],desc:'Métal mou et malléable, excellent conducteur. Sur Mythologia, le cuivre est précieux pour sa <em>conductivité passive du Flux</em> : les cercles arcaniques gravés en fil de cuivre concentrent mieux les résonances que ceux tracés à la craie. Monnaie courante de l\'Empire Kamses.',aeTxt:'La conductivité électronique élevée du cuivre lui permet de <em>véhiculer passivement les courants de Flux</em> sans les absorber ni les déformer — le câble neutre du monde magique.',usages:['Monnaie courante','Câblage rituel des cercles arcaniques','Alliage bronze (Cu+Sn)'],users:['Humains','Ordre des Mages','Marchands Kamses']},
+  {id:'etain',cat:'metaux-base',icon:'⬜',name:'Étain',formula:'Sn',rarity:'peu-commun',myth:false,ae:'aucun',aeStr:0,aeRes:null,zones:['Gisements alluviaux de Lore','Roches métamorphiques de C3'],desc:'Métal malléable principalement utilisé en alliage avec le cuivre pour produire le <em>bronze</em>. Sous 1,9g, les alliages bronze sont particulièrement recherchés pour les pièces mécaniques requérant résistance à la fatigue. Aucune résonance Ae détectée.',aeTxt:null,usages:['Bronze (Cu+Sn) ★★★','Soudure','Revêtement anti-corrosion'],users:['Artisans de Lore','Empire Kamses']},
+  {id:'plomb',cat:'metaux-base',icon:'🔩',name:'Plomb',formula:'Pb',rarity:'rare',myth:false,ae:'barriere',aeStr:0,aeRes:'Barrière Ae — blinde le Flux d\'Ombrath',zones:['Quelques gisements profonds en Lore','Mines Durgoth sécurisées'],desc:'Métal dense et mou, précieux sur Mythologia pour une raison unique : c\'est le seul métal naturel qui forme une <em>barrière efficace contre le Flux d\'Ombrath</em>. Sa rareté lui confère une valeur stratégique considérable — les coffres royaux du Trône sont doublés de plomb.',aeTxt:'La configuration 6s² pleinement remplie crée une interférence destructive avec les ondes chirales du Flux. Contrairement au fer qui <em>amplifie et lie</em> l\'Ae, le plomb <em>l\'absorbe et le dissipe thermiquement</em>. Un mage derrière une paroi de plomb est invisible à toute détection Ae.',usages:['Blindage Ae (coffres, chambres) ★★★','Protection contre intrusion magique'],users:['Ordre des Mages (archives)','Trône Elindor (coffres royaux)','Veth\'ari']},
+  {id:'zinc',cat:'metaux-base',icon:'🔲',name:'Zinc',formula:'Zn',rarity:'peu-commun',myth:false,ae:'aucun',aeStr:0,aeRes:null,zones:['Gisements carbonatés de Lore','Zones désertiques de Kamses'],desc:'Métal utilisé principalement en <em>galvanisation du fer</em> pour le protéger de la corrosion — crucial sous les pluies acides des zones équatoriales. L\'alliage laiton (Cu+Zn) est très répandu dans la quincaillerie et la décoration. Aucune résonance Ae détectée.',aeTxt:null,usages:['Galvanisation du fer','Laiton (Cu+Zn)','Instruments de mesure'],users:['Artisans','Marchands des deux continents']},
+  {id:'chrome',cat:'metaux-base',icon:'🔘',name:'Chrome',formula:'Cr',rarity:'peu-commun',myth:false,ae:'aucun',aeStr:0,aeRes:null,zones:['Roches ultrabasiques des montagnes de Lore'],desc:'Métal dur et résistant à la corrosion. Sous 1,9g, la <em>trempe chrome-fer</em> produit des alliages d\'une résistance à l\'impact nettement supérieure aux aciers simples — utilisés pour les armures lourdes de la cavalerie du Trône Elindor.',aeTxt:null,usages:['Trempe des lames de guerre','Armures lourdes ★★','Héraldique des grandes maisons'],users:['Forgerons Durgoth','Armée du Trône Elindor']},
+
+  /* MÉTAUX PRÉCIEUX */
+  {id:'or',cat:'metaux-precieux',icon:'🟡',name:'Or',formula:'Au',rarity:'rare',myth:false,ae:'actif',aeStr:3,aeRes:'Ae+Au ★★★ — alchimie, transmutation',zones:['Gisements alluviaux de Lore','Filons hydrothermaux de Kamses'],desc:'Métal noble dont la valeur sur Mythologia <em>dépasse largement l\'usage monétaire</em>. La compatibilité orbitale unique de l\'or avec l\'Aetherium en fait le catalyseur alchimique le plus puissant connu. Les archmages de l\'Ordre utilisent des ustensiles en or pur pour les transmutations Ae+Au.',aeTxt:'Les orbitales <em>5d et 6s de l\'or sont quasi-dégénérées</em> (effet relativiste prononcé), créant une compatibilité magnétique exceptionnelle avec la couche 8s. L\'or ne consomme pas l\'Aetherium ; il <em>l\'amplifie et le redirige</em> comme un prisme redirige la lumière.',usages:['Catalyseur alchimique Ae+Au ★★★','Monnaie de haute valeur','Joaillerie rituelle'],users:['Ordre des Mages ★★★','Aristocratie de Lore','Lutharin','Cour de Kamses']},
+  {id:'argent',cat:'metaux-precieux',icon:'⚪',name:'Argent',formula:'Ag',rarity:'peu-commun',myth:false,ae:'passif',aeStr:0,aeRes:'Ae+P passif — miroir de Flux',zones:['Veines hydrothermales de Lore','Gisements nord de Kamses'],desc:'Métal blanc éclatant, meilleur conducteur électrique naturel de Mythologia. L\'argent est la base des <em>miroirs magiques</em> : sa surface polie réfléchit non seulement la lumière mais aussi, légèrement, les traces Ae+P de l\'environnement. Les Aelven les considèrent comme instruments de divination.',aeTxt:'La structure cristalline cubique à faces centrées de l\'argent crée une interface lisse pour les courants Ae+P. Contrairement au cuivre, l\'argent <em>amplifie légèrement Ae+P</em> en surface — les miroirs d\'argent ancré révèlent des traces de Flux invisibles à l\'œil nu.',usages:['Miroirs magiques Ae+P ★★','Joaillerie rituelle','Monnaie secondaire'],users:['Aelven ★★','Ordre des Mages','Aristocratie de Lore']},
+  {id:'platine',cat:'metaux-precieux',icon:'🔵',name:'Platine',formula:'Pt',rarity:'tres-rare',myth:false,ae:'actif',aeStr:1,aeRes:'Ae+Pt — stabilisation de résonances instables',zones:['Gisements ultrabasiques profonds — mines Durgoth de grande profondeur'],desc:'Métal gris-argent dense, résistant à toute corrosion. Son usage principal est la <em>stabilisation des résonances Ae instables</em> — un creuset de platine évite les réactions en chaîne lors des expériences alchimiques dangereuses. Les tables de travail de la Tour d\'Opale sont plaquées platine.',aeTxt:'Le platine agit comme <em>catalyseur secondaire</em> : il stabilise les liaisons Ae+X en formation, abaissant l\'énergie d\'activation sans être consommé. Sa configuration 5d⁹6s¹ le rend compatible lors des transitions instables.',usages:['Stabilisation de résonances ★★★','Laboratoires alchimiques','Instruments de précision'],users:['Ordre des Mages ★★★']},
+
+  /* SILICATÉS */
+  {id:'quartz',cat:'silicates',icon:'🔹',name:'Quartz',formula:'SiO₂',rarity:'tres-commun',myth:false,ae:'actif',aeStr:2,aeRes:'Ae+Si ★★ — cristaux de stockage',zones:['Partout — roche mère de la croûte de Mythologia'],desc:'Minéral le plus abondant de Mythologia. Sa structure cristalline hexagonale est naturellement compatible avec l\'ancrage de l\'Aetherium, en faisant le <em>support de stockage Ae le plus utilisé à l\'échelle industrielle</em>. Un cristal de quartz ancré peut stocker une quantité de Flux réémettable ultérieurement.',aeTxt:'La structure SiO₄ tétraédrique crée des sites de substitution isomorphe où un atome d\'Aetherium peut remplacer un Si sans déstabiliser le réseau. La chiralité 8s de l\'Ae ancré est <em>parfaitement préservée</em> — rendant le cristal réémetteur fidèle.',usages:['Cristaux de stockage Ae ★★★','Bâtons de mage (support)','Architecture','Instruments optiques'],users:['Ordre des Mages','Aelven','Durgoth (forge)','Veth\'ari']},
+  {id:'feldspath',cat:'silicates',icon:'🪨',name:'Feldspath',formula:'KAlSi₃O₈',rarity:'tres-commun',myth:false,ae:'passif',aeStr:0,aeRes:'Ae passif de fond — bruit ambiant du Flux',zones:['Roches granitiques de Lore et C3 — omniprésent'],desc:'Famille de minéraux silicatés constituant la majorité des roches granitiques continentales. Les felspaths sont les vecteurs du <em>Flux de fond</em> — le bruit ambiant que tous les mages ressentent en permanence provient principalement du granite feldspathique.',aeTxt:null,usages:['Construction ★★★','Céramique','Verre de base'],users:['Architectes','Maçons','Tous les peuples de Lore']},
+  {id:'mica',cat:'silicates',icon:'📄',name:'Mica',formula:'K(Mg,Fe)₃AlSi₃O₁₀(OH)₂',rarity:'peu-commun',myth:false,ae:'passif',aeStr:0,aeRes:'Ae passif isolant — semi-réfléchissant en couches',zones:['Roches métamorphiques de Lore'],desc:'Minéral feuilleté exfoliable en lamelles semi-transparentes. Ses feuillets créent des barrières <em>légères et isolantes</em> contre les courants Ae — utilisé en doublure des robes de protection des apprentis mages et pour les fenêtres des salles de pratique.',aeTxt:'L\'empilement des feuillets crée des gaps de van der Waals qui interrompent la propagation des courants Ae. En couches fines, ils sont <em>semi-réfléchissants pour le Flux</em> — protection partielle, suffisante pour les apprentis.',usages:['Isolation Ae légère (robes)','Fenêtres semi-transparentes','Protection apprentis'],users:['Ordre des Mages','Artisans de Lore']},
+  {id:'glacite',cat:'silicates',icon:'🧊',name:'Glacite',formula:'Ae·SiO₂ (haute pression glaciaire)',rarity:'rare',myth:true,ae:'actif',aeStr:2,aeRes:'Ae+Si glaciaire — froid, armures de glace, vent',zones:['Parois internes du Passage Impossible','Falaises glaciaires équatoriales'],desc:'Variété d\'Aetherite naturellement liée à la silice sous les pressions extrêmes des parois glaciaires du Passage Impossible. D\'un blanc bleuté translucide. Matériau premier des <em>instruments rituels chamaniques</em> Skoran — les antennes Ae de la chaîne équatoriale.',aeTxt:'La pression du glacier (milliers de tonnes à 1,9g) comprime la liaison Ae+Si dans une configuration impossible en surface — les canaux de conduction sont <em>orientés perpendiculairement à la surface de refroidissement</em>, forçant les résonances vers le froid et le vent.',usages:['Instruments rituels Skoran ★★★','Bâtons de mage (effets givre)','Architecture haute altitude'],users:['Skoran ★★★','Ordre des Mages (expéditions)','Aelven']},
+
+  /* GEMMES */
+  {id:'corindon',cat:'gemmes',icon:'💎',name:'Corindon',formula:'Al₂O₃',rarity:'rare',myth:false,ae:'actif',aeStr:2,aeRes:'Rubis → Ae+O · Saphir → Ae+Si',zones:['Roches métamorphiques de haute pression — Lore et Kamses'],desc:'L\'oxyde d\'aluminium pur donne le rubis (rouge) et le saphir (bleu). La haute gravité génère des corindons d\'une taille et clarté exceptionnelles. Les <em>pierres de mage</em> les plus prisées sont des corindons — leur réseau Al₂O₃ ancre l\'Ae avec une stabilité indéfinie.',aeTxt:'Le réseau Al₂O₃ est parmi les plus stables (dureté 9/10). Le <em>rubis amplifie Ae+O</em> (impuretés Cr modifient les orbitales d) ; le <em>saphir amplifie Ae+Si</em> (impuretés Ti stabilisent les liaisons tétraédriques).',usages:['Pierres de mage ★★','Joaillerie de haute valeur','Instruments optiques'],users:['Ordre des Mages ★★','Aristocratie','Aelven']},
+  {id:'beryl',cat:'gemmes',icon:'💚',name:'Béryl',formula:'Be₃Al₂Si₆O₁₈',rarity:'rare',myth:false,ae:'actif',aeStr:1,aeRes:'Émeraude → Ae+C · Aigue-marine → Ae+Si',zones:['Pegmatites granitiques de Lore'],desc:'L\'émeraude (vert, chrome) et l\'aigue-marine (bleu, fer) sont les deux variétés principales. L\'émeraude ancre naturellement Ae+C — <em>intuition correcte</em> dans toutes les cultures qui l\'associent à la vie. L\'aigue-marine est portée par les navigateurs comme protection des mers d\'équinoxe.',aeTxt:'La structure cyclique hexagonale Si₆O₁₈ crée des <em>canaux tubulaires orientés le long de l\'axe c</em> — conduits naturels pour les courants Ae. Selon l\'impureté : chrome → Ae+C ; fer ferreux → Ae+Si.',usages:['Joaillerie rituelle','Protection marins (aigue-marine) ★★','Soins Ae+C (émeraude)'],users:['Vahryn chamans (émeraude)','Aevhari (aigue-marine)','Aristocratie']},
+  {id:'diamant',cat:'gemmes',icon:'💠',name:'Diamant',formula:'C (réseau cubique)',rarity:'tres-rare',myth:false,ae:'actif',aeStr:3,aeRes:'Ae+C ★★★ — vie pure, biologie, régénération',zones:['Pipes kimberlitiques profondes — Lore méridional, sous-sol Kamses'],desc:'Le carbone pur en réseau cubique — la forme la plus dense et la plus dure de Mythologia. Sa pureté en carbone en fait le support Ae+C le plus concentré existant. Un diamant ancré par un grand maître peut stocker suffisamment de Flux Vitae pour <em>soigner des blessures mortelles</em>.',aeTxt:'La densité maximale des liaisons C-C force l\'Aetherium ancré à adopter une configuration <em>Vitae exclusive</em> — aucune autre résonance ne se stabilise dans le diamant. Le focalisateur Ae+C le plus pur.',usages:['Focalisateur Ae+C ★★★','Stockage de Flux vital d\'urgence','Joaillerie suprême'],users:['Vahryn chamans anciens','Ordre des Mages','Thyrak druides']},
+
+  /* PHOSPHORÉS */
+  {id:'apatite',cat:'phosphores',icon:'🌸',name:'Apatite',formula:'Ca₅(PO₄)₃(F,Cl,OH)',rarity:'peu-commun',myth:false,ae:'actif',aeStr:2,aeRes:'Ae+P ★★ — lumière, illusion',zones:['Roches sédimentaires et métamorphiques — Lore et Kamses'],desc:'Principal minerai de phosphore de Mythologia. La présence de PO₄³⁻ dans sa structure crée une compatibilité directe avec Ae+P. Les <em>bâtons d\'illusion</em> des mages Aelven et Kethara sont quasi tous dotés d\'une pointe en apatite taillée. Elle brille légèrement la nuit sous les UV résiduels.',aeTxt:'Les groupes phosphate PO₄³⁻ sont naturellement luminescents sous UV — avec les UV élevés d\'Aurys et Séraph, les affleurements <em>brillent légèrement la nuit</em>. L\'Aetherium ancré hérite de cette luminescence amplifiée.',usages:['Bâtons d\'illusion ★★','Pigments lumineux','Réactifs alchimiques'],users:['Aelven ★★','Kethara femelles ★★','Lutharin']},
+  {id:'phosphene',cat:'phosphores',icon:'🩷',name:'Phosphène',formula:'Ae·P₄O₁₀ (phosphate Ae natif)',rarity:'rare',myth:true,ae:'actif',aeStr:3,aeRes:'Ae+P ★★★ — émission rose-Séraph permanente',zones:['Grottes calcaires à Ae de Lore — rayon 80 km de la Tour d\'Opale'],desc:'Minéral propre à Mythologia — phosphate d\'Aetherium formé dans les grottes calcaires proches des affleurements Ae majeurs. Concrétions rosées qui <em>rougeoient en rose Séraph en permanence</em>, même en plein jour. Le seul minéral qui émet spontanément de la lumière Ae+P sans intervention d\'un mage.',aeTxt:'La liaison directe Ae·P₄O₁₀ crée un excès d\'énergie permanent dans les orbitales phosphorées — une <em>bioluminescence minérale</em>. L\'émission correspond exactement au spectre rose de Séraph (absorption 580–640 nm). Les mages n\'ont qu\'à <em>diriger</em> la résonance, non l\'initier.',usages:['Éclairage permanent de la Tour d\'Opale ★★★','Bâtons de lumière','Réactifs Ae+P'],users:['Ordre des Mages ★★★','Aelven','Kethara femelles']},
+
+  /* FERREUX */
+  {id:'magnetite',cat:'ferreux',icon:'🧲',name:'Magnétite',formula:'Fe₃O₄',rarity:'commun',myth:false,ae:'passif',aeStr:0,aeRes:'Ae+Fe passif — magnétique, navigation',zones:['Roches basaltiques','Zones volcaniques des deux continents'],desc:'Oxyde de fer naturellement magnétique. Sur Mythologia, les <em>boussoles alchimiques</em> utilisent de la magnétite pour détecter non seulement le nord géographique, mais aussi les concentrations de Flux Ae à proximité. Les Sauridh en vision UV perçoivent son champ comme une lueur rouge pulsatile.',aeTxt:'La magnétite contient simultanément Fe²⁺ et Fe³⁺ — cette mixité crée des <em>transferts d\'électrons spontanés</em> compatibles avec la résonance Ae+Fe. Elle capte passivement les courants Ae environnants et les oriente le long de son axe magnétique.',usages:['Boussoles alchimiques ★★★','Détection de filons Ae+Fe','Instruments de navigation'],users:['Navigateurs','Ordre des Mages','Durgoth (prospection)']},
+  {id:'hematite',cat:'ferreux',icon:'🔴',name:'Hématite',formula:'Fe₂O₃',rarity:'commun',myth:false,ae:'passif',aeStr:0,aeRes:'Ae+Fe passif — vecteur de peinture rituelle',zones:['Zones sédimentaires de Kamses (ocre rouge)','Toute la croûte continentale'],desc:'Oxyde de fer brun-rouge, principale source de pigment rouge de Mythologia. L\'<em>ocre rouge de Kamses</em> est de l\'hématite pulvérisée — utilisée dans tous les rituels de peinture corporelle Grauth et cérémonies Sauridh des ancêtres. Universellement associée au sang, à la guerre et à Mortis.',aeTxt:'Mélangée à de la poudre d\'Aetherite (rite Sauridh), l\'hématite devient un vecteur Ae+Fe passif — les <em>peintures rituelles Sauridh conduisent réellement de faibles courants de Flux</em> lors des cérémonies de réactivation.',usages:['Pigment rouge rituel ★★★','Peintures corporelles Sauridh','Minerai de fer secondaire'],users:['Sauridh ★★★','Grauth','Humains Kamses']},
+  {id:'pyrite',cat:'ferreux',icon:'✨',name:'Pyrite',formula:'FeS₂',rarity:'commun',myth:false,ae:'passif',aeStr:0,aeRes:'Ae passif double latent — Ae+Fe + Ae+O (thermique)',zones:['Zones hydrothermales','Veines de charbon de Lore'],desc:'L\'or des fous — minéral de fer et de soufre d\'un éclat doré trompeur. Sur Mythologia, la pyrite est connue pour sa <em>double nature thermique</em> : à haute température, elle libère les résonances Ae+Fe et Ae+O simultanément en un bref éclat dangereux — la "double foudre de Pyrite".',aeTxt:'Au-dessus de 450°C, la liaison Fe-S se rompt : les deux espèces relâchent simultanément leurs résonances dans un bref éclat. Les alchimistes appellent cela la <em>"double foudre de Pyrite"</em> — utilisée comme déclencheur de pièges.',usages:['Pièges alchimiques ★★','Déclencheurs explosifs','Minerai de soufre'],users:['Ordre des Mages (pièges)','Armée du Trône','Prospecteurs']},
+  {id:'ferrath',cat:'ferreux',icon:'⚡',name:'Ferrath',formula:'Ae₃Fe₇ (alliage naturel)',rarity:'tres-rare',myth:true,ae:'actif',aeStr:3,aeRes:'Ae+Fe ★★★ — transmissibilité maximale, stabilité permanente',zones:['Coulées basaltiques refroidies lentement — zones volcaniques profondes de Lore'],desc:'Alliage naturel d\'Aetherium et de fer formé dans les refroidissements lents de coulées magmatiques — la nature elle-même a réalisé ce que les Durgoth mettent des siècles à apprendre. <em>Gris-noir avec des veinures bleues électriques</em> qui pulsent même sans mage. La base secrète des forges légendaires.',aeTxt:'Dans les coulées magmatiques refroidissant sur des milliers d\'années à 1,9g, l\'Aetherium se lie atomiquement au fer — une <em>forge naturelle</em> au maximum thermodynamique. Un morceau de Ferrath ancre une résonance Ae+Fe permanente <em>sans intervention d\'aucun mage</em>.',usages:['Forge légendaire ★★★','Armes héroïques','Reliques indestructibles'],users:['Durgoth maîtres ★★★ (secret absolu)','Ordre des Mages (quelques pièces)']},
+
+  /* CARBONÉS */
+  {id:'anthracite',cat:'carbones',icon:'🖤',name:'Anthracite',formula:'C (réseau graphitique compact)',rarity:'peu-commun',myth:false,ae:'passif',aeStr:0,aeRes:'Ae+C passif — combustible rituel',zones:['Bassins sédimentaires de Lore'],desc:'Charbon de la plus haute qualité — carbone presque pur. Sur Mythologia, l\'anthracite brûlé lors de rituels Ae+C <em>libère du carbone sous forme de suie chargée</em>, recueillie comme encre arcanique Ae+C. Les druides Thyrak l\'utilisent comme combustible de méditation pendant les longues nuits d\'hiver.',aeTxt:null,usages:['Combustible de rituel Ae+C','Encre arcanique carbonée','Forge (haute chaleur sans soufre)'],users:['Thyrak druides','Ordre des Mages','Vahryn chamans']},
+  {id:'marbre',cat:'carbones',icon:'🏛️',name:'Marbre',formula:'CaCO₃ (calcaire métamorphique)',rarity:'tres-commun',myth:false,ae:'aucun',aeStr:0,aeRes:null,zones:['Zones métamorphiques de Lore — matériau architectural dominant'],desc:'Calcaire recristallisé sous chaleur et pression. Sous 1,9g, le marbre est le matériau de construction le plus utilisé pour les bâtiments de prestige. La <em>Tour d\'Opale</em> est construite en marbre blanc de Lore avec des incrustations de Phosphène et de Glacite. Neutre au Flux — une salle en marbre pur est sans interférence magique.',aeTxt:null,usages:['Architecture de prestige ★★★','Sculpture','Salles sans interférence Ae'],users:['Architectes','Trône Elindor','Ordre des Mages']},
+  {id:'graphite',cat:'carbones',icon:'✏️',name:'Graphite',formula:'C (réseau hexagonal feuilleté)',rarity:'peu-commun',myth:false,ae:'passif',aeStr:0,aeRes:'Ae+C passif directionnel — encre arcanique',zones:['Schistes métamorphiques de Lore et C3'],desc:'Carbone en feuillets hexagonaux — conducteur électrique, mou et gras au toucher. Sur Mythologia, le graphite est l\'ingrédient central de l\'<em>encre arcanique</em> : mélangé à un liant Ae liquide, il produit une encre qui conduit le Flux de manière douce et précise, idéale pour les cercles d\'invocation.',aeTxt:'Les feuillets de graphite conduisent le Flux Ae <em>parallèlement à leur surface</em> — conductivité directionnelle qui améliore la cohérence des cercles d\'invocation comparés aux tracés en poudre de craie non orientée.',usages:['Encre arcanique ★★★','Lubrification','Électrodes (ateliers Durgoth)'],users:['Ordre des Mages ★★★','Arcanistes','Durgoth']},
+  {id:'vitaeline',cat:'carbones',icon:'🟠',name:'Vitaeline',formula:'Ae·C₂₄H₄₀O₄ (résine fossile Ae+C)',rarity:'rare',myth:true,ae:'actif',aeStr:2,aeRes:'Ae+C ★★ — croissance, soins longue durée',zones:['Strates fossiles de la jungle C3 — uniquement sous les zones à anciens Vahryn'],desc:'Résine fossile de C3 ayant absorbé de l\'Aetherium sur des millions d\'années — une ambre magique. D\'un ambre profond à rouge-orangé avec des inclusions de faune préhistorique. La Vitaeline <em>dégage une légère chaleur biologique permanente</em> au toucher. Les chamans Vahryn la considèrent comme la mémoire vivante de la jungle.',aeTxt:'Sur des millions d\'années, les chaînes carbonées ont formé des liaisons covalentes directes avec l\'Aetherium — <em>la liaison Ae+C la plus douce et la plus stable existante</em>. Idéale pour les soins lents, contrairement au diamant (Ae+C pur concentré).',usages:['Soins Ae+C longue durée ★★★','Croissance végétale accélérée','Joaillerie chamanique'],users:['Vahryn chamans ★★★','Thyrak druides ★★']},
+
+  /* AZOTÉS */
+  {id:'salp-tre',cat:'azotes',icon:'🤍',name:'Salpêtre',formula:'KNO₃',rarity:'commun',myth:false,ae:'passif',aeStr:0,aeRes:'Ae+N passif — réactif nécromantique',zones:['Grottes et encorbellements calcaires de Kamses','Efflorescences naturelles des déserts'],desc:'Nitrate de potassium formé par décomposition de matière organique en milieu sec. Les grottes arides de Kamses en produisent des efflorescences abondantes. Sur Mythologia, le salpêtre dissous dans certaines préparations sert de <em>vecteur Ae+N</em> pour amorcer la réactivation des résidus Ae dans un corps momifié.',aeTxt:'L\'azote du salpêtre sous forme NO₃⁻ présente une compatibilité partielle avec Ae+N. Appliqué sur un corps préparé, il <em>augmente la densité locale d\'azote réactif</em>, augmentant la quantité de résidus Ae activables par le nécromancien lors du rite.',usages:['Réactif nécromantique ★★★ (Sauridh)','Poudres explosives','Agriculture'],users:['Sauridh nécromanciens ★★★','Alchimistes','Fermiers Kamses']},
+  {id:'noctite',cat:'azotes',icon:'🌑',name:'Noctite',formula:'Ae·N₂O₅ (nitrate d\'Ae natif)',rarity:'rare',myth:true,ae:'actif',aeStr:2,aeRes:'Ae+N — activation nocturne uniquement',zones:['Dunes profondes de Kamses — zones de convergence du vent nocturne'],desc:'Cristaux nocturnes formés dans les couches profondes de sable. D\'un brun-rosé le jour, les Noctites deviennent d\'un <em>bleu profond lumineux dès la tombée de la nuit</em>. L\'unique minéral de Mythologia gouverné par le cycle jour/nuit.',aeTxt:'La liaison Ae·N₂O₅ est <em>photo-sensible</em> : les UV d\'Aurys créent une interférence destructive avec la résonance Ae+N le jour. La nuit, sans UV, la chiralité 8s s\'exprime librement — <em>activation spontanée</em>. Comportement unique dans la minéralogie de Mythologia.',usages:['Opérations nocturnes Sauridh','Rituels lunaires','Éclairage nocturne naturel'],users:['Sauridh nécromanciens (nuit) ★★','Ordre des Mages (expéditions nocturnes)']},
+
+  /* VOLCANIQUES */
+  {id:'obsidienne',cat:'volcaniques',icon:'⬛',name:'Obsidienne',formula:'SiO₂ (verre volcanique)',rarity:'peu-commun',myth:false,ae:'passif',aeStr:0,aeRes:'Ae+O latent — chaleur piégée, tranchant',zones:['Zones volcaniques de Lore','Coulées magmatiques de C3'],desc:'Verre volcanique noir à coupant extrême. La silice amorphe issue d\'un refroidissement rapide préserve une structure désordonnée où l\'oxygène excédentaire reste piégé, donnant une résonance Ae+O passive. Les lames d\'obsidienne sont plus tranchantes que l\'acier mais fragiles sous les chocs latéraux. <em>L\'outil parfait pour les rituels de précision.</em>',aeTxt:'Lors du refroidissement rapide du magma, l\'oxygène excédentaire reste piégé en liaisons Si-O-O instables. Un mage Ae+O peut <em>activer cette résonance latente</em> pour transformer une lame d\'obsidienne en torche tranchante temporaire.',usages:['Lames de précision chirurgicale','Outils de coupe rituelle','Instruments de dissection (Ordre)'],users:['Sauridh (lames rituelles)','Vahryn (outils de jungle)','Ordre des Mages']},
+  {id:'vitrum-aurys',cat:'volcaniques',icon:'🌟',name:'Vitrum d\'Aurys',formula:'Ae·SiO₂ (verre Ae+O volcanique)',rarity:'tres-rare',myth:true,ae:'actif',aeStr:3,aeRes:'Ae+O ★★★ — chaleur permanente, tranchant supérieur',zones:['Pôles tropicaux uniquement — UV extrêmes + activité volcanique simultanée'],desc:'Verre magmatique formé uniquement aux pôles tropicaux lors des pics d\'intensité UV d\'Aurys combinés à une activité volcanique active. D\'une translucidité ambrée. <em>Plus tranchant que l\'obsidienne, plus résistant aux chocs</em>, et chaud en permanence au toucher — les lames de Vitrum d\'Aurys ne refroidissent jamais.',aeTxt:'L\'intensité UV maximale d\'Aurys au pôle tropical frappe le magma en fusion au moment précis de sa vitrification, forçant la liaison de vapeurs d\'Aetherium dans la matrice SiO₂. L\'Aetherium piégé est sous forme Ae+O <em>active et permanente</em> — chaleur émise en continu à très basse puissance.',usages:['Lames d\'élite ★★★','Outils de l\'Ordre','Décoration impériale Kamses'],users:['Guerriers d\'élite Grauth (pôles)','Ordre des Mages ★★','Cour de Kamses']},
+
+  /* PROFONDEURS */
+  {id:'ombrax',cat:'profondeurs',icon:'🕳️',name:'Ombrax',formula:'Ae·Pb₃Si₂O₇ (composite pression extrême)',rarity:'legendaire',myth:true,ae:'actif',aeStr:3,aeRes:'Ae paradoxal — guide d\'ondes unidirectionnel, blindage externe total',zones:['Strates à plus de 40 km de profondeur — Zone Veth\'ari exclusivement'],desc:'Minéral formé sous les pressions et températures extrêmes des strates les plus profondes — inaccessibles sans la technologie Veth\'ari. <em>Noir absolu</em>, densité supérieure à tout métal connu, surface incapable de rayures par tout minéral autre que lui-même. Les Veth\'ari en font leurs instruments les plus précieux et les gants de manipulation d\'Aetherite brute.',aeTxt:'La pression de 40+ km à 1,9g a compressé un alliage Ae+Pb+Si dans une configuration paradoxale : conducteur interne, mais <em>bloquant toute émission vers l\'extérieur</em>. Guide d\'ondes magique unidirectionnel. Un mage derrière une paroi d\'Ombrax est encore plus invisible qu\'une paroi de plomb ordinaire.',usages:['Gants de manipulation Aetherite ★★★','Enceintes sécurisées Veth\'ari','Outils Durgoth légendaires'],users:['Veth\'ari ★★★ (exclusif)','Durgoth (dents fossiles seulement)']},
+];
+
+/* ══════════════════════════════════
+   ÉTAT
+══════════════════════════════════ */
+let currentFilter = 'all';
+let currentMineral = null;
+
+/* ══════════════════════════════════
+   GÉNÈRE LES CARTES DÉTAIL
+══════════════════════════════════ */
+function buildCards() {
+  const container = document.getElementById('cardsContainer');
+  DATA.forEach(m => {
+    const rar = RAR[m.rarity];
+    const cat = CATS[m.cat];
+
+    // rarity dots
+    let dotsHTML = '';
+    if (m.rarity === 'legendaire') {
+      dotsHTML = `<span class="badge-pill leg">⊗ Légendaire</span>`;
+    } else {
+      const filled = rar.d;
+      dotsHTML = `<span class="badge-pill rarity">${rar.label}</span>`;
+    }
+
+    // ae badge
+    let aeBadge = '';
+    if (m.ae === 'actif')    aeBadge = `<span class="badge-pill ae-actif">Ae Actif</span>`;
+    else if (m.ae === 'passif') aeBadge = `<span class="badge-pill ae-passif">Ae Passif</span>`;
+    else if (m.ae === 'barriere') aeBadge = `<span class="badge-pill ae-barriere">Barrière Ae</span>`;
+
+    // ae stars
+    let starsHTML = '';
+    if (m.aeStr > 0) {
+      starsHTML = '<span class="ae-stars">';
+      for (let i = 1; i <= 3; i++) starsHTML += `<span class="ae-star ${i<=m.aeStr?'':'off'}">★</span>`;
+      starsHTML += '</span>';
+    }
+
+    // ae block
+    let aeBlock = '';
+    if (m.aeTxt) {
+      aeBlock = `
+        <div class="info-lore">
+          <div class="info-lore-label">✦ Aetherium & Mécanisme physique${m.aeRes ? ` — ${m.aeRes}` : ''}${starsHTML}</div>
+          <div class="info-lore-text">${m.aeTxt}</div>
+        </div>`;
+    }
+
+    const card = document.createElement('div');
+    card.className = 'info-card';
+    card.id = 'card-' + m.id;
+    card.innerHTML = `
+      <div class="info-card-header">
+        <div class="info-card-icon">${m.icon}</div>
+        <div>
+          <div class="info-card-name">${m.name}</div>
+          <div class="info-card-formula">${m.formula}</div>
+          <div class="info-card-type">${cat.icon} ${cat.label}</div>
+        </div>
+      </div>
+
+      <div class="badges-row">
+        ${dotsHTML}
+        ${aeBadge}
+        ${m.myth ? '<span class="badge-pill myth">✦ Original Mythologia</span>' : ''}
+      </div>
+
+      <div class="info-divider"></div>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-label">Catégorie</div>
+          <div class="stat-value">${cat.label}</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Rareté</div>
+          <div class="stat-value">${rar.label}</div>
+        </div>
+        <div class="stat-box full">
+          <div class="stat-label">Zones</div>
+          <div class="stat-value">${m.zones.join(' · ')}</div>
+        </div>
+        ${m.aeRes ? `<div class="stat-box full"><div class="stat-label">Résonance Ae</div><div class="stat-value ae">${m.aeRes}</div></div>` : ''}
+      </div>
+
+      <div class="section-label">Description</div>
+      <p class="info-desc">${m.desc}</p>
+
+      ${aeBlock}
+
+      <div class="section-label">Usages</div>
+      <div class="tags-row">${m.usages.map(u => `<span class="tag-item">${u}</span>`).join('')}</div>
+
+      <div class="section-label">Utilisateurs</div>
+      <div class="tags-row" style="margin-bottom:0">${m.users.map(u => `<span class="tag-item user">${u}</span>`).join('')}</div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+/* ══════════════════════════════════
+   SIDEBAR
+══════════════════════════════════ */
+function renderSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  sidebar.innerHTML = '';
+
+  const filtered = currentFilter === 'ae'
+    ? DATA.filter(m => m.ae === 'actif')
+    : DATA;
+
+  const groups = {};
+  filtered.forEach(m => {
+    if (!groups[m.cat]) groups[m.cat] = [];
+    groups[m.cat].push(m);
+  });
+
+  Object.entries(groups).forEach(([cat, list]) => {
+    const label = document.createElement('div');
+    label.className = 'sidebar-cat-label';
+    label.textContent = CATS[cat].icon + ' ' + CATS[cat].label;
+    sidebar.appendChild(label);
+
+    list.forEach(m => {
+      const btn = document.createElement('button');
+      btn.className = `mineral-btn${m.id === currentMineral ? ' active' : ''}`;
+      btn.innerHTML = `<span class="btn-name">${m.icon} ${m.name}</span><span class="btn-sub">${m.formula}</span>`;
+      btn.addEventListener('click', () => selectMineral(m.id));
+      sidebar.appendChild(btn);
+    });
+  });
+}
+
+/* ══════════════════════════════════
+   SÉLECTION
+══════════════════════════════════ */
+function selectMineral(id) {
+  currentMineral = id;
+  renderSidebar();
+  document.getElementById('infoWelcome').style.display = 'none';
+  document.querySelectorAll('.info-card').forEach(c => c.classList.remove('active'));
+  document.getElementById('card-' + id).classList.add('active');
+  document.getElementById('infoPanel').scrollTop = 0;
+}
+
+/* ══════════════════════════════════
+   FILTRE
+══════════════════════════════════ */
+function setFilter(f, btn) {
+  currentFilter = f;
+  currentMineral = null;
+  document.querySelectorAll('.ftab').forEach(b => b.className = 'ftab');
+  btn.classList.add(f === 'all' ? 'active' : 'active-ae');
+  document.getElementById('infoWelcome').style.display = '';
+  document.querySelectorAll('.info-card').forEach(c => c.classList.remove('active'));
+  renderSidebar();
+}
+
+/* ══════════════════════════════════
+   INIT
+══════════════════════════════════ */
+buildCards();
+renderSidebar();
+</script>
+</body>
+</html>
