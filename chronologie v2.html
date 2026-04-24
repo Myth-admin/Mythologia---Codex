@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mythologia — Chronologie</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bleu-nuit: #0a1520;
+      --violet-ae: #6b3fa0;
+      --eclat-ae:  #a78bfa;
+      --or-ae:     #c9a84c;
+      --blanc-lune:#e8e4f0;
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      background: var(--bleu-nuit);
+      color: var(--blanc-lune);
+      font-family: 'EB Garamond', serif;
+      font-size: 16px;
+      line-height: 1.7;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── ÉTOILES — identique factions.html ── */
+    #starCanvas { position:fixed; inset:0; z-index:0; }
+
+    .overlay {
+      position:fixed; inset:0;
+      background: radial-gradient(ellipse at center, rgba(10,21,32,0.3) 0%, rgba(10,21,32,0.85) 100%);
+      z-index:1;
+    }
+
+    /* ── NAV — identique factions.html ── */
+    nav {
+      position: fixed;
+      top:0; left:0; right:0;
+      height: 56px;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 0 36px;
+      background: linear-gradient(180deg, rgba(10,21,32,0.97) 0%, rgba(10,21,32,0.0) 100%);
+    }
+    .nav-back {
+      font-family: 'Cinzel', serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.3em;
+      color: var(--eclat-ae);
+      text-decoration: none;
+      text-transform: uppercase;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+    .nav-back:hover { opacity: 1; }
+    .nav-sep { color: rgba(167,139,250,0.3); }
+    .nav-current {
+      font-family: 'Cinzel', serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--blanc-lune);
+    }
+
+    /* ── PAGE WRAPPER ── */
+    .page {
+      position: relative;
+      z-index: 10;
+    }
+
+    /* ── HEADER — identique factions.html ── */
+    .page-header {
+      text-align: center;
+      padding: 86px 20px 32px;
+      animation: fadeDown 1s ease both;
+    }
+    @keyframes fadeDown {
+      from { opacity:0; transform:translateY(-20px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    .page-header h1 {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: clamp(1.4rem, 3vw, 2.4rem);
+      color: var(--blanc-lune);
+      text-shadow: 0 0 40px rgba(167,139,250,0.5), 0 0 80px rgba(167,139,250,0.2);
+      letter-spacing: 0.1em;
+      margin-bottom: 6px;
+    }
+    .sous-titre {
+      font-family: 'Cinzel', serif;
+      font-size: 0.72rem;
+      letter-spacing: 0.5em;
+      color: var(--eclat-ae);
+      text-transform: uppercase;
+      opacity: 0.7;
+    }
+    .ornement {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin: 14px auto 0;
+      width: min(400px, 80vw);
+    }
+    .ornement-line  { flex:1; height:1px; background:linear-gradient(90deg,transparent,var(--eclat-ae),transparent); }
+    .ornement-gem   { width:7px; height:7px; background:var(--eclat-ae); transform:rotate(45deg); box-shadow:0 0 10px var(--eclat-ae); flex-shrink:0; }
+    .ornement-gem-s { width:4px; height:4px; background:var(--eclat-ae); transform:rotate(45deg); opacity:0.5; flex-shrink:0; }
+
+    /* ── MAIN CONTENT ── */
+    .main {
+      max-width: 1060px;
+      margin: 0 auto;
+      padding: 16px 32px 80px;
+      animation: fadeIn 1s 0.3s ease both;
+    }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+    /* LORE INTRO */
+    .lore-intro {
+      text-align: center;
+      max-width: 660px;
+      margin: 0 auto 52px;
+      padding: 20px 30px;
+      background: rgba(10,21,32,0.6);
+      border: 1px solid rgba(167,139,250,0.15);
+      color: rgba(232,228,240,0.55);
+      font-style: italic;
+      font-size: 0.98rem;
+      line-height: 1.85;
+      position: relative;
+    }
+    .lore-intro::before {
+      content:'';
+      position:absolute; top:0; left:0; right:0; height:1px;
+      background: linear-gradient(90deg, transparent, var(--or-ae), transparent);
+      opacity: 0.4;
+    }
+    .lore-intro::after {
+      content:'';
+      position:absolute; bottom:0; left:0; right:0; height:1px;
+      background: linear-gradient(90deg, transparent, var(--or-ae), transparent);
+      opacity: 0.4;
+    }
+
+    /* TIMELINE SPINE */
+    .timeline { position: relative; }
+    .timeline::before {
+      content:'';
+      position: absolute;
+      left: 50%; transform: translateX(-50%);
+      top:0; bottom:0;
+      width: 1px;
+      background: linear-gradient(180deg, transparent 0%, rgba(167,139,250,0.25) 5%, rgba(167,139,250,0.25) 95%, transparent 100%);
+    }
+
+    /* ERA BLOCK */
+    .era {
+      margin-bottom: 52px;
+      position: relative;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .era.visible { opacity:1; transform:translateY(0); }
+
+    .era-node {
+      position: absolute;
+      left: 50%; top: 28px;
+      transform: translateX(-50%);
+      z-index: 2;
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      background: var(--bleu-nuit);
+      border: 1px solid rgba(167,139,250,0.4);
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .era:hover .era-node {
+      border-color: var(--eclat-ae);
+      box-shadow: 0 0 10px 2px rgba(167,139,250,0.3);
+    }
+
+    /* Era header */
+    .era-header {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 20px 28px;
+      border: 1px solid rgba(167,139,250,0.14);
+      border-bottom: none;
+      position: relative;
+      overflow: hidden;
+    }
+    .era-header-bg {
+      position:absolute; inset:0;
+      background: var(--era-bg);
+      pointer-events:none;
+    }
+    .era-header::after {
+      content:'';
+      position:absolute; bottom:0; left:0; right:0; height:1px;
+      background: var(--era-accent);
+      opacity: 0.35;
+    }
+    .era-index {
+      position: relative;
+      font-family: 'Cinzel Decorative', serif;
+      font-size: 2.6rem; font-weight: 700;
+      color: rgba(255,255,255,0.04);
+      line-height: 1;
+      flex-shrink: 0;
+      user-select: none;
+    }
+    .era-meta { position: relative; flex:1; }
+    .era-num-label {
+      font-family: 'Cinzel', serif;
+      font-size: 0.58rem; letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--era-accent);
+      opacity: 0.75;
+      margin-bottom: 4px;
+    }
+    .era-name {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: clamp(0.95rem, 2.2vw, 1.3rem);
+      font-weight: 700;
+      color: var(--blanc-lune);
+      letter-spacing: 0.04em;
+      line-height: 1.25;
+      text-shadow: 0 0 20px rgba(167,139,250,0.2);
+    }
+    .era-sub {
+      font-family: 'EB Garamond', serif;
+      font-style: italic;
+      color: rgba(232,228,240,0.45);
+      font-size: 0.9rem;
+      margin-top: 3px;
+    }
+    .era-period { position:relative; text-align:right; flex-shrink:0; }
+    .era-period-val {
+      font-family: 'Cinzel', serif;
+      font-size: 0.95rem; font-weight: 600;
+      color: var(--era-accent);
+    }
+    .era-period-desc {
+      font-family: 'EB Garamond', serif;
+      font-style: italic;
+      font-size: 0.75rem;
+      color: rgba(232,228,240,0.35);
+      margin-top: 3px;
+      max-width: 180px;
+    }
+
+    /* Era body */
+    .era-body {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border: 1px solid rgba(167,139,250,0.14);
+      border-top: none;
+    }
+    .era-cell {
+      padding: 18px 22px;
+      border-right: 1px solid rgba(167,139,250,0.08);
+      border-bottom: 1px solid rgba(167,139,250,0.08);
+    }
+    .era-cell:nth-child(even) { border-right: none; }
+    .era-cell:nth-last-child(-n+2) { border-bottom: none; }
+
+    .cell-label {
+      font-family: 'Cinzel', serif;
+      font-size: 0.58rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: rgba(167,139,250,0.4);
+      margin-bottom: 10px;
+      display: flex; align-items: center; gap: 7px;
+    }
+    .cell-label::after {
+      content:''; flex:1; height:1px;
+      background: rgba(167,139,250,0.1);
+    }
+
+    .era-cell ul { list-style:none; display:flex; flex-direction:column; gap:5px; }
+    .era-cell ul li {
+      padding-left: 13px;
+      position: relative;
+      font-size: 0.92rem;
+      color: rgba(232,228,240,0.75);
+      line-height: 1.5;
+    }
+    .era-cell ul li::before {
+      content:'◆';
+      position:absolute; left:0;
+      font-size:0.34rem; top:0.56em;
+      color: rgba(167,139,250,0.3);
+    }
+    .era-cell .note {
+      font-style: italic;
+      font-size: 0.91rem;
+      color: rgba(232,228,240,0.45);
+      line-height: 1.75;
+    }
+    .era-cell .note em { color: var(--or-ae); font-style: normal; }
+
+    /* Era colour variables */
+    .era-1 { --era-accent:#7c6fcf; --era-bg:linear-gradient(135deg,rgba(18,14,46,0.75),rgba(26,20,60,0.75)); }
+    .era-2 { --era-accent:#4a9ccf; --era-bg:linear-gradient(135deg,rgba(10,20,40,0.75),rgba(14,34,58,0.75)); }
+    .era-3 { --era-accent:#4aad80; --era-bg:linear-gradient(135deg,rgba(8,24,18,0.75),rgba(12,38,28,0.75)); }
+    .era-4 { --era-accent:#b06040; --era-bg:linear-gradient(135deg,rgba(26,12,8,0.75),rgba(42,20,12,0.75)); }
+    .era-5 { --era-accent:var(--or-ae); --era-bg:linear-gradient(135deg,rgba(24,18,8,0.75),rgba(38,30,12,0.75)); }
+
+    /* ROLES PANEL */
+    .roles-panel {
+      margin-top: 60px;
+      border: 1px solid rgba(167,139,250,0.14);
+      background: rgba(10,21,32,0.5);
+    }
+    .roles-header {
+      padding: 14px 24px;
+      border-bottom: 1px solid rgba(167,139,250,0.1);
+      background: rgba(201,168,76,0.04);
+    }
+    .roles-header h2 {
+      font-family: 'Cinzel', serif;
+      font-size: 0.68rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--or-ae);
+      opacity: 0.8;
+    }
+    .roles-grid { display:grid; grid-template-columns:1fr 1fr; }
+    .role-card {
+      padding: 20px 24px;
+      border-right: 1px solid rgba(167,139,250,0.08);
+    }
+    .role-card:last-child { border-right:none; }
+    .role-card h3 {
+      font-family: 'Cinzel', serif;
+      font-size: 0.63rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(167,139,250,0.55);
+      margin-bottom: 10px;
+    }
+    .role-card p { font-size:0.93rem; color:rgba(232,228,240,0.5); line-height:1.75; }
+    .role-card p em { color:rgba(232,228,240,0.8); font-style:italic; }
+
+    /* AXIOMS */
+    .axioms {
+      margin-top: 32px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border: 1px solid rgba(167,139,250,0.1);
+      background: rgba(10,21,32,0.4);
+    }
+    .axiom {
+      padding: 16px 20px;
+      border-right: 1px solid rgba(167,139,250,0.08);
+      display: flex; align-items:flex-start; gap:12px;
+    }
+    .axiom:last-child { border-right:none; }
+    .axiom-icon { font-size:1rem; flex-shrink:0; opacity:0.55; margin-top:2px; }
+    .axiom-text { font-style:italic; font-size:0.87rem; color:rgba(232,228,240,0.42); line-height:1.65; }
+    .axiom-text strong { color:var(--or-ae); font-style:normal; font-weight:500; }
+
+    /* FOOTER */
+    .sfooter {
+      text-align:center;
+      padding:28px 0 40px;
+      font-family:'Cinzel', serif;
+      font-size:0.62rem;
+      letter-spacing:0.28em;
+      text-transform:uppercase;
+      color:rgba(167,139,250,0.25);
+      border-top:1px solid rgba(167,139,250,0.08);
+      margin-top:56px;
+    }
+    .sfooter span { color:rgba(201,168,76,0.4); }
+
+    /* RESPONSIVE */
+    @media (max-width:700px) {
+      .main { padding:16px 16px 60px; }
+      .era-body, .roles-grid, .axioms { grid-template-columns:1fr; }
+      .era-cell { border-right:none !important; }
+      .era-cell:nth-last-child(-n+2) { border-bottom:1px solid rgba(167,139,250,0.08) !important; }
+      .era-cell:last-child { border-bottom:none !important; }
+      .role-card { border-right:none !important; border-bottom:1px solid rgba(167,139,250,0.08); }
+      .role-card:last-child { border-bottom:none; }
+      .axiom { border-right:none !important; border-bottom:1px solid rgba(167,139,250,0.08); }
+      .axiom:last-child { border-bottom:none; }
+      .timeline::before, .era-node { display:none; }
+      .era-header { flex-wrap:wrap; gap:12px; }
+      .era-period { text-align:left; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- FOND ÉTOILÉ — identique factions.html -->
+<canvas id="starCanvas"></canvas>
+<div class="overlay"></div>
+
+<div class="page">
+
+  <!-- NAV — identique factions.html -->
+  <nav>
+    <a href="index.html" class="nav-back">← Mythologia</a>
+    <span class="nav-sep">✦</span>
+    <span class="nav-current">Chronologie</span>
+  </nav>
+
+  <!-- HEADER -->
+  <header class="page-header">
+    <h1>Chronologie</h1>
+    <p class="sous-titre">Histoire &amp; Grandes Ères du Monde</p>
+    <div class="ornement">
+      <div class="ornement-gem-s"></div>
+      <div class="ornement-line"></div>
+      <div class="ornement-gem"></div>
+      <div class="ornement-line"></div>
+      <div class="ornement-gem-s"></div>
+    </div>
+  </header>
+
+  <div class="main">
+
+    <p class="lore-intro">
+      Les mythes ne disparaissent jamais vraiment : ils se transforment, se cachent, ou renaissent.
+      Chaque Ère a laissé une empreinte dans la pierre, dans le sang, et dans le Flux d'Ombrath lui-même.
+    </p>
+
+    <div class="timeline">
+
+      <!-- ÈRE 1 — PRIMORDIALE -->
+      <article class="era era-1">
+        <div class="era-node"></div>
+        <div class="era-header">
+          <div class="era-header-bg"></div>
+          <div class="era-index">01</div>
+          <div class="era-meta">
+            <p class="era-num-label">Première Ère</p>
+            <h2 class="era-name">Ère Primordiale</h2>
+            <p class="era-sub">Les Origines</p>
+          </div>
+          <div class="era-period">
+            <p class="era-period-val">Inconnue</p>
+            <p class="era-period-desc">Avant toute mesure du temps</p>
+          </div>
+        </div>
+        <div class="era-body">
+          <div class="era-cell">
+            <p class="cell-label">☽ Religions &amp; Mythologies</p>
+            <ul>
+              <li>Croyances élémentaires — soleils, océans, terre, vie</li>
+              <li>Forces primordiales incarnées</li>
+              <li>Animisme originel</li>
+            </ul>
+          </div>
+          <div class="era-cell">
+            <p class="cell-label">⚡ Événements Majeurs</p>
+            <ul>
+              <li>Création du monde par les forces primordiales</li>
+              <li>Apparition de la magie brute</li>
+              <li>Naissance des premières formes de vie</li>
+            </ul>
+          </div>
+          <div class="era-cell">
+            <p class="cell-label">🌍 État du Monde</p>
+            <ul>
+              <li>Monde sauvage et instable</li>
+              <li>Magie imprévisible et débordante</li>
+              <li>Pas de nations, pas de lois</li>
+            </ul>
+          </div>
+          <div class="era-cell" style="display:flex;align-items:center;">
+            <p class="note">
+              <em>Aucune chronologie mesurable.</em><br>
+              L'histoire de cette ère est reconstituée depuis les mythes
+              et les traces du Flux d'Ombrath encrées dans la croûte de Mythologia.
+            </p>
+          </div>
+        </div>
+      </article>
+
+      <!-- ÈRE 2 — MYTHES -->
+      <article class="era era-2">
+        <div class="era-node"></div>
+        <div class="era-header">
+          <div class="era-header-bg"></div>
+          <div class="era-index">02</div>
+          <div class="era-meta">
+            <p class="era-num-label">Deuxième Ère</p>
+            <h2 class="era-name">Ère des Mythes</h2>
+            <p class="era-sub">L'Âge des Légendes Vivantes</p>
+          </div>
+          <div class="era-period">
+            <p class="era-period-val">−3000 à −1500</p>
+            <p class="era-period-desc">Les dieux marchent parmi les mortels</p>
+          </div>
+        </div>
+        <div class="era-body">
+          <div class="era-cell">
+            <p class="cell-label">☽ Religions &amp; Mythologies</p>
+            <ul>
+              <li>Grands panthéons naissants — grec, égyptien, nordique…</li>
+              <li>Cultes des astres : Aurys (blanc) et Séraph (rose)</li>
+              <li>Dieux actifs, visibles et adorés</li>
+            </ul>
+          </div>
+          <div class="era-cell">
+            <p class="cell-label">⚡ Événements Majeurs</p>
+            <ul>
+              <li>Naissance des grandes figures mythologiques</li>
+              <li>Exploits héroïques et quêtes divines</li>
+              <li>Fondations des premières civilisations</li>
+            </ul>
+          </div>
+          <div class="era-cell">
+            <p class="cell-label">🌍 État du Monde</p>
+            <ul>
+              <li>Civilisations puissantes et en expansion</li>
+              <li>Dieux visibles et influents</li>
+              <li>Frontières encore floues</li>
+            </ul>
+          </div>
+          <div class="era-cell">
+            <p class="cell-label">📖 Les Tales</p>
+            <p class="note">
+              La majorité des récits se déroulent durant ces ères. Chaque histoire met en scène
+              un <em>personnage mythologique</em>, ses choix, ses exploits et son héritage.
+            </p>
+          </div>
+        </div>
+      </article>
+
+      <!-- ÈRE 3 — CHRONIQUES -->
+      <article class="era era-3">
+        <div class="era-node"></div>
+        <div class="era-header">
+          <div class="era-header-bg"></div>
+          <div class="era-index">03</div>
+          <div class="era-meta">
+            <p class="era-num-label">Troisième Ère</p>
+            <h2 class="era-name">Ère des Chroniques</h2>
+            <p class="era-sub">Le Temps des Conflits et Héritages</p>
+          </div>
+          <div class="era-period">
+            <p class="era-period-val">−1500 à −500</p>
+            <p class="era-period-desc">Guerres, alliances et trahisons</p>
+          </div>
+        </div>
+        <div class="era-body">
+          <div class="era-cell">
+            <p class="cell-label">☽ Religions &amp; Mythologies</p>
+            <ul>
+              <li>Rivalités entre panthéons</li>
+              <li>Syncrétisme et croisements de croyances</li>
+              <li>Héros divinisés et mythes populaires</li>
+            </ul>
+          </div>
+          <div class="era-cell">
+            <p class="cell-label">⚡ Événements Majeurs</p>
+            <ul>
+              <li>Guerres entre dieux et peuples</li>
+              <li>Chute de royaumes légendaires</li>
+              <li>Héros maudits ou disparus</li>
+              <li>Création d'artefacts légendaires</li>
+            </ul>
+          </div>
+          <div class="era-cell">
+            <p class="cell-label">🌍 État du Monde</p>
+            <ul>
+              <li>Monde en expansion, turbulent</li>
+              <li>Conflits constants entre nations</li>
+              <li>Frontières mouvantes</li>
+            </ul>
+          </div>
+          <div class="era-cell">
+            <p class="cell-label">📖 Les Tales</p>
+            <p class="note">
+              Les légendes se croisent et changent le cours du monde.
+              Les <em>artefacts légendaires</em> créés ici resurgiront à l'Ère du Trône Elindor.
+            </p>
+          </div>
+        </div>
+      </article>
+
+      <!-- ÈRE 4 — OUBLI -->
+      <article class="era era-4">
+        <div class="era-node"></div>
+        <div class="era-header">
+          <div class="era-header-bg"></div>
+          <div class="era-index">04</div>
+          <div class="era-meta">
+            <p class="era-num-label">Quatrième Ère</p>
+            <h2 class="era-name">Ère de l'Oubli</h2>
+            <p class="era-sub">Les Cendres des Légendes</p>
+          </div>
+          <div class="era-period">
+            <p class="era-period-val">−500 à 0</p>
+            <p class="era-period-desc">Le savoir se perd, les mythes deviennent des contes</p>
+          </div>
+        </div>
+        <div class="era-body">
+          <div class="era-cell">
+            <p class="cell-label">☽ Religions &amp; Mythologies</p>
+            <ul>
+              <li>Déclin des anciens dieux</li>
+              <li>Croyances fragmentées et locales</li>
+              <li>Cultes secrets, hérésies et légendes orales</li>
+            </ul>
+          </div>
+          <div class="era-cell">
+            <p class="cell-label">⚡ Événements Majeurs</p>
+            <ul>
+              <li>Effondrement des empires anciens</li>
+              <li>Perte du savoir et des langues sacrées</li>
+              <li>Fondation des premiers ordres — précurseurs de l'Ordre des Mages</li>
+            </ul>
+          </div>
+          <div class="era-cell">
+            <p class="cell-label">🌍 État du Monde</p>
+            <ul>
+              <li>Déclin général, ruines et terres abandonnées</li>
+              <li>Survivants dispersés</li>
+              <li>Petits royaumes isolés</li>
+            </ul>
+          </div>
+          <div class="era-cell">
+            <p class="cell-label">🏛️ Héritage</p>
+            <p class="note">
+              La naissance des <em>gardiens du savoir</em> tente de préserver ce qui peut l'être
+              avant le grand silence. Ces ordres préfigurent l'Ordre des Mages.
+            </p>
+          </div>
+        </div>
+      </article>
+
+      <!-- ÈRE 5 — TRÔNE ELINDOR -->
+      <article class="era era-5">
+        <div class="era-node"></div>
+        <div class="era-header">
+          <div class="era-header-bg"></div>
+          <div class="era-index">05</div>
+          <div class="era-meta">
+            <p class="era-num-label">Cinquième Ère — Présent</p>
+            <h2 class="era-name">Ère du Trône Elindor</h2>
+            <p class="era-sub">L'Âge des Royaumes</p>
+          </div>
+          <div class="era-period">
+            <p class="era-period-val">0 à Aujourd'hui</p>
+            <p class="era-period-desc">Le Trône règne, mais les ombres ressurgissent</p>
+          </div>
+        </div>
+        <div class="era-body">
+          <div class="era-cell">
+            <p class="cell-label">☽ Religions &amp; Mythologies</p>
+            <ul>
+              <li>Religions organisées sous le Trône Elindor</li>
+              <li>Anciennes croyances réduites à des mythes, hérésies ou menaces</li>
+            </ul>
+          </div>
+          <div class="era-cell">
+            <p class="cell-label">⚡ Événements Majeurs</p>
+            <ul>
+              <li>Fondation et unification du Trône Elindor</li>
+              <li>Contrôle institutionnel de la magie</li>
+              <li>Découverte d'artefacts anciens</li>
+              <li>Menaces venues des ères oubliées</li>
+            </ul>
+          </div>
+          <div class="era-cell">
+            <p class="cell-label">🌍 État du Monde</p>
+            <ul>
+              <li>Monde structuré, politique, complexe</li>
+              <li>Royaumes, villes et routes établis</li>
+              <li>Paix fragile et tensions croissantes</li>
+            </ul>
+          </div>
+          <div class="era-cell">
+            <p class="cell-label">👑 L'Histoire Principale</p>
+            <p class="note">
+              L'Histoire Principale se déroule ici. Elle rassemble les conséquences des mythes passés
+              et révèle les <em>vérités oubliées</em> enfouies dans le Flux d'Ombrath.
+            </p>
+          </div>
+        </div>
+      </article>
+
+    </div><!-- /timeline -->
+
+    <!-- ROLES -->
+    <div class="roles-panel">
+      <div class="roles-header">
+        <h2>Rôle des Ères dans Tales of Mythologia</h2>
+      </div>
+      <div class="roles-grid">
+        <div class="role-card">
+          <h3>📖 Les Tales — Histoires individuelles</h3>
+          <p>
+            La majorité des récits se déroulent durant les <em>Ères 2 et 3</em>. Chaque histoire
+            met en scène un personnage mythologique, ses choix, ses exploits et son héritage.
+          </p>
+        </div>
+        <div class="role-card">
+          <h3>👑 L'Histoire Principale</h3>
+          <p>
+            Se déroule durant l'<em>Ère du Trône Elindor</em>. Elle rassemble les conséquences
+            de milliers d'années de mythes et révèle les vérités que l'Oubli avait ensevelies.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- AXIOMS -->
+    <div class="axioms">
+      <div class="axiom">
+        <span class="axiom-icon">🧭</span>
+        <p class="axiom-text">Les mythes ne disparaissent jamais vraiment : ils <strong>se transforment</strong>, se cachent, ou renaissent.</p>
+      </div>
+      <div class="axiom">
+        <span class="axiom-icon">⏳</span>
+        <p class="axiom-text">Chaque Tale laisse une trace dans le monde et <strong>influence l'avenir</strong> — même oublié.</p>
+      </div>
+      <div class="axiom">
+        <span class="axiom-icon">👑</span>
+        <p class="axiom-text">L'Ère du Trône Elindor est le résultat de <strong>milliers d'années d'histoires</strong>.</p>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+
+  <footer class="sfooter">Mythologia &nbsp;<span>✦</span>&nbsp; Tous droits réservés</footer>
+
+</div><!-- /page -->
+
+<script>
+/* ── STARFIELD — identique factions.html ──────────────────────── */
+const starCanvas = document.getElementById('starCanvas');
+const sCtx = starCanvas.getContext('2d');
+const stars = [];
+
+function resizeStarCanvas() {
+  starCanvas.width  = window.innerWidth;
+  starCanvas.height = window.innerHeight;
+}
+function initStars() {
+  stars.length = 0;
+  for (let i = 0; i < 260; i++) stars.push({
+    x: Math.random(), y: Math.random(),
+    r: Math.random() * 1.4 + 0.2,
+    a: Math.random() * 0.7 + 0.1,
+    speed: Math.random() * 0.003 + 0.001,
+    phase: Math.random() * Math.PI * 2
+  });
+}
+function drawStars() {
+  sCtx.clearRect(0, 0, starCanvas.width, starCanvas.height);
+  const now = Date.now() * 0.001;
+  stars.forEach(s => {
+    const alpha = s.a * (0.5 + 0.5 * Math.sin(now * s.speed * 10 + s.phase));
+    sCtx.beginPath();
+    sCtx.arc(s.x * starCanvas.width, s.y * starCanvas.height, s.r, 0, Math.PI * 2);
+    sCtx.fillStyle = `rgba(200,210,255,${alpha})`;
+    sCtx.fill();
+  });
+}
+initStars(); resizeStarCanvas();
+window.addEventListener('resize', resizeStarCanvas);
+setInterval(drawStars, 50);
+
+/* ── SCROLL REVEAL ────────────────────────────────────────────── */
+const obs = new IntersectionObserver(e => {
+  e.forEach(x => { if (x.isIntersecting) x.target.classList.add('visible'); });
+}, { threshold: 0.06 });
+document.querySelectorAll('.era').forEach(el => obs.observe(el));
+</script>
+</body>
+</html>
