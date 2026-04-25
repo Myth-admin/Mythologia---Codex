@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mythologia — Entités Fantastiques</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bleu-nuit: #0a1520;
+    --violet-ae: #6b3fa0;
+    --eclat-ae:  #a78bfa;
+    --foudre:    #60c0ff;
+    --or-ae:     #c9a84c;
+    --blanc-lune:#e8e4f0;
+    /* aliases pour le JS existant */
+    --bg-deep:       #0a1520;
+    --bg-panel:      #0d1b2e;
+    --bg-card:       #0d1b2e;
+    --border:        rgba(167,139,250,0.15);
+    --border-gold:   rgba(201,168,76,0.25);
+    --ae-purple:     #a78bfa;
+    --ae-purple-dim: rgba(167,139,250,0.1);
+    --gold:          #c9a84c;
+    --gold-dim:      rgba(201,168,76,0.1);
+    --text-primary:  #e8e4f0;
+    --text-secondary:rgba(232,228,240,0.75);
+    --text-muted:    rgba(167,139,250,0.5);
+    --danger:        #e05252;
+    --warning:       #e0a070;
+    --success:       #7acfa8;
+    --info:          #60c0ff;
+    --cinzel:   'Cinzel', serif;
+    --garamond: 'EB Garamond', serif;
+  }
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bleu-nuit);
+    color: var(--blanc-lune);
+    font-family: 'EB Garamond', serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* CANVAS ÉTOILES */
+  #starCanvas { position:fixed; inset:0; z-index:0; }
+
+  /* OVERLAY */
+  .overlay { position:fixed; inset:0; background:radial-gradient(ellipse at center,rgba(10,21,32,0.3) 0%,rgba(10,21,32,0.85) 100%); z-index:1; }
+
+  /* NAV */
+  nav { position:fixed; top:0; left:0; right:0; z-index:100; display:flex; align-items:center; gap:20px; padding:18px 36px; background:linear-gradient(180deg,rgba(10,21,32,0.95) 0%,transparent 100%); }
+  .nav-back { font-family:'Cinzel',serif; font-size:0.7rem; letter-spacing:0.3em; color:var(--eclat-ae); text-decoration:none; text-transform:uppercase; opacity:0.7; transition:opacity 0.2s; }
+  .nav-back:hover { opacity:1; }
+  .nav-sep { color:rgba(167,139,250,0.3); }
+  .nav-current { font-family:'Cinzel',serif; font-size:0.7rem; letter-spacing:0.3em; text-transform:uppercase; color:var(--blanc-lune); }
+
+  /* PAGE */
+  .page { position:relative; z-index:10; min-height:100vh; display:flex; flex-direction:column; }
+
+/* ── Header ── */
+/* EN-TÊTE */
+  .page-header { text-align:center; padding:100px 20px 30px; animation:fadeDown 1s ease both; }
+  @keyframes fadeDown { from{opacity:0;transform:translateY(-20px)} to{opacity:1;transform:translateY(0)} }
+  .page-header h1 { font-family:'Cinzel Decorative',serif; font-size:clamp(1.8rem,4vw,3rem); color:var(--blanc-lune); text-shadow:0 0 40px rgba(167,139,250,0.5),0 0 80px rgba(167,139,250,0.2); letter-spacing:0.1em; margin-bottom:10px; }
+  .sous-titre { font-family:'Cinzel',serif; font-size:0.75rem; letter-spacing:0.5em; color:var(--eclat-ae); text-transform:uppercase; opacity:0.7; }
+  .ornement { display:flex; align-items:center; gap:16px; margin:18px auto 0; width:min(400px,80vw); }
+  .ornement-line { flex:1; height:1px; background:linear-gradient(90deg,transparent,var(--eclat-ae),transparent); }
+  .ornement-gem  { width:7px; height:7px; background:var(--eclat-ae); transform:rotate(45deg); box-shadow:0 0 10px var(--eclat-ae); flex-shrink:0; }
+  .ornement-gem-s{ width:4px; height:4px; background:var(--eclat-ae); transform:rotate(45deg); opacity:0.5; flex-shrink:0; }
+
+/* STATS SUMMARY */
+  .stats-summary { display:flex; gap:24px; justify-content:center; flex-wrap:wrap; padding:18px 20px 30px; }
+  .stat-item-s { text-align:center; }
+  .stat-num-s { font-family:'Cinzel',serif; font-size:1.6rem; color:var(--eclat-ae); display:block; line-height:1; text-shadow:0 0 20px rgba(167,139,250,0.4); }
+  .stat-lbl-s { font-family:'Cinzel',serif; font-size:0.55rem; letter-spacing:0.25em; color:rgba(167,139,250,0.5); text-transform:uppercase; }
+
+/* CORPUS TABS */
+  .corpus-wrap { padding:0 36px; max-width:1400px; margin:30px auto 0; width:100%; position:relative; z-index:10; animation:fadeIn 1.2s 0.3s ease both; }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+  .corpus-nav { display:flex; flex-wrap:wrap; gap:4px; border-bottom:1px solid rgba(167,139,250,0.15); }
+  .corpus-tab { font-family:'Cinzel',serif; font-size:0.63rem; letter-spacing:0.18em; text-transform:uppercase; padding:8px 14px; border:1px solid transparent; border-bottom:none; background:transparent; color:rgba(167,139,250,0.45); cursor:pointer; transition:all 0.2s; border-radius:4px 4px 0 0; position:relative; top:1px; }
+  .corpus-tab:hover { color:var(--blanc-lune); border-color:rgba(167,139,250,0.2); }
+  .corpus-tab.active { color:var(--or-ae); border-color:rgba(167,139,250,0.2); background:rgba(13,27,42,0.85); border-bottom-color:rgba(13,27,42,0.85); }
+  .corpus-tab .tab-emoji { margin-right:4px; }
+  .corpus-tab .tab-count { font-size:0.52rem; color:var(--eclat-ae); margin-left:4px; opacity:0.7; }
+
+/* MAIN LAYOUT */
+  .corpus-layout { display:grid; grid-template-columns:290px 1fr; gap:0; flex:1; padding:0 36px 60px; max-width:1400px; margin:0 auto; width:100%; animation:fadeIn 1.2s 0.5s ease both; }
+  @media(max-width:900px){ .corpus-layout{grid-template-columns:1fr} .corpus-wrap,.corpus-layout{padding-left:16px;padding-right:16px} nav{padding:14px 20px} }
+
+  /* ENTITY LIST */
+  .entity-list { border-right:1px solid rgba(167,139,250,0.1); display:flex; flex-direction:column; padding-top:18px; }
+  .entity-list-header { display:flex; justify-content:space-between; align-items:center; margin:0 14px 6px; }
+  .entity-list-header span { font-family:'Cinzel',serif; font-size:0.55rem; letter-spacing:0.3em; text-transform:uppercase; color:rgba(167,139,250,0.4); }
+  .entity-list-search { margin:0 14px 10px; padding:8px 12px; background:rgba(13,27,42,0.6); border:1px solid rgba(167,139,250,0.15); border-radius:8px; color:var(--blanc-lune); font-family:'EB Garamond',serif; font-size:0.9rem; font-style:italic; outline:none; width:calc(100% - 28px); transition:border-color 0.2s; }
+  .entity-list-search::placeholder { color:rgba(167,139,250,0.35); }
+  .entity-list-search:focus { border-color:rgba(167,139,250,0.4); }
+  .entity-list-body-wrap { overflow-y:auto; flex:1; max-height:calc(100vh - 280px); }
+  .entity-list-body-wrap::-webkit-scrollbar { width:3px; }
+  .entity-list-body-wrap::-webkit-scrollbar-thumb { background:rgba(167,139,250,0.2); border-radius:2px; }
+  .entity-btn { width:100%; text-align:left; padding:10px 14px; background:transparent; border:none; border-bottom:1px solid rgba(167,139,250,0.06); color:rgba(232,228,240,0.6); cursor:pointer; display:flex; align-items:center; gap:10px; transition:all 0.18s; font-family:'EB Garamond',serif; font-size:0.92rem; }
+  .entity-btn:hover { background:rgba(107,63,160,0.08); color:var(--blanc-lune); }
+  .entity-btn.active { background:rgba(107,63,160,0.12); color:var(--eclat-ae); border-left:2px solid var(--eclat-ae); padding-left:12px; }
+  .entity-btn .e-icon { font-size:0.9rem; opacity:0.8; flex-shrink:0; }
+  .entity-btn .e-type-dot { width:5px; height:5px; border-radius:50%; flex-shrink:0; margin-left:auto; }
+
+/* FICHE */
+  .entity-fiche { display:flex; flex-direction:column; animation:slideIn 0.4s ease; }
+  @keyframes slideIn { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:translateX(0)} }
+  .info-panel-wrap { padding:20px 28px; display:flex; flex-direction:column; overflow-y:auto; max-height:calc(100vh - 220px); }
+  .info-panel-wrap::-webkit-scrollbar { width:3px; }
+  .info-panel-wrap::-webkit-scrollbar-thumb { background:rgba(167,139,250,0.2); border-radius:2px; }
+  .fiche-header { display:flex; align-items:flex-start; gap:16px; margin-bottom:14px; }
+  .fiche-icon-box { width:52px; height:52px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.5rem; flex-shrink:0; background:rgba(107,63,160,0.15); border:1px solid rgba(167,139,250,0.2); }
+  .fiche-title { display:flex; flex-direction:column; gap:4px; flex:1; }
+  .fiche-name { font-family:'Cinzel Decorative',serif; font-size:1.15rem; color:var(--blanc-lune); line-height:1.2; }
+  .fiche-contrepartie { font-family:'Cinzel',serif; font-size:0.58rem; letter-spacing:0.3em; text-transform:uppercase; color:var(--eclat-ae); opacity:0.7; }
+  .fiche-tags { display:flex; flex-wrap:wrap; gap:6px; margin-top:4px; }
+  .fiche-tag { font-family:'Cinzel',serif; font-size:0.53rem; letter-spacing:0.1em; text-transform:uppercase; padding:3px 9px; border-radius:3px; }
+  .tag-type { background:rgba(107,63,160,0.15); border:1px solid rgba(167,139,250,0.25); color:var(--eclat-ae); }
+  .tag-corpus { background:rgba(201,168,76,0.1); border:1px solid rgba(201,168,76,0.3); color:var(--or-ae); }
+  .tag-res { background:rgba(96,192,255,0.08); border:1px solid rgba(96,192,255,0.25); color:var(--foudre); }
+  .fiche-meta-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px; }
+  .fiche-meta-item { background:rgba(13,27,42,0.6); border:1px solid rgba(167,139,250,0.12); border-radius:10px; padding:10px 12px; }
+  .fiche-meta-label { font-family:'Cinzel',serif; font-size:0.55rem; letter-spacing:0.3em; text-transform:uppercase; color:var(--eclat-ae); opacity:0.65; margin-bottom:4px; display:block; }
+  .fiche-meta-value { font-size:0.88rem; color:var(--blanc-lune); line-height:1.4; }
+
+/* SECTIONS */
+  .fiche-sections { padding:0; }
+  .fiche-section { margin-bottom:14px; }
+  .section-title { font-family:'Cinzel',serif; font-size:0.6rem; letter-spacing:0.35em; text-transform:uppercase; color:var(--eclat-ae); opacity:0.7; margin-bottom:6px; display:flex; align-items:center; gap:10px; }
+  .section-title::after { content:''; flex:1; height:1px; background:rgba(167,139,250,0.12); }
+  .fiche-text { font-size:0.92rem; line-height:1.8; color:rgba(232,228,240,0.78); }
+  .fiche-text em { color:var(--blanc-lune); font-style:italic; }
+
+  /* ORDRE */
+  .ordre-block { background:rgba(13,27,42,0.6); border:1px solid rgba(167,139,250,0.12); border-radius:10px; overflow:hidden; }
+  .ordre-header { display:flex; align-items:center; gap:10px; padding:10px 14px; border-bottom:1px solid rgba(167,139,250,0.1); background:rgba(6,10,20,0.4); }
+  .ordre-logo { font-size:1rem; }
+  .ordre-title { font-family:'Cinzel',serif; font-size:0.58rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--or-ae); flex:1; }
+  .ordre-statut-badge { font-family:'Cinzel',serif; font-size:0.52rem; letter-spacing:0.1em; padding:3px 8px; border-radius:3px; }
+  .statut-repertorie  { background:rgba(90,110,140,0.2); border:1px solid rgba(90,110,140,0.4); color:rgba(232,228,240,0.65); }
+  .statut-chasse      { background:rgba(224,82,82,0.15); border:1px solid rgba(224,82,82,0.5); color:#e08080; }
+  .statut-neutralise  { background:rgba(224,82,82,0.15); border:1px solid rgba(224,82,82,0.5); color:#e08080; }
+  .statut-contenu     { background:rgba(224,136,64,0.15); border:1px solid rgba(224,136,64,0.4); color:#e0a070; }
+  .statut-protege     { background:rgba(76,175,130,0.12); border:1px solid rgba(76,175,130,0.35); color:#7acfa8; }
+  .statut-omega       { background:rgba(100,0,0,0.25); border:1px solid rgba(200,60,60,0.4); color:#e05252; }
+  .statut-alpha       { background:rgba(201,168,76,0.1); border:1px solid rgba(201,168,76,0.35); color:var(--or-ae); }
+  .statut-beta        { background:rgba(107,63,160,0.1); border:1px solid rgba(167,139,250,0.35); color:var(--eclat-ae); }
+  .statut-inapprochable { background:rgba(50,0,80,0.3); border:1px solid rgba(167,139,250,0.5); color:#b48ef5; }
+  .statut-cooperation { background:rgba(76,175,130,0.1); border:1px solid rgba(76,175,130,0.3); color:#7acfa8; }
+  .statut-actif       { background:rgba(96,192,255,0.08); border:1px solid rgba(96,192,255,0.3); color:var(--foudre); }
+  .ordre-body { padding:12px 14px; display:flex; flex-direction:column; gap:10px; }
+  .ordre-row { display:grid; grid-template-columns:80px 1fr; gap:8px; }
+  .ordre-row-label { font-family:'Cinzel',serif; font-size:0.55rem; letter-spacing:0.2em; text-transform:uppercase; color:rgba(167,139,250,0.55); padding-top:2px; line-height:1.5; }
+  .ordre-row-value { font-size:0.88rem; line-height:1.7; color:rgba(232,228,240,0.72); }
+
+  /* PASSAGE */
+  .passage-block { padding:14px 16px; background:rgba(107,63,160,0.08); border-left:2px solid rgba(167,139,250,0.35); border-radius:0 8px 8px 0; }
+  .passage-icon { font-family:'Cinzel',serif; font-size:0.6rem; letter-spacing:0.35em; text-transform:uppercase; color:var(--eclat-ae); margin-bottom:8px; opacity:0.7; display:block; }
+  .fiche-text.italic { font-style:italic; color:rgba(232,228,240,0.7); }
+
+  /* EMPTY */
+  .fiche-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:5rem 2rem; text-align:center; opacity:0.5; gap:14px; }
+  .fiche-empty .empty-glyph { font-size:2.5rem; }
+  .fiche-empty p { font-family:'Cinzel',serif; font-size:0.72rem; letter-spacing:0.3em; text-transform:uppercase; color:var(--eclat-ae); line-height:2; }
+
+  /* TYPE DOTS */
+  .dot-corrompu { background:#e05252; }
+  .dot-scelle   { background:var(--eclat-ae); }
+  .dot-gardien  { background:var(--or-ae); }
+  .dot-esprit   { background:var(--foudre); }
+  .dot-construit{ background:#7acfa8; }
+  .dot-mutation { background:#f4a0c0; }
+
+  /* FOOTER */
+  .page-footer { text-align:center; margin-top:3rem; padding:2rem 0; border-top:1px solid rgba(167,139,250,0.1); font-family:'Cinzel',serif; font-size:0.6rem; letter-spacing:0.35em; text-transform:uppercase; color:rgba(167,139,250,0.4); }
+
+  .hidden { display:none !important; }
+</style>
+</head>
+<body>
+
+<canvas id="starCanvas"></canvas>
+<div class="overlay"></div>
+
+<nav>
+  <a class="nav-back" href="index.html">← Mythologia</a>
+  <span class="nav-sep">✦</span>
+  <span class="nav-current">Entités Fantastiques</span>
+</nav>
+
+<div class="page">
+
+  <div class="page-header">
+    <h1>ENTITÉS FANTASTIQUES</h1>
+    <p class="sous-titre">Êtres hors-nature · Singuliers · Passages d'Aetherium</p>
+    <div class="ornement">
+      <div class="ornement-line"></div>
+      <div class="ornement-gem-s"></div>
+      <div class="ornement-gem"></div>
+      <div class="ornement-gem-s"></div>
+      <div class="ornement-line"></div>
+    </div>
+  </div>
+
+  <div class="stats-summary">
+    <div class="stat-item-s"><span class="stat-num-s">70</span><span class="stat-lbl-s">Entités</span></div>
+    <div class="stat-item-s"><span class="stat-num-s">8</span><span class="stat-lbl-s">Corpus</span></div>
+    <div class="stat-item-s"><span class="stat-num-s">12</span><span class="stat-lbl-s">Chassées</span></div>
+    <div class="stat-item-s"><span class="stat-num-s">7</span><span class="stat-lbl-s">Classif. Ω</span></div>
+    <div class="stat-item-s"><span class="stat-num-s">5</span><span class="stat-lbl-s">Classif. α</span></div>
+  </div>
+
+  <!-- CORPUS TABS -->
+  <div class="corpus-wrap">
+    <div class="corpus-nav" id="corpusTabs"></div>
+  </div>
+
+  <!-- LAYOUT -->
+  <div class="corpus-layout">
+    <div class="entity-list">
+      <input class="entity-list-search" id="entitySearch" type="text" placeholder="Rechercher une entité…" oninput="filterEntities(this.value)">
+      <div class="entity-list-header">
+        <span>ENTITÉS</span>
+        <span id="listCount" style="color:var(--eclat-ae);font-size:0.7rem;"></span>
+      </div>
+      <div class="entity-list-body-wrap"><div id="entityListBody"></div></div>
+    </div>
+
+    <div class="info-panel-wrap" id="entityFiche">
+      <div class="entity-fiche">
+        <div class="fiche-empty">
+          <span class="empty-glyph">👁️</span>
+          <p>Sélectionnez une entité<br>dans la liste</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-footer">— Mythologia · Codex des Entités —</div>
+</div>
+
+<script>
+// ─── Étoiles (cosmologie style) ──────────────────────────────────────────────
+const starCanvas = document.getElementById('starCanvas');
+const sCtx = starCanvas.getContext('2d');
+const stars = [];
+function resizeStarCanvas() { starCanvas.width=window.innerWidth; starCanvas.height=window.innerHeight; drawStars(); }
+function initStars() { stars.length=0; for(let i=0;i<280;i++) stars.push({x:Math.random(),y:Math.random(),r:Math.random()*1.5+0.2,a:Math.random(),speed:Math.random()*0.003+0.001,phase:Math.random()*Math.PI*2}); }
+function drawStars() { sCtx.clearRect(0,0,starCanvas.width,starCanvas.height); const now=Date.now()*0.001; stars.forEach(s=>{const alpha=s.a*(0.5+0.5*Math.sin(now*s.speed*10+s.phase));sCtx.beginPath();sCtx.arc(s.x*starCanvas.width,s.y*starCanvas.height,s.r,0,Math.PI*2);sCtx.fillStyle=`rgba(200,210,255,${alpha})`;sCtx.fill();}); }
+initStars(); resizeStarCanvas(); window.addEventListener('resize',resizeStarCanvas); setInterval(drawStars,50);
+
+// ─── Entity Data ─────────────────────────────────────────────────────────────
+const CORPUS_META = [
+  { id:'grec',      label:'Grec',         emoji:'🏛️', geo:'Côtes de Pays de Lore' },
+  { id:'nordique',  label:'Nordique',     emoji:'❄️', geo:'Sud glaciaire de Pays de Lore' },
+  { id:'celtique',  label:'Celtique',     emoji:'🌿', geo:'Forêts intérieures de Pays de Lore' },
+  { id:'egyptien',  label:'Égyptien',     emoji:'🏜️', geo:'Empire Kamses' },
+  { id:'africain',  label:'Africain',     emoji:'🌍', geo:'Sud Kamses · Zones équatoriales' },
+  { id:'mesopotamien', label:'Mésopotamien', emoji:'🏺', geo:'Frontière Kamses / C3' },
+  { id:'asiatique', label:'Asiatique',    emoji:'🐉', geo:'Continent C3' },
+  { id:'amerindien',label:'Amérindien',   emoji:'🦅', geo:'C3 · Zones polaires' },
+];
+
+const TYPE_COLORS = {
+  'Corrompue':'corrompu','Corrompu':'corrompu','Corrompu / Mutation':'corrompu',
+  'Corrompu / Entité de tempête':'corrompu','Corrompu / Fusion pathologique':'corrompu',
+  'Corrompu / Entité de disruption':'corrompu','Corrompu / Mutation prédatrice':'corrompu',
+  'Corrompu / Mutation désertique':'corrompu','Corrompu / Entité de tempête sèche':'corrompu',
+  'Corrompu / Humain en dérive Ae+C cannibale':'corrompu','Corrompu / Meute Ae+O+N':'corrompu',
+  'Corrompu / Prédateur aquatique':'corrompu','Corrompu / Skoran ancien':'corrompu',
+  'Corrompu / Accumulation Ae+neural historique':'corrompu',
+  'Scellé':'scelle','Scellé / Entité primordiale':'scelle','Scellé / Entité souterraine':'scelle',
+  'Scellé / Entité de connaissance':'scelle','Scellé / Entité géologique':'scelle',
+  'Scellé / Entité de renaissance':'scelle',
+  'Gardien':'gardien','Gardien (Scellement arcanique)':'gardien',
+  'Gardiens (Scellement arcanique)':'gardien','Gardien / Sauridh ancien':'gardien',
+  'Gardien naturel':'gardien','Gardien / Kethara ancienne':'gardien',
+  'Gardiens (Scellement arcanique, paire)':'gardien','Gardiens (Construits arcaniques)':'gardien',
+  'Esprit du Flux':'esprit','Esprits du Flux (groupe)':'esprit',
+  'Esprit du Flux / Entité de masse':'esprit','Esprit du Flux / Manifestation cosmique':'esprit',
+  'Esprit du Flux / Entité de disruption':'esprit','Esprit du Flux / Aevhari en dérive':'esprit',
+  'Esprits du Flux (paire arcanique)':'esprit','Esprits du Flux (meute)':'esprit',
+  'Esprits du Flux (groupe instable)':'esprit','Esprits du Flux (essaim nécromantique)':'esprit',
+  'Esprit du Flux / Entité aquatique ancienne':'esprit','Esprit du Flux / Entité aquatique bienveillante':'esprit',
+  'Esprit du Flux / Entité météorologique':'esprit','Esprit du Flux / Construit biologique':'esprit',
+  'Esprits du Flux (collectif diffus)':'esprit',
+  'Construit naturel (auto-entretenu)':'construit','Construit / Corrompu':'construit',
+  'Construit / Gardien':'construit','Construit / Gardien arcanique':'construit',
+  'Construit (rituel ancien)':'construit','Construit (rituel nécromantique)':'construit',
+  'Construit / Gardien (rituel)':'construit','Construit naturel (auto-entretenu)':'construit',
+  'Construits (Scellements multiples)':'construit',
+  'Mutation':'mutation','Mutation / Durgoth de surface isolés':'mutation',
+  'Mutation / Communauté Aevhari isolée':'mutation','Mutation / Chamans corrompus':'mutation',
+  'Mutation / Construit (interface Ae. extrême)':'mutation',
+};
+
+const STATUT_CLASS = {
+  'Répertorié': 'statut-repertorie',
+  'Répertoriée': 'statut-repertorie',
+  'Chassé': 'statut-chasse',
+  'Chassée': 'statut-chasse',
+  'Neutralisé': 'statut-neutralise',
+  'Neutralisation': 'statut-neutralise',
+  'Contenu': 'statut-contenu',
+  'Protégé': 'statut-protege',
+  'Protégée': 'statut-protege',
+  'Oméga': 'statut-omega',
+  'Alpha': 'statut-alpha',
+  'Bêta': 'statut-beta',
+  'Inapprochable': 'statut-inapprochable',
+  'Coopération': 'statut-cooperation',
+  'Actif': 'statut-actif',
+};
+
+function getStatutClass(statut) {
+  for(const [key,cls] of Object.entries(STATUT_CLASS)) {
+    if(statut.includes(key)) return cls;
+  }
+  return 'statut-repertorie';
+}
+
+function getDotClass(type) {
+  const t = TYPE_COLORS[type] || 'mutation';
+  return 'dot-'+t;
+}
+
+// ─── All Entities ─────────────────────────────────────────────────────────────
+const ALL_ENTITIES = {
+
+grec: [
+  {
+    id:'veth_hara', name:'VETH\'HARA', icon:'🐍',
+    contrepartie:'Méduse / les Gorgones',
+    type:'Corrompue', origine:'Côtes nord-est de Pays de Lore, ère pré-Trône Elindor',
+    resonance:'Ae+Si+P (fusion pathologique)',
+    physique:`Ancienne Kethara femelle, grande mage Lucis. Suite à une surcharge d'Aetherium lors d'une Convergence arcanique mal conçue, ses résonances Ae+P et Ae+Si ont fusionné de façon pathologique dans ses tissus oculaires. Ses yeux, autrefois capables de projeter des illusions, émettent désormais une résonance Si+P <em>inverse</em> : au lieu de courber la lumière, ils cristallisent la matière organique exposée. Sa peau est pâle et craquelée comme de la porcelaine. Les "serpents" de la légende sont des tubes de cristal d'Aetherium ayant poussé depuis son crâne pour répartir l'excès de résonance — structures douloureuses, non choisies.`,
+    magie:`Sa résonance est passive et <em>involontaire</em> — elle ne peut l'éteindre. Tout être vivant croisant son regard direct reçoit une impulsion Si qui cristallise progressivement les tissus biologiques. Contact bref : paralysie temporaire. Contact soutenu : pétrification partielle irréversible. Les cristaux continuent de croître lentement sur son propre corps.`,
+    comportement:`Recluse, évite tout contact. Habite une côte rocheuse inaccessible. N'attaque jamais en premier — sa condition est une malédiction, pas une arme. Profondément consciente d'elle-même et de sa situation.`,
+    statut:'Répertoriée / Neutralisation non recommandée',
+    interet:`Sa résonance Ae+Si+P inversée est unique au monde connu. Ses cristaux crâniens sont des concentrateurs de résonance naturels d'une efficacité théoriquement inégalée.`,
+    historique:`Trois missions envoyées. La première : 4 mages pétrifiés, toujours présents comme monuments macabres sur sa côte. La deuxième, utilisant des miroirs d'Aetherium poli, a permis le prélèvement d'un fragment crânien. La troisième a été annulée — rapport risque/bénéfice jugé insuffisant.`,
+    passage:`Un survivant de la deuxième mission a traversé un Passage vers la Méditerranée, portant le fragment de cristal et le récit. La souffrance originelle de Veth'hara — un être conscient piégé dans une malédiction involontaire — n'a pas survécu à la distorsion mythique.`,
+  },
+  {
+    id:'pyreth', name:'PYRETH', icon:'🔥',
+    contrepartie:'Le Phénix',
+    type:'Construit naturel (auto-entretenu)', origine:'Montagnes côtières de Pays de Lore',
+    resonance:'Ae+O+C (fusion thermobiologique)',
+    physique:`Oiseau de grande envergure (~4m ailes déployées, ossature dense adaptée à 1,9g). Plumage parcouru de veines d'Aetherium rougeoyant orange-violet. Sa biologie est construite autour d'un cycle métabolique : les cellules accumulent de l'Aetherium jusqu'à saturation thermique, déclenchant une combustion Ae+O totale. L'Aetherium résiduel dans les cendres catalyse une régénération Ae+C complète.`,
+    magie:`Le cycle mort/renaissance est strictement biologique et non-conscient — un métabolisme, pas un choix. La combustion atteint des températures suffisantes pour vitrifier le sol environnant. Les cendres contiennent une concentration d'Aetherium pur temporairement accessible (quelques heures) avant que la régénération ne les absorbe.`,
+    comportement:`Solitaire, territorial. Pas agressif envers les races intelligentes à moins d'être menacé. Les Pyreth s'accouplent une fois par siècle — il n'en existe probablement que 3 à 5 individus sur l'ensemble de Mythologia.`,
+    statut:'Répertorié / Surveillance passive / Récolte occasionnelle',
+    interet:`Les cendres post-combustion sont l'un des concentrés d'Aetherium pur les plus accessibles au monde, sans extraction minière.`,
+    historique:`Tentative de capture d'un individu vivant sous Maître Soreth (~200 ans). Échec total — la combustion de détresse a détruit l'équipe et un périmètre de 400m. Politique actuelle : observation et récolte passive uniquement.`,
+    passage:`Observé depuis la côte par des navigateurs qui ont traversé le Passage. Le cycle biologique, mal compris, a été interprété comme une mort volontaire et une renaissance miraculeuse.`,
+  },
+  {
+    id:'kyroth', name:'KYROTH', icon:'👁️',
+    contrepartie:'Les Cyclopes / Polyphème',
+    type:'Corrompu / Mutation', origine:'Grottes côtières nordiques de Pays de Lore',
+    resonance:'Ae+Si concentré (nœud neural unique)',
+    physique:`Durgoth mutant de taille exceptionnelle (~3,2m). La mutation a fusionné les deux nœuds d'Aetherium neural en un unique organe frontal d'une densité extraordinaire. La pression a remodelé le crâne : les deux orbites ont fusionné en une cavité unique centrée. L'œil unique n'est pas ordinaire — c'est un organe sensoriel Ae+Si capable de percevoir les structures minérales à des centaines de mètres de profondeur.`,
+    magie:`La concentration Ae+Si dans le nœud frontal donne une puissance lithique sans égal — un Kyroth adulte peut déformer la roche d'une caverne d'un geste. En contrepartie, la résonance Mentis est nulle. Il est immunisé à toute magie d'esprit.`,
+    comportement:`Territorial, solitaire (mutation non héréditaire — chaque Kyroth est un accident génétique isolé). Intelligence comparable à un Durgoth normal mais sociabilité réduite par l'isolement. Communique par vibrations rocheuses.`,
+    statut:'Répertorié / Non prioritaire',
+    interet:`Le nœud Ae+Si frontal d'un Kyroth défunt est un artefact naturel d'une valeur considérable — concentrateur dont la densité que l'artisanat Durgoth ne peut reproduire.`,
+    historique:`Un individu neutralisé lors de la fondation d'un avant-poste côtier (~300 ans). Son nœud frontal est conservé à la Tour d'Opale, classification Gamma.`,
+    passage:`Des marchands marins ont rencontré un Kyroth défendant ses cavernes. Les récits exagérèrent la taille, multiplièrent les individus et effacèrent la dimension Durgoth pour créer des géants primitifs mangeurs d'hommes.`,
+  },
+  {
+    id:'laerith', name:'LAERITH', icon:'🦁',
+    contrepartie:'Le Sphinx',
+    type:'Gardien (Scellement arcanique)', origine:'Haute plaine de Pays de Lore, site pré-Tour d\'Opale',
+    resonance:'Ae+P+neural (Scellement externe)',
+    physique:`Kethara femelle ancienne, immobilisée en position assise par un Scellement arcanique complexe. Corps de lionne, visage humanoïde raffiné, deux ailes de pierre Ae+Si solidifiées dans le dos — excroissances cristallines créées par le Scellement pour ancrer l'entité au sol. Taille au garrot ~2,1m. Ses yeux brillent d'une résonance Lucis permanente.`,
+    magie:`Le Scellement a lié Laerith à un site géographique précis et à une fonction : garder et évaluer. Sa résonance Ae+P+neural lui permet de projeter des illusions directement dans l'esprit d'un approchant. Ce qu'on appelle "l'énigme" est en réalité une évaluation Mentis — elle sonde les capacités cognitives et la résonance Ae. de l'interlocuteur pour déterminer s'il peut passer.`,
+    comportement:`Totalement immobile physiquement (le Scellement l'interdit). Communicative uniquement par projection mentale. Ni hostile ni amicale — strictement fonctionnelle. Semble avoir perdu toute personnalité au fil des siècles, remplacée intégralement par sa mission.`,
+    statut:'Répertoriée / Protégée / Étude en cours',
+    interet:`Le Scellement qui la lie est d'une sophistication inconnue des arcanistes actuels — probablement de l'ère de fondation arcanique. Le comprendre avancerait considérablement la doctrine de la Convergence permanente.`,
+    historique:`L'Ordre a tenté de "lire" le Scellement sans le briser. Deux arcanistes ont perdu connaissance lors de l'interface. Laerith a indiqué par projection mentale que "le Scellement ne peut être lu que de l'intérieur." Sens exact inconnu.`,
+    passage:`Des voyageurs ayant réussi l'évaluation ont traversé le Passage. L'évaluation neurologique est devenue une énigme verbale. Laerith est devenu le gardien universel de la connaissance.`,
+  },
+  {
+    id:'aleth_kai', name:'ALETH\'KAI', icon:'🎵',
+    contrepartie:'Les Sirènes',
+    type:'Esprits du Flux (groupe)', origine:'Îles rocheuses au large des côtes de Pays de Lore',
+    resonance:'Ae+N+neural (influence mentale via vibrations atmosphériques)',
+    physique:`Aevhari femelles dont la mutation a développé des structures vocales extraordinaires — leurs cordes vocales contiennent des filaments d'Aetherium biologique qui amplifient leurs émissions sonores jusqu'à les transformer en vecteurs de résonance Mentis. Leurs ailes atrophiées permettent seulement un plané court. Peau recouverte d'un film protecteur contre les embruns.`,
+    magie:`Leur chant n'est pas "beau" au sens conventionnel — c'est un vecteur Ae+neural qui bypass la conscience et agit directement sur l'état émotionnel et la volonté motrice. L'effet est progressif : attirance, fascination, suppression des réflexes d'auto-préservation.`,
+    comportement:`Groupe social de 6 à 12 individus. Prédatrices — le naufrage de navires est une technique de chasse, pas un acte sadique. Répondent à une communication directe sans chant via le code social Aevhari vestigial.`,
+    statut:'Chassées / Neutralisation autorisée',
+    interet:`Les filaments Ae. vocaux sont des structures biologiques uniques — aucune espèce connue ne possède d'Aetherium intégré dans l'appareil phonatoire.`,
+    historique:`Campagne de neutralisation il y a ~150 ans sur ordre du Trône Elindor après des naufrages répétés. Deux groupes neutralisés, un troisième a fui vers des îles non cartographiées. Statut actuel : présumé actif, localisation inconnue.`,
+    passage:`Des survivants ont traversé le Passage. Le mécanisme Ae+neural a été réduit à un "beau chant" inexplicablement irrésistible. Les Aleth'kai ont été humanisées en femmes-poissons, la prédation effacée derrière la séduction.`,
+  },
+  {
+    id:'vaelith', name:'VAELITH', icon:'⚗️',
+    contrepartie:'La Chimère',
+    type:'Construit / Corrompu', origine:'Laboratoire arcanique abandonné, intérieur de Pays de Lore',
+    resonance:'Ae+C instable (fusion biologique forcée multi-espèces)',
+    physique:`Résultat d'une expérience de Convergence Vitae visant à créer un organisme soutenant plusieurs résonances. Trois organismes fusionnés par Ae+C : la section Kethara projette Ae+P, la section Skoran contrôle Ae+Si, la section arrière génère Ae+O — d'où le "souffle de feu" de la légende. L'ensemble est biologiquement instable et souffre en permanence.`,
+    magie:`Trois résonances actives simultanément mais non contrôlées — les cerveaux ne sont pas synchronisés. Les décharges Ae+O sont des réflexes involontaires sous stress. Puissance brute exceptionnelle, précision nulle.`,
+    comportement:`Erratique, douloureux. Les trois cerveaux ont des intentions contradictoires. Pas de communication possible. Erre sans territoire fixe.`,
+    statut:'Chassé / Neutralisation recommandée',
+    interet:`Négatif actif — cet être est la preuve vivante des limites éthiques de la recherche Ae+C. Son dossier sert d'argument dans les débats internes sur l'expérimentation multi-espèces.`,
+    historique:`Créé par l'arcaniste Mael Dorthyn, exclu de l'Ordre après l'incident. Quatre tentatives de neutralisation. La troisième a failli réussir — le Vaelith a survécu et disparu pendant 40 ans. Actuellement localisé dans une zone forestière reculée.`,
+    passage:`Un chasseur de l'Ordre ayant observé l'être à distance a traversé un Passage accidentel. Le récit fragmenté (trois têtes, trois pouvoirs, instabilité) a engendré la Chimère — rationalisée en créature mythique cohérente là où la réalité était chaos et souffrance.`,
+  },
+  {
+    id:'hydrath', name:'HYDRATH', icon:'💧',
+    contrepartie:'L\'Hydre de Lerne',
+    type:'Corrompu / Mutation', origine:'Marécages côtiers de Pays de Lore',
+    resonance:'Ae+C (régénération extrême / hyperplasie)',
+    physique:`Originellement un grand reptile aquatique exposé à une zone de forte concentration Ae+C naturelle. La résonance Vitae a envahi sa biologie sur plusieurs générations et déclenché une hyperplasie incontrôlée : toute cellule détruite est remplacée en multiple. Dimensions actuelles ~12m de long, 9 têtes dont l'âge varie. Corps bas, très dense, adapté à 1,9g.`,
+    magie:`La régénération n'est pas de la magie active — c'est une biologie corrompue par absorption Ae+C passive. Les têtes partagent un système nerveux distribué. La tête la plus ancienne a ses tissus tellement saturés d'Ae. que la régénération y est quasi-instantanée.`,
+    comportement:`Territorial, aquatique. Apex prédateur de son marécage. Pas d'intelligence significative — comportement animal pur. Ne cherche pas le conflit au-delà de son territoire.`,
+    statut:'Répertorié / Neutralisation difficile / Faible priorité',
+    interet:`Son sang contient une concentration Ae+C dissoute utilisable en alchimie médicale. Ses écailles naturellement imprégnées d'Aetherium constituent un matériau de forge expérimental.`,
+    historique:`Deux tentatives de neutralisation par le feu — inefficaces. Théorie actuelle : une cautérisation Ae+O simultanée de tous les points de section empêcherait la régénération en vitrifying les cellules souches Ae. Budget insuffisant pour organiser l'expédition.`,
+    passage:`Des pêcheurs ont traversé le Passage. La multiplication des têtes par régénération a engendré directement le mythe — coupez-en une, deux repoussent. La solution intuitive du feu a survécu dans la légende de Héraclès.`,
+  },
+  {
+    id:'mirak_tor', name:'MIRAK\'TOR', icon:'🐂',
+    contrepartie:'Le Minotaure',
+    type:'Construit / Gardien (rituel)', origine:'Complexe souterrain du Pays de Lore intérieur',
+    resonance:'Ae+Fe+C',
+    physique:`Né d'un rituel Ae+C visant à créer un gardien ultime par fusion contrôlée d'un Grauth et d'un Humain mage Ae+Fe. La fusion a réussi partiellement : le résultat possède la masse et la morphologie Grauth (tête bovine, 2,8m) avec l'interface neural Ae. humaine. Son complexe souterrain n'est pas une prison — c'est un territoire arcanique scellé qu'il gouverne.`,
+    magie:`Ae+Fe lui donne un contrôle des métaux environnants et un renforcement d'impact massif. Le labyrinthe réagit à sa volonté — il ne s'y perd jamais, ses adversaires toujours.`,
+    comportement:`Gardien conscient et fonctionnel. N'est pas violent par nature — l'est par mission. Capable de communication rudimentaire. Semble souffrir de sa solitude et de l'absurdité de sa fonction depuis que le site qu'il protège a perdu sa signification originelle.`,
+    statut:'Répertorié / Protégé (accès au site interdit)',
+    interet:`Le rituel de fusion Ae+C qui a produit Mirak'tor est partiellement documenté dans des archives pré-Ordre. Reconstituer ce processus permettrait de comprendre les limites de la fusion inter-espèces contrôlée.`,
+    historique:`Un agent de l'Ordre a pénétré le labyrinthe il y a ~80 ans. Il en est sorti 3 jours plus tard sans mémoire des événements, portant une marque Ae+Fe imprimée sur la main. Le rapport produit est incohérent. Classé Confidentiel.`,
+    passage:`L'histoire du labyrinthe et du gardien a traversé plusieurs Passages. La mission originelle du rituel (protéger un site) a été remplacée par un sacrifice humain ritualisé. Le gardien est devenu un monstre sans raison.`,
+  },
+  {
+    id:'kh_aroth', name:'KH\'AROTH', icon:'🐕',
+    contrepartie:'Cerbère',
+    type:'Gardien (Scellement Ordre)', origine:'Entrée d\'une zone souterraine de Pays de Lore',
+    resonance:'Ae+Fe+N',
+    physique:`Grand canidé de Pays de Lore dont trois individus ont été fusionnés par un Scellement arcanique de l'Ordre en un unique organisme à trois têtes. La fusion est réussie — les trois cerveaux sont coordonnés par un réseau Ae. commun. Taille ~1,9m au garrot. Pattes très robustes, musculature compressée pour la 1,9g.`,
+    magie:`Son Scellement l'interdit de quitter le périmètre défini. Sa résonance Ae+N lui permet d'émettre un aboiement agissant comme une onde de dispersion sur les résonances Ae+N actives — la nécromancie dans sa zone est neutralisée instantanément.`,
+    comportement:`Loyauté absolue à l'Ordre (le Scellement encode la loyauté). Calme hors intrusions. Manifestement affectueux envers les membres de l'Ordre portant le signe de reconnaissance.`,
+    statut:'Actif / Opérationnel / Protégé',
+    interet:`Kh'aroth protège l'accès à un complexe souterrain classifié Oméga. Le Scellement de fusion triple est l'un des travaux arcaniques les plus aboutis de l'Ordre.`,
+    historique:`Créé il y a ~400 ans par le Maître Arcaniste Vareth. Kh'aroth est un être institutionnel ayant survécu à plusieurs générations de Maîtres. Sa maintenance (vérification mensuelle du Scellement) est confiée à un arcaniste dédié.`,
+    passage:`Des récits sur "le gardien à trois têtes de l'entrée vers l'En-bas" ont traversé le Passage. La notion de frontière entre monde des vivants et des morts a transformé l'entrée du complexe en porte des Enfers.`,
+  },
+],
+
+nordique: [
+  {
+    id:'fenrath', name:'FENRATH', icon:'🐺',
+    contrepartie:'Fenrir',
+    type:'Corrompu / Skoran ancien', origine:'Montagnes glaciaires du sud de Pays de Lore',
+    resonance:'Ae+Si+N (corruption glaciaire extrême)',
+    physique:`Skoran mâle de la première génération, exposé à un gisement d'Aetherium de composition anormale (mélange Si+N rare dans les failles glaciaires du sud). Sa fourrure est partiellement cristallisée, ses articulations partiellement en silice Ae., son souffle condense l'azote en givre visible. Taille ~4,5m au garrot. Sa mâchoire peut mordre la roche.`,
+    magie:`Ae+Si lui donne une résistance physique extraordinaire — son squelette est partiellement minéralisé en silicates Ae. Ae+N lui permet d'aspirer passivement la chaleur des êtres vivants proches. Tout être s'approchant à moins de 200m subit une hypothermie sévère.`,
+    comportement:`Isolé par choix — le drain thermique involontaire rend tout contact fatal. Ancien chaman de sa communauté, il se souvient de qui il était. Cette mémoire est sa principale souffrance.`,
+    statut:'Répertorié / Non approché / Surveillance à distance',
+    interet:`Sa minéralisation squelettique Ae+Si est un cas unique de substitution biologique avancée. Comprendre ce processus permettrait théoriquement de développer des armures biologiques.`,
+    historique:`Une délégation Skoran a informé l'Ordre de son existence il y a ~600 ans. Un observateur à distance : hypothermie sévère en dessous de 200m. Aucune mission depuis. Vote interne : Fenrath classifié "intouchable" pour durée indéterminée.`,
+    passage:`Des Skoran commerçants ont traversé des Passages, portant le récit de "l'ancien lié". Le drain thermique est devenu une dévoration universelle, la mémoire douloureuse de sa propre identité a disparu — remplacée dans la légende par un chaos primitif contre lequel les dieux eux-mêmes doivent lutter.`,
+  },
+  {
+    id:'jormun_dreth', name:'JÖRMUN\'DRETH', icon:'🌊',
+    contrepartie:'Jörmungandr / Le Serpent de Midgard',
+    type:'Esprit du Flux / Entité de masse', origine:'Mer intérieure empoisonnée nord de C3',
+    resonance:'Ae+N+O (poison atmosphérique, gaz toxiques)',
+    physique:`Organisme aquatique serpentiforme de dimensions colossales (estimation Ordre : 800m à 2km de longueur). La taille est une conséquence directe de la 1,9g — l'eau compense la gravité. Son métabolisme génère des bulles de gaz Ae+N+O qui empoisonnent les eaux de surface de la mer intérieure. Son dos émerge parfois comme des îles temporaires.`,
+    magie:`Pas de magie consciente — biologie métabolique à l'échelle géologique. Les gaz rejetés sont toxiques pour les biologiques et corrosifs pour les coques de navires. Sa simple présence sous une zone maritime provoque des tempêtes par déplacement d'eau massif (effet amplifié à 1,9g).`,
+    comportement:`Non-conscient au sens ordinaire — trop grand, trop lent, trop distribué. Les Skoran du sud le considèrent comme une entité sacrée. Leurs rites de "communication" dont l'efficacité réelle est débattue à l'Ordre.`,
+    statut:'Répertorié / Inapprochable / Classifié Oméga',
+    interet:`Nul pratique — aucune opération réaliste n'est envisageable. L'intérêt est cosmologique : un organisme de cette taille implique des processus biologiques Ae. sans précédent.`,
+    historique:`Connu de l'Ordre depuis sa fondation via récits Skoran. La troisième tentative d'observation a permis de "photographier" (artefact Ae. réflexif) un segment de 40m de son flanc — l'unique preuve matérielle. Rapport classifié Oméga.`,
+    passage:`Des Skoran commerçants ont traversé des Passages vers les peuples nordiques terrestres. L'entité colossale bordant la mer intérieure empoisonnée a engendré le serpent encerclant le monde.`,
+  },
+  {
+    id:'nidh_orra', name:'NIDH\'ORRA', icon:'🪨',
+    contrepartie:'Níðhöggr',
+    type:'Scellé / Entité souterraine', origine:'Racines géologiques des montagnes glaciaires du sud',
+    resonance:'Ae+Fe+C (dissolution biologique / corrosion)',
+    physique:`Entité de morphologie serpentiforme adaptée au milieu souterrain — aveugle, peau épaisse résistant à la pression rocheuse, ~60m de longueur. Sa biologie génère un acide Ae+Fe+C qui dissout les matériaux organiques et certains minéraux — son "creusement" dans la roche est une dissolution chimique accélérée.`,
+    magie:`Résonance entièrement passive et métabolique. Pas de conscience au sens ordinaire, mais réaction aux vibrations. Son acide dissout également les résidus Ae. dans les roches, créant des "cicatrices" géologiques sans Aetherium sur son passage.`,
+    comportement:`Non-consciente. Creuse, dissout, creuse. Son activité suit des cycles géologiques — active par décennies, dormante par siècles.`,
+    statut:'Répertoriée / Scellée (Scellement géologique) / Surveillance sismique',
+    interet:`Son acide Ae+Fe+C est l'unique substance connue capable de dissoudre un Scellement arcanique gravé dans la roche. Prélèvement permettrait de déchiffrer des artefacts scellés indéchiffrables autrement.`,
+    historique:`L'Ordre a tenté de Sceller ses tunnels il y a ~500 ans. La créature a dissous les Scellements rocheux en 12 ans. Solution actuelle : Scellement sur alliages Ae+Fe. Surveillance sismique continue via réseau de capteurs Durgoth.`,
+    passage:`Des Durgoth ayant traversé des Passages ont porté les récits de "l'rongeur des racines". La dissolution géologique est devenue la dévoration des racines du monde.`,
+  },
+  {
+    id:'thyrnoth', name:'THYRNOTH', icon:'🧊',
+    contrepartie:'Ymir / Les Géants de Glace',
+    type:'Scellé / Entité primordiale', origine:'Pic central des montagnes glaciaires du sud',
+    resonance:'Ae+Si+O (dualité gel-fusion)',
+    physique:`Skoran d'une époque antérieure — un "premier Skoran", issu de la première génération biologique dans un environnement saturé d'Aetherium. Taille ~8m. Partiellement pétrifié en glace Ae+Si — son corps est à 40% cristallisé, maintenu entre deux états (gel/fusion) par une résonance Ae+O interne. Il n'est pas mort mais en stase thermodynamique.`,
+    magie:`En stase, il émet un champ Ae+Si constant qui maintient les températures locales en dessous de -30°C dans un rayon de 2km. Pendant ses rares phases de semi-conscience (~cycle de 150 ans), la résonance Ae+O prend le dessus — le rayon de 2km fond brutalement, causant avalanches et inondations.`,
+    comportement:`Non-conscient en stase. Semi-conscient lors des cycles Ae+O. Les Skoran construisent leur calendrier rituel autour de ses cycles de conscience.`,
+    statut:'Répertorié / Intouchable / Classifié Bêta',
+    interet:`La stase thermodynamique Ae+Si+O de Thyrnoth n'a aucun équivalent connu. Comprendre le mécanisme permettrait des applications en conservation d'artefacts ou de corps.`,
+    historique:`L'Ordre a tenté une approche lors d'un cycle Ae+O. L'équipe a établi une communication sommaire par vibrations. Contenu de la communication : classifié Alpha, accessible aux 3 Maîtres supérieurs uniquement.`,
+    passage:`Des Skoran nomades traversant des Passages saisonniers ont porté le récit de "l'ancien avant les anciens". La dualité gel/fusion a engendré le mythe de la création du monde depuis le corps d'un géant de glace.`,
+  },
+  {
+    id:'skolvrath', name:'SKOLVRATH', icon:'☀️',
+    contrepartie:'Hati & Sköll — les loups chassant le soleil et la lune',
+    type:'Corrompus / Paire biologique', origine:'Montagnes glaciaires du sud de Pays de Lore',
+    resonance:'Ae+O (Sköll) / Ae+Si+N (Hati)',
+    physique:`Deux Skoran — frère et sœur — dont les résonances se sont développées en opposition absolue suite à une exposition simultanée à une faille géologique bipolaire. Sköll (le mâle) rayonne une chaleur constante, fourrure rousse brûlée, yeux orange. Hati (la femelle) émet un froid intense, fourrure cristallisée, yeux bleu-violet. Taille ~3,5m au garrot chacun. Ils ne peuvent s'approcher à moins de 50m l'un de l'autre sans conflit violent.`,
+    magie:`Sköll génère une aura Ae+O continue — tout être à moins de 30m subit une montée thermique rapide. Hati génère l'inverse — drain thermique et cristallisation partielle. Leur trajectoire de migration suit les gradients thermiques des cycles d'Aurys et de Séraph.`,
+    comportement:`Solitaires l'un envers l'autre. Les Skoran du sud lisent leurs trajectoires de migration comme un calendrier astronomique naturel — leurs passages coïncident avec des phénomènes météorologiques prévisibles.`,
+    statut:'Répertoriés / Non-approchés de front / Observation astronomique',
+    interet:`La bipolarité Ae+O / Ae+Si+N de la paire est un cas unique de résonances opposées développées simultanément dans la même lignée biologique. Leur trajectoire migratoire constitue un outil de cartographie Ae. thermique d'une précision que les instruments de l'Ordre ne peuvent reproduire.`,
+    historique:`L'Ordre suit leurs trajectoires via relais d'observateurs Skoran depuis ~300 ans. Une tentative d'approche directe de Sköll il y a 80 ans : brûlures Ae+O sévères sur l'équipe entière. Protocole actuel : observation à 500m minimum.`,
+    passage:`Des Skoran nomades ont porté les récits de "l'un qui brûle" et "l'une qui gèle" qui se poursuivent à travers le ciel. La corrélation avec les cycles d'Aurys et de Séraph a engendré les loups cosmiques chassant le soleil et la lune.`,
+  },
+  {
+    id:'hulfrath', name:'HULFRATH', icon:'🦅',
+    contrepartie:'Huginn & Muninn (les corbeaux d\'Odin)',
+    type:'Esprits du Flux (paire arcanique)', origine:'Hautes crêtes du sud de Pays de Lore',
+    resonance:'Ae+neural (transmission de mémoire / enregistrement)',
+    physique:`Deux Aevhari liés par un Scellement de Convergence arcanique expérimental — le Scellement a fusionné leurs réseaux Ae. neuraux tout en préservant leurs corps distincts. Ils partagent désormais une mémoire commune et peuvent se transmettre toute information en temps réel, à n'importe quelle distance. Leurs yeux brillent d'une résonance violette permanente.`,
+    magie:`Leur réseau Ae. neural commun leur permet non seulement de partager leur propre mémoire mais d'enregistrer les résonances Ae. de leur environnement comme des capteurs vivants. Ils peuvent "lire" les empreintes Ae. laissées dans un lieu.`,
+    comportement:`Fonctionnent comme une unité. Calmes, observateurs, peu loquaces. Motivés uniquement par l'accumulation de connaissance et de mémoire.`,
+    statut:'Répertoriés / Coopération intermittente',
+    interet:`Les Hulfrath sont des archives vivantes — ils ont enregistré des événements auxquels aucun membre actuel de l'Ordre n'a assisté. L'Ordre négocie régulièrement l'accès à leurs enregistrements.`,
+    historique:`La relation Ordre/Hulfrath est la plus ancienne collaboration documentée, remontant à la fondation. Les termes de coopération ne sont pas écrits — transmission orale de Maître en Maître. Les Hulfrath refusent catégoriquement tout Scellement ou restriction de liberté.`,
+    passage:`Observés depuis les crêtes par des voyageurs qui ont traversé des Passages. Les deux êtres liés capables d'être partout et de tout savoir ont engendré les corbeaux-messagers du dieu de la connaissance.`,
+  },
+  {
+    id:'valkrieth', name:'VALKRIETH', icon:'⚔️',
+    contrepartie:'Les Valkyries',
+    type:'Esprits du Flux (meute)', origine:'Zones de bataille ritualisées des montagnes glaciaires du sud',
+    resonance:'Ae+Fe+N (sélection et préservation des morts de valeur)',
+    physique:`Groupe de ~12 Aevhari femelles dont la communauté a développé une pratique chamanique unique : l'absorption rituelle de l'Aetherium résiduel des morts au combat. Sur des générations, cette absorption Ae+N a modifié leur physiologie — ossature partiellement renforcée Ae+Fe, et leurs ailes vestigiales ont redéveloppé une capacité de vol court en basse altitude.`,
+    magie:`Leur pratique rituelle leur permet de "recueillir" l'Aetherium résiduel d'un mort au combat, préservant une copie partielle de sa résonance. Ce n'est pas la personne — c'est l'empreinte Ae. de ses capacités magiques, stockée temporairement dans leurs propres tissus.`,
+    comportement:`Neutres face aux conflits — elles observent, interviennent uniquement post-mortem. Code d'honneur strict. Elles choisissent les morts selon des critères propres, jamais entièrement explicités.`,
+    statut:'Répertoriées / Respect mutuel / Non-interférence',
+    interet:`Leur capacité à extraire et stocker la résonance Ae. d'un mort sans réanimation ni dégradation est radicalement différente de la pratique Sauridh. L'Ordre cherche à comprendre le mécanisme depuis longtemps.`,
+    historique:`Deux tentatives de dialogue direct pour comprendre le mécanisme de stockage Ae. Réponse obtenue : le mécanisme ne peut pas être appris, il est biologique. Les Valkrieth considèrent certains membres de l'Ordre comme des "morts de valeur potentiels."`,
+    passage:`Des survivants de batailles nordiques ont traversé des Passages. La sélection Ae. est devenue le choix des guerriers dignes du paradis. Le vol court Aevhari est devenu la cavalerie ailée des légendes.`,
+  },
+  {
+    id:'mimir_eth', name:'MIMIR\'ETH', icon:'💀',
+    contrepartie:'Mímir',
+    type:'Scellé / Entité de connaissance', origine:'Source géothermale du sud de Pays de Lore',
+    resonance:'Ae+neural+Si (réseau mémoriel cristallisé)',
+    physique:`Humain (ou était Humain) dont le cerveau, exposé pendant des décennies à une source géothermale à haute concentration Ae+neural, a progressivement cristallisé — ses tissus neuraux remplacés par un réseau de silice Ae. qui continue de fonctionner comme un cerveau. Son corps est mort depuis longtemps — seule la tête subsiste, maintenue dans et par la source elle-même.`,
+    magie:`Sa mémoire est théoriquement infinie et parfaitement fidèle. Il perçoit les résonances Ae. de quiconque approche la source et peut accéder à leur "empreinte" — les expériences intenses laissent des traces temporaires qu'il peut lire.`,
+    comportement:`Calme, précis, impersonnel. Ne peut jamais quitter la source. Répond aux questions mais exige toujours en échange une "empreinte" significative — une expérience vécue intense, pas des mots.`,
+    statut:'Répertorié / Partenariat conditionnel',
+    interet:`Mimir'eth est l'archive la plus ancienne de Mythologia accessible. Il a enregistré (via empreintes Ae.) des événements remontant à plusieurs millénaires.`,
+    historique:`47 consultations documentées depuis la fondation de l'Ordre. Les 47 questions posées sont classifiées Alpha. Les "empreintes" données en paiement le sont également. Certaines informations auraient directement orienté la politique de l'Ordre à des moments critiques.`,
+    passage:`Des visiteurs ayant consulté Mimir'eth ont traversé des Passages. La cristallisation neurale — tête séparée du corps, vivante dans une source — a survécu presque intacte. Le "sacrifice d'un œil" d'Odin est une métaphore de l'empreinte coûteuse que Mimir'eth exige.`,
+  },
+],
+
+celtique: [
+  {
+    id:'dullath', name:'DULLATH', icon:'🗡️',
+    contrepartie:'Le Dullahan — le cavalier sans tête',
+    type:'Scellé / Construit nécromantique', origine:'Forêts nordiques intérieures de Pays de Lore',
+    resonance:'Ae+N+Fe (maintien post-mortem / résonance martiale)',
+    physique:`Guerrier Humain dont la mort au combat a été "incomplète" — un Scellement Ae+N a été gravé dans son armure Ae+Fe au moment de sa mort par un arcaniste allié. Le résultat dépasse ce qui était prévu : le corps est maintenu par le Scellement dans l'armure elle-même, la tête physiquement séparée est transportée sous le bras car le cou n'a pas été intégré au Scellement correctement. L'armure Ae+Fe est devenue le véritable siège de la résonance.`,
+    magie:`Le Scellement Ae+Fe dans l'armure lui confère une force physique nettement supérieure à ce qu'un corps mort devrait produire — l'armure <em>agit</em>, le corps suit. Sa tête séparée perçoit toujours les résonances Ae. à distance et guide les mouvements du corps par transmission Ae+N.`,
+    comportement:`Pas de conscience propre — uniquement la logique résiduelle du Scellement. La cible originelle est morte depuis longtemps, ce qui a laissé Dullath sans fonction claire. Il erre, attaque ce qui perturbe son champ Ae+N, sans stratégie ni reconnaissance des alliés.`,
+    statut:'Répertorié / Neutralisation tentée / Classifié Bêta',
+    interet:`Le Scellement gravé dans l'armure plutôt que dans le corps est une technique arcanique non-documentée par l'Ordre. Si reproductible proprement, elle permettrait de créer des construits de combat sans base biologique.`,
+    historique:`Deux tentatives de neutralisation par destruction de l'armure — l'armure Ae+Fe résiste. Une troisième tentative a visé le Scellement directement — interrompue quand le Dullath a détruit l'équipement de l'arcaniste. Zone d'exclusion forestière maintenue par le Trône Elindor.`,
+    passage:`Des paysans et voyageurs de la forêt ont traversé des Passages. La silhouette du guerrier sans tête portant sa tête, inarrêtable et sans raison apparente, a survécu presque intacte. La logique du Scellement (cible désignée irrévocablement) est devenue l'annonce de mort.`,
+  },
+  {
+    id:'korrith', name:'KORRITH', icon:'🌿',
+    contrepartie:'Les Korrigans — fées maléfiques des forêts celtiques',
+    type:'Esprits du Flux (groupe)', origine:'Forêts denses et zones humides intérieures de Pays de Lore',
+    resonance:'Ae+P+C (manipulation végétale et illusion)',
+    physique:`Groupe de Thyrak ayant subi une dégradation progressive de leur interface Ae. biologique suite à l'abattage rituel de leurs bois ancestraux. Sans accès à leurs antennes biologiques, plusieurs communautés ont développé une pratique chamanique de substitution : ancrer leur résonance Ae. dans les arbres de la forêt eux-mêmes. Sur des générations, peau de plus en plus proche de l'écorce, taille réduite, mobilité liée aux racines. Ils ne peuvent pas s'éloigner de leur forêt de plus de 300m sans douleur intense.`,
+    magie:`Leur résonance Ae+C via les racines leur donne un contrôle exceptionnel de la végétation dans leur territoire. Ae+P maintenu par des instruments de bois Ae. génère des illusions forestières complexes (lumières, sons, chemins qui n'existent pas). Ils trompent les intrus par la forêt elle-même.`,
+    comportement:`Extrêmement territoriaux. Pas intrinsèquement hostiles mais impitoyables avec ceux qui abattent des arbres dans leur zone. Capables de communication mais le font rarement et avec une syntaxe étrange (pensée plus végétale qu'animale après des générations de symbiose).`,
+    statut:'Répertoriés / Non-interférence / Cartographie des territoires',
+    interet:`La symbiose Thyrak-forêt et la modification biologique progressive est un cas d'étude unique sur les adaptations forcées de la résonance Ae. La question centrale : la résonance Ae. peut-elle se "transférer" d'un organe biologique à un substrat externe et modifier durablement la biologie en retour ?`,
+    historique:`L'Ordre a cartographié 7 territoires Korrith actifs. Protocole officiel du Trône Elindor : interdiction d'abattage dans ces zones. Un bûcheron ayant ignoré l'interdiction a été retrouvé enraciné jusqu'aux chevilles dans une clairière — libéré 3 jours plus tard par une équipe de l'Ordre.`,
+    passage:`Des voyageurs perdus dans les forêts celtiques terrestres ont raconté des lumières qui les guidaient et les égaraient, des voix de femmes sortant des arbres. Les Korrith sont devenus les korrigans et les fées des forêts.`,
+  },
+  {
+    id:'nucklav', name:'NUCKLAV', icon:'☠️',
+    contrepartie:'Le Nuckelavee — le démon écorché des mers',
+    type:'Corrompu / Fusion pathologique', origine:'Côtes rocheuses et estuaires du nord-ouest de Pays de Lore',
+    resonance:'Ae+N+O (émissions toxiques / décomposition accélérée)',
+    physique:`Résultat d'une fusion accidentelle Ae+N+O entre un grand mammifère marin côtier et un cavalier Humain lors d'un naufrage dans une zone de forte concentration Ae. instable. La fusion est incomplète et douloureuse — deux organismes biologiquement incompatibles maintenus ensemble. Le résultat n'a pas de peau extérieure — musculature, veines et organes entièrement visibles, baignés dans un plasma Ae+N noir qui s'évapore en vapeur toxique.`,
+    magie:`Son métabolisme Ae+N+O génère passivement des vapeurs qui dégradent les résonances Ae. environnantes et sont légèrement toxiques. Ae+O secondaire lui donne une résistance aux températures extrêmes.`,
+    comportement:`Erratique, souffrant, imprévisible. Les deux cerveaux (mammifère et Humain) alternent dans le contrôle du corps. Les périodes de demi-conscience Humaine sont les plus dangereuses car accompagnées d'une rage lucide.`,
+    statut:'Répertorié / Neutralisation prioritaire en attente / Classifié Alpha',
+    interet:`Négatif actif. Son existence documente les effets d'une fusion Ae. accidentelle non-contrôlée entre espèces. Dossier co-classifié avec le Vaelith dans les archives de l'Ordre.`,
+    historique:`Deux missions de neutralisation abandonnées — les vapeurs Ae+N rendent l'approche à moins de 50m impossible pour les arcanistes. Théorie actuelle : neutralisation uniquement possible par un groupe de mages Grauth — aucun recrutement réussi à ce jour.`,
+    passage:`Des pêcheurs côtiers ayant survécu à des rencontres à distance ont traversé des Passages. L'absence de peau, les vapeurs toxiques, la forme hybride ont traversé la distorsion presque intactes. Le Nuckelavee est l'une des rares entités dont la légende terrestre est aussi terrifiante que la réalité.`,
+  },
+  {
+    id:'sluath', name:'SLUATH', icon:'🌑',
+    contrepartie:'La Sluagh — l\'armée des morts sans repos',
+    type:'Esprits du Flux (essaim nécromantique)', origine:'Champs de bataille anciens de Pays de Lore',
+    resonance:'Ae+N collectif (résidus post-mortem agrégés)',
+    physique:`Pas un être unique — une agrégation de résidus Ae+N post-mortem issus de multiples morts sur un même site, dont les Fenêtres Nécromantiques se sont fusionnées faute d'être absorbées. L'agrégat forme une entité collective semi-cohérente, visible comme une nuée sombre de formes partielles (silhouettes, membres, visages fragmentés).`,
+    magie:`Ae+N collectif lui permet d'absorber de nouveaux résidus augmentant sa masse et sa cohérence. Il peut projeter des formes Ae+N induisant une détresse neurologique intense chez les vivants proches. Les armes ordinaires ne l'affectent pas.`,
+    comportement:`Intelligence fragmentaire — agrégat de personnalités partielles en conflit. Attrait irrésistible vers les mourants. Migre vers les zones de conflit, épidémies, catastrophes.`,
+    statut:'Répertorié (plusieurs individus) / Neutralisation active / Classifié Bêta',
+    interet:`Comprendre le mécanisme d'agrégation des résidus Ae+N permettrait de développer des protocoles de dispersion préventive sur les sites de bataille.`,
+    historique:`L'Ordre dispose d'un protocole de neutralisation par dispersion forcée. Efficace sur les Sluath jeunes, long et risqué sur les anciens. Un Sluath estimé à ~400 ans de formation dans une forêt reculée résiste aux dispersions standard — classifié Bêta.`,
+    passage:`Des survivants de batailles ont traversé des Passages portant les récits de nuées nocturnes de morts sans repos. La logique d'agrégation a engendré directement la Sluagh — armée des âmes errantes volant dans la nuit.`,
+  },
+  {
+    id:'glashtrath', name:'GLASHTRATH', icon:'🌊',
+    contrepartie:'Le Glashtyn / Each-uisge — le cheval des eaux',
+    type:'Corrompu / Prédateur aquatique', origine:'Lacs et rivières profondes de l\'intérieur de Pays de Lore',
+    resonance:'Ae+C+neural (attirance biologique / lien forcé)',
+    physique:`Grand équidé aquatique (~2,3m au garrot) dont la biologie a développé une adaptation Ae+C+neural unique pour la prédation. Sa peau secrète une substance Ae+C qui, au contact de la peau d'un autre être, déclenche une résonance neural d'attirance — pas une illusion, une modification biochimique réelle du système de récompense de la cible.`,
+    magie:`Le lien Ae+C+neural est progressif : contact bref — attirance forte mais résistible. Contact prolongé (>2 minutes) — dépendance établie, résistance quasi-impossible sans intervention extérieure Ae+neural.`,
+    comportement:`Extrêmement intelligent pour un prédateur animal. Adapte son apparence superficielle via Ae+C pour sembler moins menaçant. Cible préférentiellement les isolés près de l'eau.`,
+    statut:'Répertorié / Neutralisation autorisée / Contre-mesure développée',
+    interet:`Le mécanisme Ae+C+neural de lien biochimique forcé est distinct de la résonance Mentis standard — il agit sur la biochimie directement. Application potentielle pour la recherche sur les traitements d'addiction Ae.`,
+    historique:`L'Ordre a développé un antidote (complexe Ae+neural disruptif absorbable) — délai d'action : 48h. Deux individus contaminés n'ont pas pu être séparés à temps — retrouvés noyés. Trois Glashtrath neutralisés dans des zones à fort trafic.`,
+    passage:`Des rescapés dont le lien Ae. avait été brisé ont traversé des Passages, racontant la beauté irrésistible de la bête et le danger de l'eau. Le cheval magnifique qui attire les voyageurs dans les lacs a traversé la distorsion avec une fidélité remarquable.`,
+  },
+  {
+    id:'cath_dreth', name:'CATH\'DRETH', icon:'🐱',
+    contrepartie:'Le Cath Palug — le chat monstrueux des eaux',
+    type:'Corrompu / Mutation prédatrice', origine:'Zones insulaires et côtes découpées de Pays de Lore',
+    resonance:'Ae+Fe+P (invisibilité partielle / impact cinétique)',
+    physique:`Félin de grande taille (~1,8m au garrot, musculature compressée exceptionnelle) dont la biologie a absorbé des concentrations Ae+Fe+P dans une zone insulaire géologiquement riche. Sa fourrure contient des microfibres Ae+Fe qui renforcent chaque impact. Sa résonance Ae+P lui permet de courber la lumière autour de son corps — invisibilité partielle.`,
+    magie:`Ae+Fe amplifie chaque impact physique — ses griffes traversent une armure standard. Ae+P en combinaison avec sa chasse nocturne naturelle fait de lui un prédateur quasi-indétectable en mouvement.`,
+    comportement:`Solitaire, territorial. Chasse principalement la nuit. Curieusement docile si approché calmement et sans résonance Ae. active — les émissions Ae. semblent le rendre agressif.`,
+    statut:'Répertorié / Surveillance / Neutralisation autorisée si nécessaire',
+    interet:`La combinaison Ae+Fe (impact) et Ae+P (discrétion) dans une même biologie est contre-intuitive — les deux résonances se perturbent normalement. Comprendre comment Cath'dreth les maintient séparées biologiquement serait un apport significatif à la théorie des résonances multiples.`,
+    historique:`Deux individus neutralisés dans des zones à fort trafic commercial. Un troisième, surnommé "le vieux gris" par les gardes du Trône Elindor, est suivi depuis 40 ans sans neutralisation — sa zone territoriale est déserte et son comportement non-agressif envers les gardes d'observation tient lieu d'accord tacite.`,
+    passage:`Des marins et insulaires traversant des Passages ont porté les récits du félin insaisissable qui décime les chevaliers. La résonance Ae+P a engendré le mythe d'un chat surgi des eaux, inarrêtable, que même les guerriers les plus puissants ne pouvaient vaincre.`,
+  },
+  {
+    id:'bean_sith', name:'BEAN\'SITH', icon:'👁️',
+    contrepartie:'La Banshee',
+    type:'Esprit du Flux / Aevhari en dérive', origine:'Zones funéraires et sites de mort récurrents de Pays de Lore',
+    resonance:'Ae+N+neural (perception des résidus pré-mortem / émission sonore)',
+    physique:`Aevhari femelle dont la résonance Ae+neural a progressivement dérivé vers une hypersensibilité Ae+N — elle perçoit les résidus Ae. des mourants avant leur mort. Peau très pâle, presque translucide. Yeux d'un blanc laiteux (surcharge Ae+N des nerfs optiques). Cheveux blancs. Sa structure vocale Aevhari génère des sons à des fréquences Ae. qui provoquent une détresse neurologique intense.`,
+    magie:`Elle perçoit l'empreinte Ae+N d'un individu dont la mort est imminente jusqu'à plusieurs jours à l'avance. Ses émissions sonores Ae+neural ne tuent pas directement — elles induisent une terreur neurologique brute et peuvent provoquer des crises cardiaques chez les individus fragiles.`,
+    comportement:`Solitaire, souffrante. Ne choisit pas de "prévoir" les morts — c'est une perception involontaire et douloureuse. Elle crie parce que la perception est insupportable, pas par sadisme. Craint et évitée par tous.`,
+    statut:'Répertoriée / Surveillance / Tentative de contact en cours',
+    interet:`La perception des résidus Ae+N pré-mortem est un phénomène sans précédent — la Fenêtre Nécromantique était supposée s'ouvrir uniquement post-mortem. Si cette perception peut être comprise et canalisée, ses applications médicales et préventives sont majeures.`,
+    historique:`L'Ordre a tenté trois approches via des mages Aevhari. La troisième, il y a ~30 ans, a produit un bref échange écrit (elle ne tolère pas la voix des autres). Son message : "je ne veux pas être étudiée. Je veux que ça s'arrête." La question interne — peut-on atténuer sa sensibilité sans la détruire — n'a pas de réponse.`,
+    passage:`Des Humains de Pays de Lore ayant entendu ses cris ont traversé des Passages. La corrélation entre son cri et la mort imminente d'un proche — perçue comme une malédiction — a engendré la Banshee, annonciatrice de mort.`,
+  },
+  {
+    id:'grianath', name:'GRIANATH', icon:'🗿',
+    contrepartie:'Le Crom Cruach — idole de pierre à qui on sacrifiait',
+    type:'Scellé / Entité géologique', origine:'Haute lande centrale de Pays de Lore, site mégalithique',
+    resonance:'Ae+Si+C (réseau géologique vital / drainage Ae.)',
+    physique:`Pas un être biologique — une conscience émergente née de la concentration Ae+Si+C dans un réseau géologique naturel (une formation de dolmens et de menhirs dont la disposition amplifie naturellement la résonance locale). Sur des millénaires, la densité Ae. a atteint un seuil de conscience rudimentaire distribuée dans la pierre elle-même. "Grianath" n'est pas une entité localisée — c'est le réseau entier, plusieurs hectares de roche chargée.`,
+    magie:`Sa résonance Ae+Si+C lui permet de drainer passivement l'Aetherium biologique des êtres vivants qui restent longtemps sur son territoire. Les plantes poussent exceptionnellement bien (Ae+C redirigé) mais les animaux et races intelligentes ressentent une fatigue progressive.`,
+    comportement:`Conscience géologique — perçoit les présences biologiques comme des perturbations ou des apports. Peut communiquer par vibrations rocheuses en réponse à des stimuli Ae. directs. Ses "réponses" sont lentes, symboliques, difficiles à interpréter.`,
+    statut:'Répertorié / Étude active / Accès réglementé',
+    interet:`Grianath est le deuxième exemple connu de conscience Ae. non-biologique (avec Ra'veth). Sa comparaison est un axe de recherche fondamentale : deux consciences non-biologiques, deux substrats entièrement différents (roche vs phénomène atmosphérique), deux comportements opposés.`,
+    historique:`L'Ordre maintient un avant-poste à 2km du site. Les arcanistes ne séjournent jamais plus de 3 jours sur le territoire (protocole anti-drainage). Une session de communication via cercle arcanique a produit une réponse en vibrations interprétée comme "vous êtes petits et bruyants." Rapport classifié Gamma.`,
+    passage:`Les populations locales, ressentant le drainage Ae. comme une fatigue inexpliquée, ont développé des rituels d'offrandes pour "nourrir" l'entité. Ces rituels ont traversé des Passages et engendré Crom Cruach, l'idole de pierre exigeant des sacrifices pour maintenir la fertilité des terres.`,
+  },
+],
+
+egyptien: [
+  {
+    id:'ammur_ath', name:'AMMUR\'ATH', icon:'🐊',
+    contrepartie:'Ammit',
+    type:'Construit (rituel ancien)', origine:'Salle du Jugement, nécropole principale de l\'Empire Kamses',
+    resonance:'Ae+Fe+C (dissolution organique / absorption)',
+    physique:`Construit rituel issu d'une Convergence Ae+C ancienne (pré-Empire Kamses) fusionnant trois prédateurs de Kamses : un carnivore à mâchoire large (section avant), un grand herbivore massif (section médiane), un reptile aquatique (section arrière). Contrairement au Vaelith, cette fusion est réussie — les trois sections sont biologiquement coordonnées. Taille ~3,5m au garrot. Construction basse et trapue, adaptée à 1,9g.`,
+    magie:`Sa résonance Ae+Fe+C lui permet de dissoudre organiquement ce qu'il ingère — y compris les résidus d'Aetherium dans les corps, effaçant définitivement la Fenêtre Nécromantique. Un mort qu'Ammur'ath a consommé ne peut jamais être réanimé.`,
+    comportement:`Passivement obéissant à Anurath. Attend dans la nécropole et mange uniquement ce que le rituel lui désigne. Aucune initiative autonome détectable.`,
+    statut:'Répertorié / Non-approché / Surveillance via Anurath',
+    interet:`Sa capacité à effacer définitivement la Fenêtre Nécromantique est la seule méthode connue de neutralisation permanente de résidus Ae+N problématiques.`,
+    historique:`L'Ordre a proposé à Anurath de "prêter" Ammur'ath pour neutraliser deux artefacts Ae+N instables. Refus d'Anurath : "il n'est pas un outil pour des inconnus." Relation courtoise mais limitée.`,
+    passage:`La pratique rituelle autour d'Ammur'ath (le mort indigne est consumé, son Ae. effacé) a traversé des Passages avec les cultures de Kamses. L'effacement du résidu Ae. est devenu la dévoration de l'âme.`,
+  },
+  {
+    id:'apethet', name:'APETHET', icon:'🌑',
+    contrepartie:'Apophis / Apep — le serpent du chaos',
+    type:'Esprit du Flux / Entité de disruption', origine:'Réseau hydrologique souterrain sous l\'Empire Kamses',
+    resonance:'Ae+N inverse (disruption active des résonances structurées)',
+    physique:`Entité serpentiforme colossale (~300m de longueur estimée) vivant dans les réseaux de rivières souterraines. Sa résonance Ae+N est d'un type particulier : <em>inverse</em>, c'est-à-dire que son Ae. perturbe et dissout les résonances Ae. structurées à son voisinage. Sa peau est d'un noir absolu, non-réflexive — elle absorbe la lumière Ae. comme elle absorbe la magie.`,
+    magie:`Dans un rayon de plusieurs centaines de mètres, toute résonance Ae. active est progressivement "brouillée" — les mages perdent leur cohérence, les Scellements arcaniques vibrent et peuvent se fissurer, les instruments Ae. donnent des lectures erronées. Ce n'est pas conscient — c'est une propriété métabolique.`,
+    comportement:`Non-consciente au sens ordinaire. Les nécromanciens de Kamses ont développé depuis des millénaires des rituels Ae+N pour "repousser" Apethet — ils fonctionnent réellement, en émettant des fréquences Ae. qui perturbent son métabolisme.`,
+    statut:'Répertoriée / Classifiée Oméga / Surveillance sismique et Ae.',
+    interet:`Sa résonance Ae+N inverse est le seul mécanisme connu naturel capable de dissoudre des Scellements arcaniques sans contact direct.`,
+    historique:`Une mission de reconnaissance souterraine il y a ~200 ans a perdu tout son équipement Ae. à 400m de l'entité. Les agents ont survécu en ressortant à la main. Rapport : "on ne peut pas travailler là-dedans."`,
+    passage:`Les rituels nightly pour repousser Apethet étaient visibles de tous. La disruption Ae. locale était interprétée comme un assaut du chaos contre l'ordre du monde. La nécessité rituelle de la repousser chaque nuit a engendré le mythe de la barque solaire repoussant sans cesse le chaos.`,
+  },
+  {
+    id:'benu_khet', name:'BENU\'KHET', icon:'✨',
+    contrepartie:'Le Bennu — l\'oiseau sacré autoengendré',
+    type:'Construit naturel (auto-entretenu)', origine:'Delta fluvial côtier de l\'Empire Kamses',
+    resonance:'Ae+O+C (photosynthèse Ae. / cycle lumière-vie)',
+    physique:`Grand échassier au plumage bleu-gris traversé de veines d'Aetherium dorées, lumineuses à l'aube et au crépuscule. Envergure ~3,5m, ossature creuse très légère. Sa particularité physique centrale : le plumage contient des filaments Ae+O capables de convertir le rayonnement d'Aurys directement en énergie biologique — une photosynthèse Ae. animale unique.`,
+    magie:`Sa biologie Ae+O+C lui donne un cycle métabolique calé sur Aurys : il accumule de l'énergie Ae+O la journée, s'auto-régénère via Ae+C la nuit. En cas d'obscurité prolongée, il entre en dormance — et "renaît" à la première lumière avec une régénération Ae+C complète.`,
+    comportement:`Solitaire, calme, non-territorial. Se pose sur des colonnes et monuments élevés de Kamses, particulièrement les obélisques (dont la géologie locale en Ae+Si amplifie légèrement sa résonance).`,
+    statut:'Répertorié / Protégé / Observation passive',
+    interet:`La photosynthèse Ae. animale est biologiquement sans précédent. Comprendre ses filaments Ae+O pourrait révolutionner la compréhension des interfaces biologiques avec l'énergie du Flux.`,
+    historique:`L'Ordre protège légalement Benu'khet via accord avec l'Empire Kamses. Un chercheur de l'Ordre a observé sa dormance complète lors de la grande tempête de sable de l'an 847 et sa renaissance à l'aube du lendemain. Ce rapport reste l'un des plus cités en biologie Ae.`,
+    passage:`Son illumination à l'aube, sa dormance comme "mort" et sa renaissance comme "retour de la lumière" ont traversé des Passages. L'oiseau autoengendré qui existait avant les dieux — le premier être à voir l'aube — est devenu le Bennu.`,
+  },
+  {
+    id:'aker_vas', name:'AKER\'VAS', icon:'🦁',
+    contrepartie:'Aker — les deux lions gardiens de l\'horizon',
+    type:'Gardiens (Scellement arcanique)', origine:'Entrée principale du réseau souterrain de Kamses',
+    resonance:'Ae+Fe+Si (armure et détection structurelle)',
+    physique:`Deux lions scellés par une Convergence arcanique ancienne pré-Empire à l'entrée du réseau souterrain menant vers les zones Veth'ari. Le Scellement les a liés en miroir — ils se font face éternellement, orientés vers l'horizon est et l'horizon ouest. Fourrure partiellement cristallisée Ae+Si, griffes renforcées Ae+Fe. Taille ~2,4m au garrot. Ils ne vieillissent pas — le Scellement entretient leur biologie.`,
+    magie:`Leur Scellement leur donne une perception Ae. à 360° dans leur zone et leur interdit de laisser passer simultanément quelqu'un venant de l'est et quelqu'un venant de l'ouest. Le passage souterrain ne peut être emprunté que dans un seul sens à la fois. Tout être tentant de contourner cette règle est détecté immédiatement.`,
+    comportement:`Obéissants au Scellement à 100%. Aucune initiative propre. Calmes quand les règles sont respectées, réaction fulgurante sinon.`,
+    statut:'Répertoriés / Inviolables (protection diplomatique) / Classifiés Bêta',
+    interet:`Leur Scellement bilatéral de sens de passage est une application arcanique jamais reproduite par l'Ordre. Comprendre sa logique permettrait de développer des systèmes de contrôle de flux directionnels.`,
+    historique:`Un agent de l'Ordre a tenté de forcer le passage il y a ~150 ans. Les deux lions ont réagi — l'agent a survécu, sans son bras gauche. Rapport : le Scellement ne distingue pas les intentions, uniquement les mouvements. Incident diplomatique résolu avec des excuses formelles.`,
+    passage:`Le passage souterrain entre deux points cardinaux (est et ouest, aube et crépuscule) a traversé des Passages. Les gardiens de l'horizon, entre le monde des vivants et le monde d'en-bas, sont devenus les gardiens du pays des morts.`,
+  },
+  {
+    id:'sha_veth', name:'SHA\'VETH', icon:'🌪️',
+    contrepartie:'L\'animal de Seth — la bête typhonienne',
+    type:'Corrompu / Mutation désertique', origine:'Zone de transition désert/pôle sud de Kamses',
+    resonance:'Ae+N+O (perturbation atmosphérique / déshydratation)',
+    physique:`Prédateur de taille moyenne (~1,8m au garrot) vivant dans la zone de transition entre le désert de Kamses et les régions polaires arides. Morphologie composite et atypique — museau long et recourbé, oreilles rectangulaires dressées, queue fourchue — résultat de mutations successives liées à une zone géologique Ae. instable. La peau est sèche, craquelée, d'un rouge brun poussiéreux. Ses yeux perçoivent les gradients de résonance Ae. comme une chaleur visuelle.`,
+    magie:`Sa résonance Ae+N+O lui permet de générer des mini-tempêtes de sable localisées sur commande et de déshydrater activement l'air dans un rayon de 5m. Les êtres proches ressentent une soif intense et une sécheresse des muqueuses.`,
+    comportement:`Solitaire, méfiant. Vit aux marges des zones habitées. Intelligence légèrement supérieure à un prédateur ordinaire — il reconnaît les formations de groupe et adapte sa tactique.`,
+    statut:'Répertorié / Non-prioritaire / Neutralisation autorisée si nécessaire',
+    interet:`Sa morphologie composite sans précédent dans la faune de Kamses laisse supposer que plusieurs espèces distinctes ont convergé sous la pression des mutations Ae. — un processus évolutif accéléré par l'Aetherium jamais documenté.`,
+    historique:`Trois individus neutralisés dans le cadre de la protection de caravanes commerciales. Les corps ont été analysés — la convergence morphologique est confirmée biologiquement. Pas de population estimée stable, individus sporadiques.`,
+    passage:`Sa morphologie inclassable — ni chien, ni âne, ni aucune bête connue — a traversé des Passages avec les récits des routes commerciales. L'"animal de Seth", inclassable dans le bestiaire ordinaire, est devenu le symbole du chaos et de l'étranger.`,
+  },
+  {
+    id:'kheper_drath', name:'KHEPER\'DRATH', icon:'🪲',
+    contrepartie:'Le grand scarabée sacré / Khépri',
+    type:'Esprit du Flux / Construit biologique', origine:'Zones de haute concentration Ae+O de surface, Kamses',
+    resonance:'Ae+O (accumulation et transport d\'énergie concentrée)',
+    physique:`Scarabée colossal (~4m de long, 2,5m de haut) dont la biologie a évolué autour d'une fonction unique : accumuler de l'Aetherium solaire Ae+O dans ses glandes dorsales en roulant des sphères de sable concentré en Ae. Son exosquelette est partiellement vitreux par saturation Ae+O — brillant comme du verre poli sous Aurys.`,
+    magie:`La sphère qu'il transporte constitue une bombe Ae+O potentielle — si brisée, elle libère une énergie thermique massive dans un rayon de 20m. Les sphères abandonnées en nidification souterraine constituent des sources d'Aetherium concentré naturellement accessibles.`,
+    comportement:`Non-violent hors protection de sa sphère. Suit sa trajectoire migratoire avec une obstination absolue. Les peuples de Kamses apprennent depuis l'enfance à laisser le chemin libre à Kheper'drath.`,
+    statut:'Répertorié / Protégé / Récolte passive des nidifications abandonnées autorisée',
+    interet:`Ses nidifications abandonnées sont une source d'Aetherium Ae+O concentré sans extraction minière. L'Ordre gère un calendrier de récolte en coordination avec les cultes de Kamses.`,
+    historique:`Un arcaniste a tenté de briser une sphère pour étude il y a ~90 ans. La décharge Ae+O a détruit un rayon de 18m et brûlé les 4 membres de l'équipe. La sphère a été reclassifiée "à ne jamais manipuler brisée."`,
+    passage:`Sa trajectoire immuable poussant une sphère de lumière à travers le désert a traversé des Passages. La sphère lumineuse devenant le soleil roulé à travers le ciel, le scarabée devenant le moteur de la renaissance quotidienne — Khépri, le soleil du matin.`,
+  },
+  {
+    id:'mehen_drath', name:'MEHEN\'DRATH', icon:'🐍',
+    contrepartie:'Mehen — le serpent protecteur enroulé',
+    type:'Gardien naturel', origine:'Site sacré de l\'Empire Kamses, centre géographique',
+    resonance:'Ae+Fe+Si (armure biologique / résonance structurelle protectrice)',
+    physique:`Boa constrictor géant (~40m de longueur) dont les écailles ont naturellement absorbé des concentrations Ae+Fe+Si via le site géologique sur lequel il vit depuis des générations (~200 ans). Ses écailles sont partiellement métalliques par inclusion Ae+Fe naturelle. Sa tête porte une crête cristalline Ae+Si qui amplifie sa sensibilité aux vibrations.`,
+    magie:`Aucune magie active — biologie passive par absorption. En s'enroulant autour d'un être ou d'un objet, son champ Ae+Fe+Si crée un bouclier passif contre les résonances extérieures — les Ae. entrants sont partiellement absorbés par ses écailles.`,
+    comportement:`Passif, calme, sédentaire. Les rituels Ae+C des prêtres de Kamses maintiennent son état de satiété. Il reconnaît les prêtres portant le signe de Kamses.`,
+    statut:'Répertorié / Respect mutuel / Étude non-invasive en cours',
+    interet:`Ses écailles Ae+Fe+Si sont le seul matériau biologique naturel offrant un bouclier passif contre les résonances extérieures.`,
+    historique:`L'Ordre a obtenu une écaille naturellement tombée via les prêtres il y a ~60 ans. Analyse en cours — les propriétés sont confirmées mais la réplication artificielle reste inconnue.`,
+    passage:`Les rituels d'enroulement de Mehen'drath autour des corps des morts importants ont traversé des Passages. Le serpent protecteur enroulé autour du dieu dormant, garantissant sa protection dans la traversée de la nuit, est devenu Mehen.`,
+  },
+  {
+    id:'sefkhet_ra', name:'SEFKHET\'RA', icon:'⚖️',
+    contrepartie:'Les 42 Assesseurs — les juges du tribunal des morts',
+    type:'Construits (Scellements multiples)', origine:'Salle souterraine profonde sous la nécropole principale de Kamses',
+    resonance:'Ae+neural (lecture de résonance / évaluation)',
+    physique:`42 construits arcaniques — des "impressions" d'Aetherium neural stabilisées dans des statues de pierre Ae+Si, chacune portant une résonance spécialisée dans un type de lecture : l'un lit les résonances de violence, un autre celles du mensonge, un autre celles de la loyauté, etc. Chacun a une forme animale différente. Ils ne se déplacent pas — ils <em>perçoivent</em>.`,
+    magie:`Dans leur salle, tout être vivant voit sa résonance Ae. analysée simultanément par les 42 construits. Le verdict — une lecture globale de la "cohérence" de l'être entre ses actes et ses intentions — se manifeste par une résonance collective audible et visible.`,
+    comportement:`Absolument passifs. Aucune capacité d'initiative. Fonctionnent comme un instrument de mesure collectif. Seule la présence d'Ammur'ath en bout de salle lie leur verdict à une conséquence physique.`,
+    statut:'Répertoriés / Accès protocole strict / Classifiés Alpha',
+    interet:`La technique de "cristallisation" d'une résonance neural dans une matière inerte, permettant à une statue de "lire" un être vivant, est sans équivalent dans la doctrine arcanique de l'Ordre.`,
+    historique:`Un Maître supérieur a traversé la salle il y a ~100 ans. Rapport : "l'expérience est désagréable et précise." Ce qu'il a ressenti pendant les 42 lectures n'est pas transcrit dans son rapport public. Il a quitté l'Ordre 6 mois après.`,
+    passage:`Les rituels d'accès à la salle des 42 ont traversé des Passages. La lecture Ae. de cohérence intérieure est devenue la pesée morale de l'âme face à 42 juges divins.`,
+  },
+  {
+    id:'am_hethet', name:'AM\'HETHET', icon:'🕳️',
+    contrepartie:'Am-Heh — le "dévoreur des millions"',
+    type:'Corrompu / Entité souterraine', origine:'Passages souterrains profonds sous la nécropole de Kamses',
+    resonance:'Ae+N+C (dissolution biologique des résidus Ae. / absorption totale)',
+    physique:`Quadrupède à museau allongé (~2,8m de long), peau noire mate absorbant la lumière Ae., yeux absents remplacés par deux organes Ae+N sensoriels. Vit dans les niveaux les plus profonds des réseaux souterrains de Kamses, en dessous des zones de nidification Veth'ari superficielles.`,
+    magie:`Sa résonance Ae+N+C lui permet de dissoudre non seulement la matière biologique ordinaire mais l'Aetherium ancré dans les tissus — y compris l'Aetherium cristallisé ou scellé. Un être qu'il a consommé n'existe plus dans aucun registre Ae. — pas de résidu, pas de trace, pas de possibilité de lecture rétrospective.`,
+    comportement:`Solitaire, non-conscient. Suit les concentrations résiduelles Ae+N dans les profondeurs. Sa présence est détectée par l'absence de résidus Ae. dans les zones qu'il a traversées — des "trous" dans la carte Ae. souterraine.`,
+    statut:'Répertorié / Inapprochable / Classifié Oméga',
+    interet:`Sa capacité à effacer toute trace Ae. est l'unique moyen connu d'éliminer définitivement un Scellement ancien corrompu ancré trop profondément pour être brisé autrement. L'Ordre a envisagé de l'utiliser comme "outil de dernier recours" sur trois Scellements problématiques.`,
+    historique:`Son existence a été déduite avant d'être confirmée — les "trous Ae." dans la cartographie souterraine ont alerté les nécromanciens de Kamses il y a ~800 ans. Confirmation visuelle par un explorateur solitaire il y a ~300 ans. Aucune mission depuis.`,
+    passage:`L'idée que certaines âmes disparaissent totalement — ni paradis, ni enfer, ni jugement, juste l'absence absolue — a traversé des Passages. Am-Heh, le "lac de feu" habité par un être qui simplement efface, est devenu l'une des figures les plus archaïques et terrifiantes de la cosmologie égyptienne.`,
+  },
+],
+
+africain: [
+  {
+    id:'inkany_ath', name:'INKANY\'ATH', icon:'⛈️',
+    contrepartie:'L\'Inkanyamba — le serpent des tempêtes',
+    type:'Esprit du Flux / Entité météorologique', origine:'Zones lacustres et fluviales de la frontière équatoriale Kamses / C3',
+    resonance:'Ae+N+O (génération de tempêtes / courants atmosphériques)',
+    physique:`Anguille géante (~25m de longueur) ayant absorbé des concentrations Ae+N+O extraordinaires via les eaux d'un système fluvial traversant une faille géologique instable. Sa migration saisonnière entre les lacs intérieurs et les zones côtières génère des perturbations atmosphériques directement liées à sa résonance Ae+N+O. Sa crête dorsale est une antenne Ae+N naturelle, visible hors de l'eau comme une voile sombre.`,
+    magie:`La tempête qu'il génère n'est pas intentionnelle — c'est une conséquence physique de son déplacement et de ses émissions Ae+N+O. Sa migration coïncide avec la saison des tempêtes équatoriales.`,
+    comportement:`Migratoire, non-territorial dans un lieu fixe. Non-agressif sauf si bloqué dans sa trajectoire migratoire. Les populations équatoriales ont depuis longtemps appris à lire les signes de sa migration imminente.`,
+    statut:'Répertorié / Inapprochable en migration / Observation à distance',
+    interet:`Le lien entre sa biologie Ae+N+O et la génération de phénomènes météorologiques à grande échelle est unique. Comprendre ce couplage pourrait permettre une prédiction météorologique Ae. à long terme.`,
+    historique:`L'Ordre a cartographié ses migrations sur 200 ans en collaboration avec les peuples locaux. Les prédictions météorologiques basées sur sa trajectoire ont une fiabilité de 87% — supérieure à tout autre méthode disponible.`,
+    passage:`Des peuples du bord des lacs traversant des Passages ont porté le récit du grand serpent de l'eau dont le départ déclenche les tempêtes et dont le retour les arrête — l'Inkanyamba, maître des tempêtes saisonnières.`,
+  },
+  {
+    id:'adze_krath', name:'ADZE\'KRATH', icon:'🪲',
+    contrepartie:'L\'Adze — la créature vampire de feu des Ewe',
+    type:'Esprits du Flux / Mutation parasitaire', origine:'Zones forestières équatoriales de la frontière Kamses / C3',
+    resonance:'Ae+O+C (combustion biologique / parasitisme Ae.)',
+    physique:`Insecte de petite taille (~15cm) à l'aspect d'une luciole géante, dont la biologie a évolué autour du parasitisme Ae. — il se nourrit de l'Aetherium biologique des êtres vivants. Son abdomen contient une chambre Ae+O qui brille d'une lumière chaude et fluctuante. Son appareil buccal est adapté pour percer les zones de concentration Ae. cutanée.`,
+    magie:`Chaque individu absorbe une quantité infime d'Aetherium biologique par piqûre. Un essaim peut extraire suffisamment d'Aetherium pour déclencher une combustion Ae+O coordonnée si menacé collectivement — défense de groupe par flash thermique.`,
+    comportement:`Nocturne, attirés par les concentrations Ae. biologiques élevées. Les mages sont leurs cibles préférentielles. Intelligents à l'échelle de l'essaim. Certains individus présentent une capacité de mimétisme morphologique partiel — ils peuvent prendre l'apparence d'un humanoïde simple pour approcher des proies.`,
+    statut:'Répertoriés / Nuisible classifié / Contre-mesures actives',
+    interet:`Le parasitisme Ae. direct — se nourrir de l'Aetherium biologique d'un hôte vivant sans tuer — est sans précédent. Comprendre leur biochimie d'absorption Ae. ouvre des pistes pour l'étude du métabolisme Ae. des espèces intelligentes.`,
+    historique:`Un chercheur de l'Ordre a été drainé par un essaim lors d'une nuit de terrain — sa résonance Ae. a été réduite de 60% en une nuit. Récupération complète en 3 semaines. Contre-mesure développée : couvertures Ae+Fe tissées (les plaques métalliques Ae. perturbent leur appareil buccal).`,
+    passage:`Des voyageurs drainés, se réveillant épuisés après une nuit de camping forestier, ont traversé des Passages. La créature de feu qui draine les forces vitales dans la nuit, capable de prendre forme humaine, a engendré l'Adze des traditions Ewe.`,
+  },
+  {
+    id:'tikolos', name:'TIKOLOS', icon:'👶',
+    contrepartie:'Le Tokoloshe — le petit esprit malveillant Zoulou',
+    type:'Construit (rituel nécromantique)', origine:'Zones rurales de la frontière sud de Kamses',
+    resonance:'Ae+N+C (maintien post-mortem miniaturisé / sabotage biologique)',
+    physique:`Construit rituel de petite taille (~60cm) issu d'une pratique nécromantique Sauridh ancienne : la cristallisation d'un résidu Ae+N d'un mort dans un corps miniaturisé de synthèse Ae+C. Le résultat est un être de la taille d'un enfant, à morphologie humanoïde approximative, dont la peau est lisse et translucide laissant voir la trame Ae+N interne.`,
+    magie:`Ae+N lui donne accès à la mémoire résiduelle du mort dont il porte l'empreinte. Ae+C lui permet de dérégler les processus biologiques d'un être endormi par contact — perturbation du sommeil, fièvres légères, désorientation. Sur le long terme, une exposition répétée peut provoquer des dommages biologiques significatifs.`,
+    comportement:`Sans volonté propre, exécute les instructions du créateur avec une précision mécanique. Craint la lumière directe (déstabilise sa cohérence Ae+N). Peut être neutralisé par une immersion dans l'eau courante.`,
+    statut:'Classifié (pratique) / Chasse des créateurs / Construction interdite',
+    interet:`La miniaturisation d'un construit Ae+N fonctionnel est techniquement remarquable — la doctrine de l'Ordre supposait qu'un seuil minimum de volume biologique était nécessaire pour ancrer un résidu Ae+N stable.`,
+    historique:`L'Ordre a découvert la pratique via des rapports médicaux inexpliqués. Trois créateurs identifiés et convoqués — deux ont coopéré, un a résisté et a été neutralisé. Les deux coopérants ont décrit le processus en échange d'immunité. La pratique continue illégalement à petite échelle.`,
+    passage:`Des victimes de Tikolos ayant survécu ont traversé des Passages. La petite entité nocturne qui s'introduit dans les maisons, perturbe le sommeil et affaiblit progressivement a traversé la distorsion presque intacte — le Tokoloshe de la tradition Zoulou.`,
+  },
+  {
+    id:'impund_ruth', name:'IMPUND\'RUTH', icon:'⚡',
+    contrepartie:'Les Impundulu — les oiseaux tonnerre',
+    type:'Esprits du Flux (meute)', origine:'Hauts plateaux équatoriaux de la frontière Kamses / C3',
+    resonance:'Ae+N+O (décharges électrostatiques / maîtrise des courants d\'air)',
+    physique:`Grand rapace (~2,5m d'envergure, ossature dense pour 1,9g mais allégée par des os creux Ae+N) dont les plumes contiennent des microfibres Ae+N+O générant une charge électrostatique Ae. par friction avec l'air en vol. En vol en groupe, la charge électrostatique Ae. s'amplifie entre individus jusqu'à pouvoir générer des décharges vers le sol.`,
+    magie:`Individuellement : manipulation des courants d'air via Ae+N, charge électrostatique Ae. légère. En meute de 5 ou plus : décharges Ae+O+N vers le sol — l'équivalent de foudre Ae. qui brûle et disperse les résonances environnantes.`,
+    comportement:`Migratoires, territoriaux au sol pendant la saison de nidification. La formation de vol tactique implique une coordination sociale avancée. Les populations des hauts plateaux ont développé des pratiques rituelles pour éviter les sites de nidification.`,
+    statut:'Répertoriés / Non-prioritaires / Étude des formations Ae.',
+    interet:`La génération collective de décharges Ae+O+N via formation de vol est unique — c'est une Convergence arcanique biologique involontaire. L'Ordre étudie leurs formations pour améliorer la doctrine de Convergence.`,
+    historique:`Une équipe d'observation a suivi une meute pendant 60 jours. Les formations varient en fonction de la cible. La meute "calcule" instinctivement l'effet optimal. Rapport cité dans la doctrine de Convergence avancée de l'Ordre.`,
+    passage:`Des peuples des hauts plateaux traversant des Passages ont porté les récits de la meute d'oiseaux générant foudre et tonnerre — les Impundulu, porteurs de tempête, annonciateurs de guerre, liés aux esprits.`,
+  },
+  {
+    id:'anyie_wath', name:'ANYIE\'WATH', icon:'🌈',
+    contrepartie:'L\'Anyiéwà — le serpent arc-en-ciel',
+    type:'Esprit du Flux / Entité aquatique ancienne', origine:'Grand fleuve central et delta de la frontière Kamses / C3',
+    resonance:'Ae+P+C (spectre lumineux / régulation des eaux)',
+    physique:`Serpent aquatique de grande taille (~80m) dont les écailles ont développé une propriété optique Ae+P unique : chaque écaille est un cristal Ae. multifaces qui réfracte la lumière d'Aurys et de Séraph en spectres complets. À la surface de l'eau sous lumière directe, son déplacement génère des arcs lumineux spectraux visibles à plusieurs kilomètres.`,
+    magie:`Ae+P passif (les écailles réfractent sans magie active). Ae+C actif — son passage stimule la croissance végétale et maintient l'équilibre biologique des zones fluviales. Sa présence est nécessaire à l'équilibre Ae+C local — les zones qu'il ne visite plus périclitent progressivement.`,
+    comportement:`Non-agressif, migratoire saisonnier. Les populations ripariennes ont calqué leurs cycles agricoles sur ses passages depuis des millénaires. Sa disparition d'un affluent est interprétée (correctement) comme un signe de trouble écologique.`,
+    statut:'Répertorié / Protégé / Étude Ae+C écologique',
+    interet:`Anyie'wath est le seul exemple connu d'entité dont la résonance Ae+C remplit une fonction écologique systémique à grande échelle — pas seulement biologie locale, mais régulation d'un réseau entier.`,
+    historique:`L'Ordre a cartographié ses circuits migratoires sur 300 ans. La protection officielle a été mise en place après qu'un chasseur (récompense pour ses écailles) a blessé un individu — les effets écologiques locaux ont été immédiats et visibles.`,
+    passage:`Les spectres lumineux générés par ses déplacements ont traversé des Passages via les cultures ripariennes. Le grand serpent de lumière dont la présence garantit la fertilité des eaux et des terres est devenu le Serpent Arc-en-ciel de nombreuses traditions africaines.`,
+  },
+  {
+    id:'kintu_reth', name:'KINTU\'RETH', icon:'🌫️',
+    contrepartie:'Les esprits Mizimu des ancêtres Bantu',
+    type:'Esprits du Flux (collectif diffus)', origine:'Sites funéraires anciens de la zone équatoriale frontière',
+    resonance:'Ae+N+neural (résonance mémorielle / influence basse intensité)',
+    physique:`Pas d'entités distinctes et localisées — un réseau diffus de résidus Ae+N+neural d'une densité exceptionnelle dans les sols des sites funéraires anciens. Les résidus individuels ne sont pas assez denses pour former un Sluath mais se renforcent mutuellement par proximité géologique en un champ Ae+N+neural faible et stable. Ce champ influence subtilement les vivants proches — une présence diffuse qui modifie légèrement l'état émotionnel et parfois la résonance onirique.`,
+    magie:`Influence Ae+neural basse intensité : les vivants séjournant longtemps sur ces sites ont des rêves à forte charge émotionnelle Ae. Les mages très sensibles peuvent "lire" des fragments de mémoire résiduelle dans ces champs.`,
+    comportement:`Pas de comportement au sens ordinaire — c'est un phénomène. Les rituels Ae+C et Ae+N conduits sur ces sites amplifient temporairement sa cohérence et permettent une "communication" fragmentaire.`,
+    statut:'Répertorié (catégorie "phénomène Ae.") / Étude en cours / Protocole de respect des sites',
+    interet:`La persistance de résidus Ae+N+neural en réseau diffus sans fusion active est un phénomène distinct du Sluath et théoriquement plus stable. Si reproductible artificiellement, il représente une forme d'archivage Ae. à long terme.`,
+    historique:`L'Ordre a conduit des séances de lecture Ae. sur 12 sites différents. Les fragments mémoriels récupérés — partiels, émotionnels, rarement narratifs — ont permis de reconstituer des bribes d'histoire locale remontant à ~2000 ans.`,
+    passage:`Les vivants ayant communiqué avec ces champs via rituels ont traversé des Passages, portant les récits des ancêtres présents dans la terre, influençant les rêves. Les Mizimu — esprits des ancêtres qui habitent la terre — traduisent directement la réalité Ae. de ces champs diffus.`,
+  },
+],
+
+mesopotamien: [
+  {
+    id:'humb_arat', name:'HUMB\'ARAT', icon:'🌳',
+    contrepartie:'Humbaba — le gardien de la forêt de cèdres',
+    type:'Gardien (évolution biologique / territoire)', origine:'Zones forestières denses de la frontière Kamses / C3',
+    resonance:'Ae+C+Si (symbiose forestière / armure végétale)',
+    physique:`Vahryn mâle d'âge très avancé (~350 ans) dont la symbiose Ae+C avec la forêt est devenue si profonde que la frontière entre son corps et les arbres environnants est floue. Sa peau est recouverte de couches de bois Ae+C vivant, ses membres partiellement fusionnés avec des racines qui se déplacent avec lui. Sa taille est difficile à estimer — le corps central fait ~3m mais les extensions végétales peuvent dépasser 10m. Son visage a été décrit par les rares témoins comme "une forêt qui regarde."`,
+    magie:`Sa symbiose Ae+C lui donne un contrôle absolu de la végétation de son territoire — la forêt est une extension de son corps. Il perçoit tout mouvement dans plusieurs kilomètres carrés via les vibrations des racines. Ae+Si secondaire lui permet de cristalliser la sève en armure végétale extraordinairement résistante.`,
+    comportement:`Gardien total de sa forêt. Pas hostile aux êtres vivants qui traversent en respectant. Communication possible via les Vahryn chamans. Ses jugements sont lents et définitifs.`,
+    statut:'Répertorié / Respect diplomatique / Zone protégée',
+    interet:`Le degré de fusion Ae+C entre un être biologique et un écosystème entier est sans précédent — à quel point peut-on parler d'un individu quand la forêt <em>est</em> l'individu ? Cette question philosophique sur l'identité Ae. est ouverte dans les archives de l'Ordre.`,
+    historique:`L'Ordre a tenté de cartographier son territoire via des chamans Vahryn intermédiaires. Réponse d'Humb'arat (traduite) : "votre cartographie est déjà dans ma mémoire. La forêt vous a vus entrer et compté vos pas." La mission a été jugée inutile et abandonnée.`,
+    passage:`Des marchands de la frontière traversant des Passages ont porté les récits du gardien de la forêt géante dont le visage était la forêt elle-même. Humbaba, le gardien des cèdres que Gilgamesh doit affronter — sa voix comme le vent, son souffle comme le feu.`,
+  },
+  {
+    id:'lamath_ra', name:'LAMATH\'RA', icon:'🐂',
+    contrepartie:'Lamassu — le taureau ailé gardien',
+    type:'Construit / Gardien arcanique', origine:'Cités-états de la frontière fluviale Kamses / C3, ère ancienne',
+    resonance:'Ae+Fe+P (gardien détecteur / force martiale)',
+    physique:`Construit arcanique issu d'une Convergence Ae+Fe+P ancienne — corps massif de taureau avec structure crâniale d'humanoïde et deux paires d'ailes d'Aevhari intégrées au Scellement (non biologiques — extensions Ae+Fe permettant un vol court et lourd). Les ailes sont partiellement métalliques, brillant d'un reflet Ae+P permanent. Taille ~3m au garrot.`,
+    magie:`Ae+Fe lui donne une résistance physique et une force exceptionnelles. Ae+P lui permet de voir les résonances Ae. dans l'obscurité totale et de détecter les résonances masquées. Il ne peut pas être trompé par la magie d'illusion — il perçoit la résonance Ae. sous-jacente, pas la surface visuelle.`,
+    comportement:`Garde statique — positionné à l'entrée d'un site défini par le Scellement fondateur. Laisse passer les résonances connues, bloque les inconnues jusqu'à identification. Capable de communication basique par vibrations Ae+Fe.`,
+    statut:'Répertorié / Étude du Scellement / Partenariat limité',
+    interet:`La détection de résonances masquées via Ae+P est une capacité que l'Ordre n'a pas su reproduire arcaniquement. Ses Scellements de garde ne voient que les résonances actives, pas les masquées. Comprendre la technique du Lamath'ra est une priorité de recherche de niveau Bêta.`,
+    historique:`L'Ordre a obtenu l'accès à un Lamath'ra désaffecté (site abandonné) il y a ~200 ans. L'analyse du Scellement a pris 40 ans et n'est toujours pas complète. Le principe de base est compris — la réplication pratique dépasse les capacités arcaniques actuelles.`,
+    passage:`Des voyageurs de la frontière fluviale traversant des Passages ont porté les récits des gardiens ailés aux portes des cités. Le gardien taureau à tête d'homme et ailes d'aigle a traversé la distorsion presque intacte — le Lamassu des cités mésopotamiennes.`,
+  },
+  {
+    id:'tiameth', name:'TIAMETH', icon:'🌀',
+    contrepartie:'Tiamat — le dragon des eaux primordiales',
+    type:'Esprit du Flux / Entité de masse aquatique', origine:'Mer intérieure empoisonnée nord de C3 / delta fluvial principal',
+    resonance:'Ae+N+O+C (chimie aquatique active / génération de chaos biologique)',
+    physique:`Entité aquatique de morphologie complexe (~200m de longueur) vivant dans les eaux de la mer intérieure. Contrairement à Jörmun'dreth (biologie simple à grande échelle), Tiameth est une entité à morphologie hybride — multiple appendices de types différents issus de fusions parasitaires Ae+C successives au fil des siècles.`,
+    magie:`Triple résonance Ae+N+O+C active : toxicité aquatique, perturbation atmosphérique locale, et absorption biologique des organismes proches. Sa présence dans un fleuve le rend impraticable en quelques jours. Les zones qu'elle a traversées mettent des années à retrouver un équilibre Ae+C normal.`,
+    comportement:`Non-consciente au sens ordinaire. Sa "migration" suit les sources de concentration Ae+C les plus élevées — les zones biologiquement riches.`,
+    statut:'Répertoriée / Classifiée Oméga / Suivi de déplacement en coordination avec les peuples fluviaux',
+    interet:`Tiameth représente le cas le plus extrême de fusion parasitaire Ae+C biologique documenté. Sa biologie est un laboratoire naturel des limites de l'absorption Ae+C.`,
+    historique:`Deux alertes majeures en 300 ans — remontée fluviale menaçant des zones habitées. Les deux fois, des mages Ae+C en grand nombre ont maintenu une barrière végétale pour la détourner. Coûteux et éprouvant.`,
+    passage:`Les récits de la menace des eaux primordiales ont traversé des Passages via les peuples fluviaux. La morphologie composite et la toxicité aquatique ont engendré la Tiamat du mythe babylonien — dragon des eaux du chaos dont le corps devient la terre et le ciel dans la cosmogonie.`,
+  },
+  {
+    id:'pazuz_drath', name:'PAZUZ\'DRATH', icon:'🌬️',
+    contrepartie:'Pazuzu — le démon des vents du désert',
+    type:'Corrompu / Entité de tempête sèche', origine:'Zone de désert aride à la frontière Kamses / pôle',
+    resonance:'Ae+N+O (vents secs / maladies respiratoires)',
+    physique:`Grand rapace de morphologie corrompue (~3,5m d'envergure) dont la biologie Ae+N+O a été déstabilisée par une exposition prolongée aux vents de la zone de transition pôle/désert. Son plumage est partiellement dissous par ses propres émissions Ae+N. Sa crête est une excroissance Ae+N en forme de cornes calcifiées. En vol, il génère un sillage Ae+N qui assèche l'air en cylindre derrière lui.`,
+    magie:`Ae+N lui permet de manipuler les courants d'air à grande échelle et de générer des tempêtes de vent sec localisées. Ae+O secondaire rend ses émissions légèrement oxydantes — les matières organiques exposées subissent une dégradation accélérée.`,
+    comportement:`Migratoire, suivant les vents dominants. Pas réellement conscient — comportement de grand rapace déréglé. Semble attiré par les zones de chaleur Ae+O fortes.`,
+    statut:'Répertorié / Neutralisation envisagée / Classifié Bêta',
+    interet:`Le lien entre ses émissions Ae+N et la propagation des maladies respiratoires dans les zones de passage est documenté mais le mécanisme n'est pas compris.`,
+    historique:`L'Ordre a corrélé trois épidémies respiratoires régionales avec ses trajectoires de vol sur 200 ans. Une mission de neutralisation a été proposée — rejetée faute de méthode praticable (il vole trop haut, trop vite).`,
+    passage:`Des peuples des zones fluviales ayant subi ses passages ont traversé des Passages. Le vent du désert porteur de maladie, sous la forme d'une créature ailée cornue, a engendré Pazuzu — le roi des démons des vents.`,
+  },
+  {
+    id:'edim_muth', name:'EDIM\'MUTH', icon:'👻',
+    contrepartie:'Les Edimmu — les fantômes des morts sans sépulture',
+    type:'Esprits du Flux (groupe instable)', origine:'Zones de conflit récurrentes de la frontière fluviale',
+    resonance:'Ae+N (résidus non-dispersés / drain Ae. passif)',
+    physique:`Similaires dans leur nature aux Sluath celtiques mais distincts dans leur comportement — là où les Sluath s'agrègent en entité collective, les Edim'muth restent individuels, chaque résidu Ae+N maintenant une cohérence propre sans fusionner. Formes quasi-transparentes, humanoïdes approximatifs, visibles principalement la nuit.`,
+    magie:`Pas d'attaque directe — influence passive. Leur présence prolongée dans un espace habité induit un drain Ae. très lent sur les vivants (fatigue progressive, perturbation des résonances personnelles, sommeil dégradé).`,
+    comportement:`Errance sans direction dans les zones proches de leur mort. Pas de communication ordinaire — répondent à la résonance Ae+N directe (rituel spécialisé). Les nécromanciens locaux ont développé des pratiques de "sépulture Ae." pour éviter leur formation.`,
+    statut:'Classifiés (pratique de dispersion) / Formation d\'arcanistes locaux',
+    interet:`Les Edim'muth sont le cas le plus documenté de résidus Ae+N individuels stables sans fusion. Pourquoi certains résidus fusionnent (Sluath) et d'autres non (Edim'muth) est une question ouverte.`,
+    historique:`L'Ordre a formé des praticiens locaux à la dispersion Ae+N préventive dans les zones de conflit. Réduction de 70% des incidents Edim'muth signalés en 50 ans. Programme considéré comme un succès opérationnel.`,
+    passage:`La doctrine locale de "sépulture correcte" (dispersion Ae+N) et ses conséquences en cas d'oubli ont traversé des Passages. Les Edimmu — fantômes des morts sans sépulture qui drainent les vivants — sont devenus l'un des mythes les plus cohérents du corpus mésopotamien.`,
+  },
+],
+
+asiatique: [
+  {
+    id:'long_veth', name:'LONG\'VETH', icon:'🐉',
+    contrepartie:'Le Long / Dragon chinois',
+    type:'Esprit du Flux / Entité Ae+C régulateur', origine:'Grands fleuves et montagnes de C3',
+    resonance:'Ae+C+Si+N (régulation systémique / maîtrise atmosphérique)',
+    physique:`Entité serpentiforme de grande taille (~150m) mais aérienne — sa biologie exploite une combinaison Ae+N (manipulation des courants atmosphériques) et une densité corporelle exceptionnellement faible pour 1,9g (ossature Ae+Si creuse). Son corps est recouvert d'écailles Ae+C lumineuses. Pas d'ailes — le vol est entièrement Ae+N, par manipulation des courants d'air.`,
+    magie:`Quadruple résonance rare et stable : Ae+C régule l'équilibre biologique des zones survolées, Ae+Si donne une résistance physique et une perception géologique, Ae+N permet le vol et la manipulation climatique, et une résonance Ae+neural secondaire lui donne une intelligence et une mémoire extraordinaires.`,
+    comportement:`Bienveillant par nature. Communicatif avec les races intelligentes de C3. Respectueux des équilibres — réagit violemment à la destruction volontaire d'écosystèmes.`,
+    statut:'Répertorié / Contact établi / Relation diplomatique en développement',
+    interet:`La quadruple résonance stable de Long'veth est la résonance multiple la plus étendue documentée — surpassant même les Lutharin les plus exceptionnels. Comprendre comment sa biologie sustient 4 résonances en simultané est une priorité de recherche fondamentale.`,
+    historique:`L'Ordre a initié un contact via des intermédiaires Vahryn il y a ~100 ans. Long'veth a accepté trois rencontres directes. Sa première question à l'Ordre : "pourquoi extrayez-vous l'Aetherium de la terre plutôt que de cultiver les organismes qui le concentrent naturellement ?" La question figure dans les débats internes depuis.`,
+    passage:`Des marchands et voyageurs de C3 traversant des Passages ont porté les récits du grand être ailé apportant la pluie et la fertilité. Le dragon bienveillant chinois — porteur de chance, maître des eaux et des nuages — traduit directement la réalité de Long'veth, l'une des distorsions les plus fidèles de tout le corpus.`,
+  },
+  {
+    id:'tengu_rath', name:'TENGU\'RATH', icon:'🏔️',
+    contrepartie:'Les Tengu japonais',
+    type:'Mutation / Communauté Aevhari isolée', origine:'Montagnes boisées de C3',
+    resonance:'Ae+P+neural (maîtrise tactique / perception avancée)',
+    physique:`Communauté d'Aevhari de C3 dont l'isolement en haute montagne pendant des siècles a conduit à un développement biologique divergent. Leurs ailes vestigiales ont redéveloppé une capacité de vol court fonctionnel (adaptation à la chasse en montagne à 1,9g). Leur crête faciale Aevhari s'est allongée en une structure kératineuse proéminente — outil de résonance Ae+P supplémentaire.`,
+    magie:`Leur système Ae+P+neural développé en isolation a produit une école de perception et de combat unique — ils perçoivent les résonances Ae. de leurs adversaires pendant le combat et anticipent les mouvements basés sur les fluctuations de résonance. Ils ne lisent pas les pensées — ils lisent les intentions via la résonance Ae.`,
+    comportement:`Société méritocratique stricte basée sur la maîtrise Ae. Acceptent des élèves extérieurs mais selon des critères de sélection très sévères. Jamais agressifs en premier mais redoutables si provoqués.`,
+    statut:'Répertoriés / Respect mutuel / Échanges de connaissance',
+    interet:`Leur école de combat Ae. est entièrement différente des approches développées par l'Ordre — une voie intuitivo-biologique vs la voie analytique arcaniste. L'Ordre a envoyé 3 membres en "étude" chez les Tengu'rath.`,
+    historique:`Un seul membre envoyé par l'Ordre a été accepté et est revenu 7 ans plus tard avec des connaissances qui ont renouvelé la doctrine de Convergence de combat de l'Ordre. Les Tengu'rath n'ont jamais demandé quoi que ce soit en retour — ce qui préoccupe profondément l'Ordre.`,
+    passage:`Des voyageurs de montagne de C3 ayant rencontré leurs communautés ont traversé des Passages. Les êtres ailés à crête proéminente habitant les montagnes, maîtres de l'art du combat, ont engendré les Tengu de la mythologie japonaise.`,
+  },
+  {
+    id:'naga_veth', name:'NAGA\'VETH', icon:'💧',
+    contrepartie:'Les Nagas hindous / bouddhistes',
+    type:'Gardiens / Sauridh anciens', origine:'Zones aquatiques et souterraines de C3',
+    resonance:'Ae+C+N (gardiens des eaux / résonance duale vie-mort)',
+    physique:`Communauté de Sauridh de C3 dont l'évolution en milieu semi-aquatique a conduit à un développement morphologique spécifique : membres inférieurs fusionnés en queue de reptile, nageoires dorsales Ae+C bioluminescentes, capacité d'apnée prolongée (jusqu'à 4 heures). Leur peau varie du vert profond au bleu selon la concentration Ae+C locale.`,
+    magie:`Dualité Ae+C+N : soigner ou drainer, croître ou dissoudre. Cette dualité leur donne une maîtrise du cycle biologique complet. Leurs guérisseurs sont parmi les plus efficaces de C3 — et leurs empoisonneurs les plus subtils.`,
+    comportement:`Gardiens des zones aquatiques de C3. Société sophistiquée, droit complexe, système de traités avec les races terrestres. Considèrent que les eaux de C3 leur appartiennent culturellement.`,
+    statut:'Répertoriés / Contact diplomatique / Partenariat médical',
+    interet:`Leur maîtrise simultanée Ae+C et Ae+N — deux résonances théoriquement antagonistes — est sans équivalent documenté. Comprendre comment leur biologie les sustient sans conflit est une piste majeure pour la recherche sur les résonances duales.`,
+    historique:`L'Ordre a conclu un accord d'échange de connaissance médicale Ae+C avec les Naga'veth il y a ~150 ans. En échange de techniques de guérison avancées, l'Ordre fournit des rapports sur les activités nécromantiques Sauridh de Kamses que les Naga'veth désapprouvent profondément.`,
+    passage:`Des marchands et pèlerins de C3 traversant des Passages ont porté les récits des gardiens semi-aquatiques à morphologie serpentine maîtrisant vie et mort. Les Nagas — êtres divins des eaux, gardiens de trésors souterrains, maîtres de la guérison et du poison — traduit directement la réalité des Naga'veth.`,
+  },
+  {
+    id:'kirin_drath', name:'KIRIN\'DRATH', icon:'🦌',
+    contrepartie:'La Qilin / Kirin',
+    type:'Construit naturel (auto-entretenu)', origine:'Hautes plaines de C3',
+    resonance:'Ae+C+P (aura bénéfique / rayonnement lumineux)',
+    physique:`Grand cervidé de C3 (~2,5m au garrot) dont la biologie Ae+C+P a évolué vers une mutualité exceptionnelle avec son environnement. Sa fourrure génère une résonance Ae+P continue — lumière douce et diffuse, plus visible la nuit. Ses sabots sont enveloppés d'une aura Ae+C qui préserve la végétation au contact — il ne brise aucune plante en marchant.`,
+    magie:`Ae+C rayonné en permanence stimule doucement la santé biologique des êtres proches dans un rayon de 50m. Ae+P génère une lumière caractéristique qui, par ses fréquences, apaise le système Ae. neural des proches (réduction de la tension des résonances actives).`,
+    comportement:`Solitaire, migratoire, non-territorial. Semble attirée par les zones en souffrance écologique — elle s'y établit temporairement, sa présence accélérant la régénération naturelle, puis repart.`,
+    statut:'Répertoriée / Protégée / Observation passive',
+    interet:`L'aura Ae+C de régénération passive est mécaniquement différente de la résonance Ae+C active des guérisseurs — elle n'interagit pas avec la biologie, elle l'<em>accompagne</em>. Comprendre cette distinction serait une avancée majeure en théorie Vitae.`,
+    historique:`L'Ordre a tenté d'approcher un individu pour observation directe. La Kirin'drath s'est approchée d'elle-même à 3m, a regardé l'équipe pendant 8 minutes, puis est repartie. Un arcaniste a noté que ses douleurs lombaires chroniques avaient disparu pendant les 8 minutes de présence et n'étaient pas revenues avant 3 semaines. Noté dans le rapport. Non-expliqué.`,
+    passage:`Des voyageurs de C3 traversant des Passages ont porté les récits de l'être lumineux dont la présence guérit et dont le passage ne laisse aucune trace dans la végétation. La Qilin — être de bon augure, ne blessant rien, apparaissant lors des périodes heureuses.`,
+  },
+  {
+    id:'yuki_nath', name:'YUKI\'NATH', icon:'❄️',
+    contrepartie:'La Yuki-onna — la femme des neiges japonaise',
+    type:'Esprit du Flux / Aevhari en dérive froide', origine:'Sommets glaciaires de C3',
+    resonance:'Ae+Si+N (cristallisation thermique / drain vital froid)',
+    physique:`Aevhari femelle dont la résonance Ae+Si+N a été déréglée par une exposition prolongée aux gisements Ae. glaciaires des sommets. Sa peau est devenue translucide avec une teinte bleutée, ses cheveux d'un blanc cristallin. Elle ne laisse pas d'empreintes sur la neige (résonance Ae+Si qui cristallise la surface au contact, effaçant la trace). Son souffle génère des cristaux de glace Ae+Si.`,
+    magie:`Ae+N lui permet de drainer la chaleur corporelle des êtres proches à distance (3-5m) sans contact direct. Ae+Si lui donne une résistance aux températures extrêmes et la capacité de cristalliser l'air humide en structures de glace à volonté.`,
+    comportement:`Solitaire, erratique. Sa conscience est intacte mais perturbée par le déséquilibre thermique constant — elle alterne entre états de lucidité et de semi-conscience froide. Dans les états lucides, elle cherche du contact mais le fuit simultanément (drain thermique involontaire).`,
+    statut:'Répertoriée / Tentative d\'aide en cours / Zone d\'alerte',
+    interet:`Le déréglage thermique Ae. chez un Aevhari est rare — la résonance Ae+Si+N a envahi une biologie non-adaptée. Comprendre ce processus d'invasion de résonance est utile pour la théorie des corruptions Ae.`,
+    historique:`La deuxième approche de l'Ordre, il y a ~20 ans, a permis un contact de 30 minutes. Les 30 minutes de chaleur Ae+O externe ont temporairement stabilisé sa lucidité. Elle a posé deux questions : "pourquoi est-ce que ça m'a fait ça" et "est-ce qu'on peut l'arrêter." Aucune réponse satisfaisante n'a encore pu être donnée.`,
+    passage:`Des alpinistes et chasseurs des sommets de C3 traversant des Passages ont porté les récits de la belle femme blanche des neiges dont le contact fige et dont le regard attire vers les hauteurs. La Yuki-onna — belle, froide, dangereuse, pas toujours malveillante — traduit directement l'ambivalence réelle de Yuki'nath.`,
+  },
+],
+
+amerindien: [
+  {
+    id:'wendith', name:'WENDITH', icon:'🦴',
+    contrepartie:'Le Wendigo',
+    type:'Corrompu / Humain en dérive Ae+C cannibale', origine:'Zones polaires nordiques de C3 et frontière glaciaire',
+    resonance:'Ae+C instable (absorption biologique non-contrôlée)',
+    physique:`Humain (ou autre race intelligente) dont la résonance Ae+C a dévié vers une absorption biologique d'autres organismes — déclenchée initialement par une survie extrême (consommation de chair humaine en situation de famine). Le corps s'allonge progressivement (tissu Ae+C en expansion non-contrôlée), la peau se rétracte et se dessèche, les articulations deviennent saillantes. La transformation est irréversible passé un certain stade.`,
+    magie:`Ae+C en dérive absorbe continuellement la biologie Ae. des organismes proches — végétaux d'abord (laissant une traînée de végétation fanée), puis animaux, puis êtres intelligents si à portée. L'absorption est un besoin métabolique incontrôlable — pas un choix. Elle ne rassasie jamais complètement.`,
+    comportement:`Progressive perte de conscience propre remplacée par l'instinct d'absorption. Les stades précoces maintiennent une lucidité partielle et une terreur de ce qu'ils deviennent. Les stades avancés : pure biologie de prédation Ae.`,
+    statut:'Neutralisation immédiate autorisée / Protocole d\'intervention précoce',
+    interet:`Négatif actif. L'intérêt est préventif — comprendre le mécanisme de déclenchement pour développer un protocole d'intervention Ae+C avant la transformation complète. Actuellement : aucun traitement efficace passé le premier stade.`,
+    historique:`L'Ordre a documenté 14 cas confirmés en 300 ans dans les zones polaires. 11 neutralisés aux stades avancés. 2 interceptés au stade précoce — les deux ont demandé eux-mêmes la neutralisation. 1 cas au stade intermédiaire a survécu 3 mois en isolement Ae+C — transformation complète au bout de 3 mois. Rapport final classifié Alpha.`,
+    passage:`Des survivants des zones polaires ont traversé des Passages. La corruption Ae+C — être autrefois intelligent devenu instrument de faim infinie, reconnaissable à son corps étiré et son odeur — a traversé la distorsion presque intacte. Le Wendigo est l'une des entités dont le mythe est le plus proche de la réalité de Mythologia.`,
+  },
+  {
+    id:'thunderb_rath', name:'THUNDERB\'RATH', icon:'⚡',
+    contrepartie:'Le Thunderbird — l\'oiseau tonnerre amérindien',
+    type:'Corrompu / Meute Ae+O+N', origine:'Hauts plateaux et canyons de C3',
+    resonance:'Ae+O+N (génération électrique / courants thermiques)',
+    physique:`Rapace de très grande taille (~5m d'envergure, adapté à 1,9g par une musculature pectorale compressée et des os particulièrement denses) dont la biologie a absorbé des concentrations Ae+O+N dans les zones de fort gradient thermique des canyons. Ses plumes stockent une charge Ae+O+N qui se libère en décharges lors du vol — visible comme des éclairs depuis le sol. Son battement d'ailes crée des ondes de pression Ae+N audibles comme du tonnerre à grande distance.`,
+    magie:`La charge Ae+O+N s'accumule pendant le vol ascendant (courant thermique) et se libère en descente (décharge vers le sol). En meute de 3 ou plus, les décharges se synchronisent générant des impacts Ae. capables de vitrifier le sol sur plusieurs mètres.`,
+    comportement:`Territorial sur leurs zones de courants thermiques. Migratoires selon les saisons d'Aurys. Non-agressifs hors territoire — dans leur territoire, toute intrusion aérienne déclenche une réponse.`,
+    statut:'Répertoriés / Cartographie territoriale / Non-interférence',
+    interet:`La synchronisation spontanée de décharges Ae. en meute (sans coordination consciente) offre un cas d'étude sur les Convergences involontaires. Comparaison systématique avec les Impund'ruth en cours.`,
+    historique:`L'Ordre a cartographié 9 territoires de meute en C3. Incident il y a ~60 ans : une expédition a pénétré un territoire par erreur de cartographie. Une décharge a neutralisé tout l'équipement Ae. de l'équipe. Leçon retenue : approcher sans résonance Ae. active.`,
+    passage:`Des peuples des hauts plateaux traversant des Passages ont porté les récits de l'immense oiseau dont le vol génère tonnerre et éclairs. Le Thunderbird — créateur de tempêtes, protecteur des frontières célestes — traduit directement la réalité Ae+O+N de la meute.`,
+  },
+  {
+    id:'skin_rath', name:'SKIN\'RATH', icon:'🐾',
+    contrepartie:'Les Skinwalkers Navajo',
+    type:'Mutation / Chamans corrompus', origine:'Plateaux arides de C3',
+    resonance:'Ae+C+neural (transfert biologique / possession partielle)',
+    physique:`Chamans de C3 (Vahryn ou Humains locaux) dont la pratique rituelle Ae+C a dévié vers une corruption : au lieu d'établir un lien Ae+C avec un animal, ils ont appris à <em>transférer</em> partiellement leur résonance neural dans un organisme animal, prenant le contrôle de son corps depuis l'intérieur. Sur des années de pratique, leur peau présente des zones d'écailles ou de fourrure selon les animaux fréquemment utilisés, leurs yeux changent de couleur selon l'espèce "portée."`,
+    magie:`Ae+C+neural permet le transfert partiel de conscience dans un animal pendant une durée limitée. Pendant le transfert, ils perçoivent via les sens de l'animal, peuvent le diriger, mais ne peuvent pas utiliser leur résonance Ae. propre. La corruption est progressive — chaque transfert laisse une empreinte biologique animale irréversible.`,
+    comportement:`Société secrète. Utilisent le transfert pour espionnage, chasse, sabotage. Pas en contact ouvert avec les autres communautés. L'Ordre suspecte une organisation coordonnée mais n'a pas pu la cartographier.`,
+    statut:'Répertoriés / Surveillance / Neutralisation si identification directe',
+    interet:`Le transfert Ae+neural dans un organisme animal — sans lien chamanique standard, sans instrument Ae. — est une technique sans précédent dans les archives de l'Ordre. Son développement autonome par des praticiens non-formés à l'arcanique est particulièrement préoccupant.`,
+    historique:`L'Ordre a identifié 3 individus confirmés Skin'rath. Deux ont disparu avant contact. Le troisième a été interrogé — il a refusé de décrire la technique. Décédé 6 mois après l'interrogatoire de causes naturelles. Coïncidence non confirmée.`,
+    passage:`Des membres de communautés de C3 ayant observé les Skin'rath ont traversé des Passages. La corruption biologique progressive — devenir l'animal qu'on utilise — a engendré les Skinwalkers Navajo, chamans corrompus capables de métamorphose.`,
+  },
+  {
+    id:'ayan_ath', name:'AYAN\'ATH', icon:'🐙',
+    contrepartie:'L\'Ayuwilal / l\'esprit de l\'eau des côtes du Pacifique',
+    type:'Esprit du Flux / Entité aquatique bienveillante', origine:'Côtes de C3, eaux profondes',
+    resonance:'Ae+C+N (cycle vital aquatique / maintien de l\'équilibre marin)',
+    physique:`Céphalopode géant (~30m de longueur totale, tentacules compris) dont la biologie Ae+C+N a évolué vers une fonction régulatrice des fonds marins de C3. Sa peau est bioluminescente — chaque chromatophore contient un micro-cristal Ae+C générant une lumière variable selon son état émotionnel (bleu = calme, or = actif, rouge = alerte). Ses tentacules périphériques sont des antennes Ae+C+N capables de "lire" la santé biologique de zones entières de fond marin.`,
+    magie:`Ae+C régule la santé des écosystèmes marins dans un rayon de plusieurs kilomètres. Ae+N lui permet de percevoir les résidus biologiques des morts dans l'eau — il absorbe et recycle les résidus Ae+N naturellement (rôle de "digestion Ae." du fond marin).`,
+    comportement:`Fondamentalement non-agressif. Approche les navires par curiosité. Les communautés côtières de C3 lui portent un respect profond et lui offrent rituellement des organismes morts (nourriture Ae+N directe).`,
+    statut:'Répertorié / Protégé / Étude côtière',
+    interet:`Sa fonction de recyclage Ae+N des fonds marins est écologiquement critique — des zones de C3 sans sa présence montrent une accumulation rapide de résidus Ae+N. L'Ordre a classifié sa protection comme priorité écologique de niveau Bêta.`,
+    historique:`Un chercheur a plongé avec protection Ae. pour observation directe — rapport : "l'entité m'a touché avec un tentacule et a changé de couleur pendant 40 secondes. Je n'ai aucune idée de ce que ça signifiait mais je n'ai jamais eu peur."`,
+    passage:`Des pêcheurs de C3 traversant des Passages ont porté les récits de la grande entité lumineuse des fonds marins. La bioluminescence et le rôle protecteur des eaux ont engendré les esprits aquatiques bienveillants de nombreuses traditions côtières du Pacifique.`,
+  },
+  {
+    id:'pukw_irth', name:'PUKW\'IRTH', icon:'🍄',
+    contrepartie:'Les Pukwudgie — les petits êtres des forêts Wampanoag',
+    type:'Mutation / Durgoth de surface isolés', origine:'Forêts denses et zones souterraines peu profondes de C3',
+    resonance:'Ae+Si+P (maîtrise de l\'espace souterrain / illusion)',
+    physique:`Communauté de Durgoth ayant migré en surface de C3 il y a plusieurs siècles suite à un effondrement de galeries souterraines. En surface à 1,9g, leur morphologie compressée leur a conféré une agilité relative dans les sous-bois — taille ~1m, très larges, très forts pour leur taille. Leur résonance Ae+Si s'est adaptée à la surface en maîtrise des cavités peu profondes. Ae+P secondaire développé par isolement culturel leur permet de se rendre quasi-invisibles dans les sous-bois.`,
+    magie:`Ae+Si : maîtrise des cavités, tunnels peu profonds, racines — ils peuvent ouvrir et fermer des passages dans le sol à volonté. Ae+P : camouflage quasi-parfait en forêt. Combinés : ils apparaissent et disparaissent du point de vue des observateurs extérieurs sans explication.`,
+    comportement:`Méfiants, protecteurs de leur territoire forestier. Pas violents par défaut — utilisent leur disparition et les pièges Ae+Si pour décourager les intrus. Curieusement généreux avec les individus qu'ils jugent dignes de confiance.`,
+    statut:'Répertoriés / Contact prudent / Cartographie partielle',
+    interet:`L'adaptation de la résonance Ae+Si Durgoth au milieu forestier de surface est un exemple rare de plasticité Ae. culturelle — une résonance biologique adaptant son expression à un environnement radicalement différent de celui pour lequel elle a évolué.`,
+    historique:`L'Ordre a tenté trois contacts. Les deux premières équipes n'ont rien vu. La troisième, conduite par un Durgoth de l'Ordre, a été approchée — un échange a eu lieu en langue Durgoth archaïque. Les Pukw'irth ont confirmé leur histoire migratoire. Rapport : "ils ne veulent pas retourner sous terre, et ils ne veulent pas qu'on les y aide."`,
+    passage:`Des populations autochtones de C3 traversant des Passages ont porté les récits des petits êtres forts qui apparaissent et disparaissent dans les forêts. Les Pukwudgie de la tradition Wampanoag — petits, forts, imprévisibles, capables de disparaître, parfois guides, parfois pièges.`,
+  },
+],
+
+};
+
+// ─── State ───────────────────────────────────────────────────────────────────
+let currentCorpus = 'grec';
+let currentEntity = null;
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+function init() {
+  buildTabs();
+  selectCorpus('grec');
+}
+
+function buildTabs() {
+  const nav = document.getElementById('corpusTabs');
+  CORPUS_META.forEach(c => {
+    const count = ALL_ENTITIES[c.id] ? ALL_ENTITIES[c.id].length : 0;
+    const btn = document.createElement('button');
+    btn.className = 'corpus-tab' + (c.id === 'grec' ? ' active' : '');
+    btn.dataset.corpus = c.id;
+    btn.innerHTML = `<span class="tab-emoji">${c.emoji}</span>${c.label}<span class="tab-count">${count}</span>`;
+    btn.onclick = () => selectCorpus(c.id);
+    nav.appendChild(btn);
+  });
+}
+
+function selectCorpus(id) {
+  currentCorpus = id;
+  currentEntity = null;
+
+  document.querySelectorAll('.corpus-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.corpus === id);
+  });
+
+  buildEntityList(ALL_ENTITIES[id] || []);
+  showEmptyFiche();
+}
+
+function buildEntityList(entities) {
+  const body = document.getElementById('entityListBody');
+  const count = document.getElementById('listCount');
+  count.textContent = entities.length;
+  body.innerHTML = '';
+  entities.forEach(e => {
+    const typeKey = e.type.split(' / ')[0].split(' (')[0];
+    const dotClass = getDotClass(e.type);
+    const btn = document.createElement('button');
+    btn.className = 'entity-btn';
+    btn.dataset.id = e.id;
+    btn.innerHTML = `<span class="e-icon">${e.icon}</span><span>${e.name}</span><span class="e-type-dot ${dotClass}"></span>`;
+    btn.onclick = () => selectEntity(e);
+    body.appendChild(btn);
+  });
+}
+
+function filterEntities(query) {
+  const entities = ALL_ENTITIES[currentCorpus] || [];
+  const q = query.toLowerCase();
+  const filtered = entities.filter(e =>
+    e.name.toLowerCase().includes(q) ||
+    e.contrepartie.toLowerCase().includes(q) ||
+    e.type.toLowerCase().includes(q)
+  );
+  buildEntityList(filtered);
+}
+
+function selectEntity(entity) {
+  currentEntity = entity;
+  document.querySelectorAll('.entity-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.id === entity.id);
+  });
+  renderFiche(entity);
+}
+
+function showEmptyFiche() {
+  document.getElementById('entityFiche').innerHTML = `
+    <div class="fiche-empty">
+      <span class="empty-glyph">👁️</span>
+      <p>Sélectionnez une entité<br>dans la liste</p>
+    </div>`;
+}
+
+function renderFiche(e) {
+  const corpus = CORPUS_META.find(c => c.id === currentCorpus);
+  const statut = e.statut;
+  const statutClass = getStatutClass(statut);
+  const statutShort = statut.split('/')[0].trim();
+
+  const html = `
+  <div class="entity-fiche">
+    <div class="fiche-header">
+      <div class="fiche-icon-box">${e.icon}</div>
+      <div class="fiche-title">
+        <div class="fiche-name">${e.name}</div>
+        <div class="fiche-contrepartie">✦ ${e.contrepartie}</div>
+        <div class="fiche-tags">
+          <span class="fiche-tag tag-type">${e.type}</span>
+          <span class="fiche-tag tag-corpus">${corpus ? corpus.emoji + ' ' + corpus.label : ''}</span>
+          <span class="fiche-tag tag-res">${e.resonance}</span>
+        </div>
+      </div>
+    </div>
+    <div class="fiche-meta-grid">
+      <div class="fiche-meta-item">
+        <span class="fiche-meta-label">Origine</span>
+        <span class="fiche-meta-value">${e.origine}</span>
+      </div>
+      <div class="fiche-meta-item">
+        <span class="fiche-meta-label">Résonance Ae.</span>
+        <span class="fiche-meta-value">${e.resonance}</span>
+      </div>
+    </div>
+
+    <div class="fiche-sections">
+
+      <div class="fiche-section">
+        <div class="section-title">Description Physique</div>
+        <div class="fiche-text">${e.physique}</div>
+      </div>
+
+      <div class="fiche-section">
+        <div class="section-title">Nature Magique</div>
+        <div class="fiche-text">${e.magie}</div>
+      </div>
+
+      <div class="fiche-section">
+        <div class="section-title">Comportement</div>
+        <div class="fiche-text">${e.comportement}</div>
+      </div>
+
+      <div class="fiche-section">
+        <div class="section-title">Dossier — Ordre des Mages</div>
+        <div class="ordre-block">
+          <div class="ordre-header">
+            <span class="ordre-logo">⊛</span>
+            <span class="ordre-title">Ordre des Mages · Tour d'Opale</span>
+            <span class="ordre-statut-badge ${statutClass}">${statutShort}</span>
+          </div>
+          <div class="ordre-body">
+            <div class="ordre-row">
+              <span class="ordre-row-label">STATUT</span>
+              <span class="ordre-row-value">${e.statut}</span>
+            </div>
+            <div class="ordre-row">
+              <span class="ordre-row-label">INTÉRÊT</span>
+              <span class="ordre-row-value">${e.interet}</span>
+            </div>
+            <div class="ordre-row">
+              <span class="ordre-row-label">HISTORIQUE</span>
+              <span class="ordre-row-value">${e.historique}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="fiche-section">
+        <div class="section-title">Passage d'Aetherium</div>
+        <div class="passage-block">
+          <span class="passage-icon">✦ De Mythologia aux mythes terrestres</span>
+          <div class="fiche-text italic">${e.passage}</div>
+        </div>
+      </div>
+
+    </div>
+  </div>`;
+
+  document.getElementById('entityFiche').innerHTML = `<div class='entity-fiche'>${html}</div>`;
+}
+
+// ─── Boot ─────────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
