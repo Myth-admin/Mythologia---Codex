@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ordre des Mages — Archivum Cosmographique OM-ARCH-001</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Caveat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --nuit:            #070d18;
+    --or-principal:    #c8a84a;
+    --or-pale:         #e8d090;
+    --or-sombre:       #7a6020;
+    --rouge-cls:       #7a1c1c;
+    --rouge-vif:       #b03030;
+    --blanc-parchemin: #e4dfc8;
+    --parchemin-base:  #f2e5c8;
+    --parchemin-fonce: #e2ceaa;
+    --parchemin-tres:  #d4bc90;
+    --encre-sombre:    #1a0c04;
+    --encre-sepia:     #2e1a08;
+    --encre-bleue:     #0c1e34;
+    --encre-rouge:     #5a1010;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: #0a1520;
+    color: var(--blanc-parchemin);
+    font-family: 'EB Garamond', serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: "✦ ORDRE DES MAGES ✦";
+    position: fixed; top:50%; left:50%;
+    transform: translate(-50%,-50%) rotate(-30deg);
+    font-family: 'Cinzel', serif;
+    font-size: 4rem; letter-spacing: 0.4em;
+    color: rgba(200,168,74,0.025);
+    white-space: nowrap; z-index:0;
+    pointer-events:none; user-select:none;
+  }
+
+  #starCanvas { position:fixed; inset:0; z-index:0; }
+
+  .overlay {
+    position:fixed; inset:0;
+    background: radial-gradient(ellipse at center, rgba(10,21,32,0.3) 0%, rgba(10,21,32,0.85) 100%);
+    z-index:1;
+  }
+
+  /* ── Bannière classification ── */
+  .classification-banner {
+    position:fixed; top:0; left:0; right:0; z-index:200;
+    display:flex; align-items:center; justify-content:center; gap:14px;
+    padding:7px 20px;
+    background:var(--rouge-cls);
+    border-bottom:1px solid var(--rouge-vif);
+  }
+  .cls-dot { width:5px; height:5px; background:var(--rouge-vif); border-radius:50%; box-shadow:0 0 6px var(--rouge-vif); flex-shrink:0; }
+  .cls-text { font-family:'Cinzel',serif; font-size:0.58rem; letter-spacing:0.45em; text-transform:uppercase; color:rgba(255,215,190,0.85); }
+
+  /* ── Navigation ── */
+  nav {
+    position:fixed; top:0; left:0; right:0; z-index:100;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 36px;
+    background:linear-gradient(180deg,rgba(10,21,32,0.97) 0%,transparent 100%);
+  }
+  .nav-left { display:flex; align-items:center; gap:16px; }
+  .nav-back { font-family:'Cinzel',serif; font-size:0.65rem; letter-spacing:0.3em; color:var(--or-pale); text-decoration:none; text-transform:uppercase; opacity:0.6; transition:opacity .2s; }
+  .nav-back:hover { opacity:1; }
+  .nav-sep { color:rgba(200,168,74,0.3); }
+  .nav-current { font-family:'Cinzel',serif; font-size:0.65rem; letter-spacing:0.3em; text-transform:uppercase; color:var(--blanc-parchemin); }
+  .nav-ref { font-family:'Cinzel',serif; font-size:0.58rem; letter-spacing:0.25em; color:rgba(200,168,74,0.4); }
+
+  /* ── Page & header ── */
+  .page { position:relative; z-index:10; min-height:100vh; display:flex; flex-direction:column; }
+
+  .page-header {
+    text-align:center; padding:88px 20px 28px;
+    animation:fadeDown 1s ease both;
+  }
+  @keyframes fadeDown { from{opacity:0;transform:translateY(-18px)} to{opacity:1;transform:translateY(0)} }
+
+  .ordre-seal {
+    display:inline-flex; flex-direction:column; align-items:center; gap:3px;
+    margin-bottom:22px; padding:10px 24px;
+    border:1px solid rgba(200,168,74,0.22); border-radius:3px;
+    background:rgba(200,168,74,0.04);
+  }
+  .seal-title { font-family:'Cinzel',serif; font-size:0.58rem; letter-spacing:0.55em; text-transform:uppercase; color:var(--or-principal); opacity:0.8; }
+  .seal-sub   { font-family:'EB Garamond',serif; font-size:0.75rem; letter-spacing:0.15em; color:rgba(228,223,200,0.45); font-style:italic; }
+
+  .page-header h1 {
+    font-family:'Cinzel Decorative',serif;
+    font-size:clamp(1.6rem,3.5vw,2.6rem);
+    color:var(--or-pale);
+    text-shadow:0 0 40px rgba(200,168,74,0.35),0 0 80px rgba(200,168,74,0.12);
+    letter-spacing:0.12em; margin-bottom:6px;
+  }
+  .sous-titre-doc { font-family:'EB Garamond',serif; font-size:0.95rem; letter-spacing:0.2em; color:rgba(228,223,200,0.5); font-style:italic; margin-bottom:14px; }
+
+  .doc-meta { display:flex; align-items:center; justify-content:center; gap:22px; margin:12px 0 0; flex-wrap:wrap; }
+  .meta-item { display:flex; align-items:center; gap:7px; }
+  .meta-label { font-family:'Cinzel',serif; font-size:0.55rem; letter-spacing:0.3em; text-transform:uppercase; color:var(--or-sombre); }
+  .meta-value { font-family:'EB Garamond',serif; font-size:0.78rem; color:rgba(228,223,200,0.55); }
+  .meta-sep   { color:rgba(200,168,74,0.2); }
+
+  .ornement { display:flex; align-items:center; gap:14px; margin:18px auto 0; width:min(460px,85vw); }
+  .ornement-line  { flex:1; height:1px; background:linear-gradient(90deg,transparent,var(--or-principal),transparent); opacity:0.4; }
+  .ornement-gem   { width:7px; height:7px; background:var(--or-principal); transform:rotate(45deg); box-shadow:0 0 10px var(--or-principal); flex-shrink:0; opacity:0.65; }
+  .ornement-gem-s { width:4px; height:4px; background:var(--or-principal); transform:rotate(45deg); opacity:0.3; flex-shrink:0; }
+
+  /* ── Layout principal ── */
+  .main-layout {
+    display:grid;
+    grid-template-columns:1fr 420px;
+    gap:0; flex:1;
+    padding:30px 36px 60px;
+    max-width:1440px; margin:0 auto; width:100%;
+    animation:fadeIn 1.2s .3s ease both;
+  }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+  @media (max-width:960px) { .main-layout{grid-template-columns:1fr} nav{padding:12px 18px} }
+
+  /* ── Conteneur parchemin ── */
+  .map-container { display:flex; flex-direction:column; align-items:stretch; }
+
+  .map-header-label {
+    font-family:'Cinzel',serif; font-size:0.58rem; letter-spacing:0.42em;
+    text-transform:uppercase; color:var(--or-principal); opacity:0.5;
+    margin-bottom:14px; text-align:center;
+  }
+
+  .parch-viewport {
+    position: relative;
+    width: 100%;
+  }
+
+  #parchCanvas {
+    display: block;
+    transform-origin: top left;
+    cursor: default;
+    filter:
+      drop-shadow(6px 12px 44px rgba(0,0,0,0.95))
+      drop-shadow(2px 4px 14px rgba(0,0,0,0.72));
+  }
+
+  /* Liste cliquable sous la carte */
+  .astres-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 18px;
+    justify-content: center;
+  }
+
+  .astre-btn {
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: rgba(228,223,200,0.5);
+    padding: 6px 14px;
+    border: 1px solid rgba(200,168,74,0.16);
+    border-radius: 2px;
+    background: rgba(200,168,74,0.04);
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s, background 0.2s;
+    user-select: none;
+  }
+  .astre-btn:hover, .astre-btn.active {
+    color: var(--or-pale);
+    border-color: rgba(200,168,74,0.5);
+    background: rgba(200,168,74,0.1);
+  }
+
+  /* ── Panneau notes ── */
+  .note-panel { padding:20px 20px 20px 28px; display:flex; flex-direction:column; justify-content:center; border-left:1px solid rgba(200,168,74,0.07); }
+
+  .note-welcome { display:flex; flex-direction:column; align-items:center; justify-content:center; flex:1; text-align:center; opacity:0.35; gap:16px; padding:40px 0; }
+  .note-welcome-icon { font-size:2rem; }
+  .note-welcome-text { font-family:'Cinzel',serif; font-size:0.65rem; letter-spacing:0.32em; text-transform:uppercase; color:var(--or-pale); line-height:2.2; }
+
+  .note-card { display:none; animation:noteAppear .5s cubic-bezier(.22,.61,.36,1) both; position:relative; }
+  .note-card.active { display:block; }
+  @keyframes noteAppear {
+    from { opacity:0; transform:translateY(14px) rotate(.5deg) scale(.97); }
+    to   { opacity:1; transform:translateY(0) rotate(var(--note-rot,-.4deg)) scale(1); }
+  }
+
+  .note-paper {
+    position:relative; background:var(--parchemin-base); color:var(--encre-sepia);
+    padding:30px 28px 28px; border-radius:2px;
+    transform:rotate(var(--note-rot,-.4deg));
+    box-shadow:4px 6px 28px rgba(0,0,0,.65),8px 12px 50px rgba(0,0,0,.35),1px 1px 0 rgba(255,255,255,.12) inset;
+    transition:transform .3s ease;
+  }
+  .note-paper::before {
+    content:''; position:absolute; inset:0;
+    background:repeating-linear-gradient(transparent 0px,transparent 27px,rgba(0,0,0,.04) 27px,rgba(0,0,0,.04) 28px);
+    border-radius:2px; pointer-events:none;
+  }
+  .note-paper::after {
+    content:''; position:absolute; bottom:0; right:0; width:36px; height:36px;
+    background:linear-gradient(225deg,var(--parchemin-tres) 50%,var(--parchemin-fonce) 50%);
+    clip-path:polygon(100% 0,100% 100%,0 100%); border-radius:0 0 2px 0;
+  }
+
+  .note-watermark {
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    font-family:'Cinzel',serif; font-size:5rem; color:rgba(0,0,0,.03);
+    pointer-events:none; user-select:none; letter-spacing:.1em;
+  }
+
+  .note-header { border-bottom:1px solid rgba(0,0,0,.12); padding-bottom:12px; margin-bottom:16px; position:relative; z-index:1; }
+  .note-ref     { font-family:'Cinzel',serif; font-size:.52rem; letter-spacing:.38em; text-transform:uppercase; color:rgba(90,30,10,.5); margin-bottom:10px; }
+  .note-to      { font-family:'Caveat',cursive; font-size:1.25rem; color:var(--encre-bleue); margin-bottom:4px; line-height:1.4; }
+  .note-from    { font-family:'Caveat',cursive; font-size:1.15rem; color:rgba(30,12,4,.6); margin-bottom:4px; }
+  .note-subject { font-family:'Caveat',cursive; font-size:1.2rem; color:var(--encre-sombre); font-weight:700; margin-top:6px; }
+
+  .note-body { font-family:'Caveat',cursive; font-size:1.3rem; line-height:1.78; color:var(--encre-sepia); position:relative; z-index:1; margin-bottom:16px; }
+  .note-body p { margin-bottom:12px; }
+  .note-body p:last-child { margin-bottom:0; }
+  .note-body .chiffre { color:var(--encre-rouge); font-weight:700; font-size:1.35rem; }
+
+  .note-alert { margin:14px 0; padding:10px 14px; border:1px solid rgba(90,20,20,.3); border-radius:2px; background:rgba(90,20,20,.05); font-family:'Caveat',cursive; font-size:1.22rem; color:var(--encre-rouge); line-height:1.65; position:relative; z-index:1; }
+  .note-alert::before { content:'⚠'; margin-right:8px; }
+
+  .note-data { margin:12px 0 12px 8px; font-family:'Caveat',cursive; font-size:1.25rem; color:var(--encre-sepia); line-height:1.9; list-style:none; position:relative; z-index:1; }
+  .note-data li::before { content:'—'; margin-right:8px; color:rgba(0,0,0,.3); }
+  .note-data .val { color:var(--encre-bleue); font-weight:600; }
+
+  .note-footer { margin-top:18px; padding-top:12px; border-top:1px solid rgba(0,0,0,.1); display:flex; justify-content:flex-end; align-items:flex-end; gap:16px; position:relative; z-index:1; }
+  .note-sig-block { text-align:right; }
+  .note-sig-name { font-family:'Caveat',cursive; font-size:1.6rem; font-weight:700; color:var(--encre-sombre); line-height:1.2; }
+  .note-sig-rank { font-family:'Caveat',cursive; font-size:1.05rem; color:rgba(30,12,4,.5); }
+  .note-seal { width:48px; height:48px; opacity:.75; flex-shrink:0; }
+
+  /* ── Section détails ── */
+  .mythologia-detail { margin-top:24px; padding:0 36px 60px; max-width:1440px; margin-left:auto; margin-right:auto; width:100%; position:relative; z-index:10; }
+
+  .detail-header { display:flex; align-items:center; gap:20px; margin-bottom:22px; }
+  .detail-header-line { flex:1; height:1px; background:linear-gradient(90deg,transparent,rgba(200,168,74,0.28),transparent); }
+  .detail-title { font-family:'Cinzel',serif; font-size:.62rem; letter-spacing:.48em; text-transform:uppercase; color:var(--or-principal); opacity:.72; text-align:center; white-space:nowrap; }
+
+  .detail-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:14px; }
+  .detail-card { background:rgba(11,19,32,.72); border:1px solid rgba(200,168,74,.1); border-radius:4px; padding:22px; backdrop-filter:blur(10px); transition:border-color .3s,transform .25s; position:relative; overflow:hidden; }
+  .detail-card:hover { border-color:rgba(200,168,74,.28); transform:translateY(-2px); }
+  .detail-card::before { content:''; position:absolute; top:0;left:0;right:0; height:1px; background:linear-gradient(90deg,transparent,rgba(200,168,74,.4),transparent); opacity:0; transition:opacity .3s; }
+  .detail-card:hover::before { opacity:1; }
+  .detail-card-ref { font-family:'Cinzel',serif; font-size:.47rem; letter-spacing:.35em; text-transform:uppercase; color:var(--or-sombre); margin-bottom:4px; opacity:.7; }
+  .detail-card-icon { font-size:1.3rem; margin-bottom:10px; }
+  .detail-card-title { font-family:'Cinzel',serif; font-size:.72rem; letter-spacing:.18em; text-transform:uppercase; color:var(--or-pale); margin-bottom:10px; opacity:.85; }
+  .detail-card-content { font-size:.86rem; line-height:1.82; color:rgba(228,223,200,.68); }
+  .detail-card-content strong { color:var(--blanc-parchemin); font-weight:500; }
+  .archiviste-note { margin-top:10px; padding:8px 10px; background:rgba(200,168,74,.05); border-left:1px solid rgba(200,168,74,.2); font-size:.78rem; color:rgba(200,168,74,.5); font-style:italic; line-height:1.65; }
+
+  /* ── Footer ── */
+  .doc-footer { position:relative; z-index:10; padding:28px 36px; border-top:1px solid rgba(200,168,74,.09); display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; max-width:1440px; margin:0 auto; width:100%; }
+  .footer-seal { display:flex; flex-direction:column; gap:4px; }
+  .footer-seal-title { font-family:'Cinzel',serif; font-size:.6rem; letter-spacing:.4em; text-transform:uppercase; color:var(--or-principal); opacity:.45; }
+  .footer-sig { font-family:'EB Garamond',serif; font-size:.85rem; color:rgba(228,223,200,.35); font-style:italic; }
+  .footer-stamp { font-family:'Cinzel',serif; font-size:.58rem; letter-spacing:.3em; text-transform:uppercase; color:rgba(122,28,28,.45); border:1px solid rgba(122,28,28,.28); padding:7px 16px; border-radius:2px; transform:rotate(-1.5deg); }
+</style>
+</head>
+<body>
+
+<canvas id="starCanvas"></canvas>
+<div class="overlay"></div>
+
+<nav>
+  <div class="nav-left">
+    <a class="nav-back" href="mythologia_accueil.html">← Archives</a>
+    <span class="nav-sep">✦</span>
+    <span class="nav-current">Archivum Cosmographique</span>
+  </div>
+  <div class="nav-ref">OM-ARCH-001 · Cycle 847 · An 1247 AM</div>
+</nav>
+
+<div class="page">
+
+  <div class="page-header">
+    <div class="ordre-seal">
+      <div class="seal-title">Ordre des Mages — Tour d'Opale</div>
+      <div class="seal-sub">Archivum Cosmographique — Document Officiel</div>
+    </div>
+    <h1>CODEX STELLAIRE</h1>
+    <p class="sous-titre-doc">Système d'Umbrath — Notes & Correspondances des Maîtres</p>
+    <div class="doc-meta">
+      <div class="meta-item"><span class="meta-label">Réf.</span><span class="meta-value">OM-ARCH-001</span></div>
+      <span class="meta-sep">·</span>
+      <div class="meta-item"><span class="meta-label">Compilé par</span><span class="meta-value">Aeldren Voss, Maître Observateur</span></div>
+      <span class="meta-sep">·</span>
+      <div class="meta-item"><span class="meta-label">An</span><span class="meta-value">1247 AM</span></div>
+    </div>
+    <div class="ornement">
+      <div class="ornement-line"></div>
+      <div class="ornement-gem-s"></div>
+      <div class="ornement-gem"></div>
+      <div class="ornement-gem-s"></div>
+      <div class="ornement-line"></div>
+    </div>
+  </div>
+
+  <div class="main-layout">
+
+    <!-- ═══ CARTE PARCHEMIN ═══ -->
+    <div class="map-container">
+      <div class="map-header-label">— Cartographie Observationnelle Aethérique — Tour d'Opale —</div>
+
+      <div class="parch-viewport" id="parchViewport">
+        <canvas id="parchCanvas"></canvas>
+      </div>
+
+      <!-- Liste cliquable des astres -->
+      <div class="astres-list">
+        <div class="astre-btn" data-id="umbrath">⬤ Umbrath</div>
+        <div class="astre-btn" data-id="aurys">☀ Aurys</div>
+        <div class="astre-btn" data-id="seraph">✦ Séraph</div>
+        <div class="astre-btn" data-id="mythologia">◎ Mythologia</div>
+        <div class="astre-btn" data-id="veran">☽ Véran</div>
+        <div class="astre-btn" data-id="vesh">○ Vesh</div>
+        <div class="astre-btn" data-id="garan">♄ Garan</div>
+      </div>
+    </div>
+
+    <!-- ═══ PANNEAU NOTES / LETTRES ═══ -->
+    <div class="note-panel">
+
+      <div class="note-welcome" id="infoWelcome">
+        <div class="note-welcome-icon">✉</div>
+        <div class="note-welcome-text">Sélectionnez un astre<br>pour lire la note<br>du Maître correspondant</div>
+      </div>
+
+      <!-- UMBRATH -->
+      <div class="note-card" id="card-umbrath" style="--note-rot:-0.8deg">
+        <div class="note-paper" style="background:linear-gradient(150deg,#ede0c0,#e4d4aa,#ede0c0);">
+          <div class="note-watermark">☉</div>
+          <div class="note-header">
+            <div class="note-ref">Rapport d'Observation N°001-A · Singularité Primordiale · An 1203 AM</div>
+            <div class="note-to">Rapport conclusif — Étude sur la nature du Flux d'Ombrath</div>
+            <div class="note-from">Rédigé par : Dren Vael, Maître des Singularités — Tour d'Opale, Niveau IV</div>
+            <div class="note-subject">Objet : Umbrath — Observations directes, cycles 1 à 12</div>
+          </div>
+          <div class="note-body">
+            <p>J'ai passé douze cycles d'observation à fixer ce que le ciel refuse d'éclairer. Umbrath se présente comme un <span class="chiffre">disque d'obscurité parfaite</span>, entouré d'un anneau de lumière déformée que j'ai d'abord pris pour un artefact de mes lentilles Ae. Ce n'en était pas un. La lumière d'Aurys se courbe autour de lui de façon mesurable.</p>
+            <p>En exposant un cristal d'Aetherium nu en direction d'Umbrath lors de la nuit du Grand Alignement, le cristal s'est mis à vibrer à une fréquence que je n'avais jamais enregistrée — une résonance profonde, presque inconfortable dans les os. J'ai compris ce soir-là que le Flux n'est pas produit par notre monde. Il <em>vient</em> de là.</p>
+            <div class="note-alert">Mon apprenti Orel a tenté d'ouvrir un canal de canalisation directe vers Umbrath sans Aetherium intermédiaire. Il a disparu. Pas de corps. Pas de trace d'Ae résiduel. Juste l'absence, et l'odeur brûlée d'un lien brisé.</div>
+            <p>Conclusion : Umbrath est la source unique et irremplaçable du Flux. L'Aetherium n'est que le filtre qui nous permet de le toucher sans mourir. Toute magie que vous pratiquez est un emprunt à cette obscurité.</p>
+          </div>
+          <div class="note-footer">
+            <svg class="note-seal" viewBox="0 0 60 60"><circle cx="30" cy="30" r="27" fill="none" stroke="rgba(122,28,28,0.45)" stroke-width="1.5"/><circle cx="30" cy="30" r="22" fill="rgba(122,28,28,0.08)" stroke="rgba(122,28,28,0.3)" stroke-width="0.8"/><text x="30" y="34" text-anchor="middle" font-family="Cinzel,serif" font-size="9" fill="rgba(122,28,28,0.5)" letter-spacing="1">ORDRE</text></svg>
+            <div class="note-sig-block">
+              <div class="note-sig-name">Dren Vael</div>
+              <div class="note-sig-rank">Maître des Singularités · An 1203 AM</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AURYS -->
+      <div class="note-card" id="card-aurys" style="--note-rot:0.5deg">
+        <div class="note-paper" style="background:linear-gradient(140deg,#f5ecd5,#f0e4c5,#f5ecd5);">
+          <div class="note-watermark">✦</div>
+          <div class="note-header">
+            <div class="note-ref">Rapport d'Observation N°001-B · Étoile Principale · An 1244 AM</div>
+            <div class="note-to">Rapport conclusif — Étude de l'influence d'Aurys sur le Flux</div>
+            <div class="note-from">Rédigé par : Ilvaen Sorath, Observatrice Principale — Tour d'Opale</div>
+            <div class="note-subject">Objet : Aurys — Cycle annuel et effets sur la résonance aethérique</div>
+          </div>
+          <div class="note-body">
+            <p>J'ai mesuré la puissance de sortie des cristaux d'Aetherium actifs à intervalles réguliers sur quarante ans. Le résultat est sans ambiguïté : <span class="chiffre">la puissance du Flux est maximale lorsqu'Aurys culmine au zénith</span>, et chute de façon mesurable pendant les longues nuits d'hiver. Ce n'est pas une coïncidence. Aurys module le Flux.</p>
+            <p>Observations complémentaires notables :</p>
+            <ul class="note-data">
+              <li>Midi solaire : <span class="val">+11 à +14% de puissance Ae brute mesurée</span></li>
+              <li>Solstice d'été : <span class="val">les cristaux Ae+feu atteignent leur rendement maximal</span></li>
+              <li>Nuit profonde d'hiver : <span class="val">certains apprentis perdent temporairement leur résonance</span></li>
+              <li>Lumière directe sur l'Ae nu : <span class="val">légère chauffe et vibration perceptible au toucher</span></li>
+            </ul>
+            <p>Aurys n'est pas une source de Flux. Elle en est un amplificateur. Je soupçonne que sa lumière active les liaisons Ae déjà formées. Ce mécanisme reste ouvert à investigation pour la génération suivante.</p>
+          </div>
+          <div class="note-footer">
+            <svg class="note-seal" viewBox="0 0 60 60"><circle cx="30" cy="30" r="27" fill="none" stroke="rgba(180,140,30,0.4)" stroke-width="1.5"/><circle cx="30" cy="30" r="22" fill="rgba(200,168,74,0.08)" stroke="rgba(180,140,30,0.25)" stroke-width="0.8"/><text x="30" y="34" text-anchor="middle" font-family="Cinzel,serif" font-size="9" fill="rgba(150,110,20,0.5)" letter-spacing="1">ORDRE</text></svg>
+            <div class="note-sig-block">
+              <div class="note-sig-name">Ilvaen Sorath</div>
+              <div class="note-sig-rank">Observatrice Principale · An 1244 AM</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SÉRAPH -->
+      <div class="note-card" id="card-seraph" style="--note-rot:-0.3deg">
+        <div class="note-paper" style="background:linear-gradient(160deg,#f4e8d8,#eddccc,#f4e8d8);">
+          <div class="note-watermark">✿</div>
+          <div class="note-header">
+            <div class="note-ref">Rapport d'Observation N°001-C · Étoile Secondaire · An 1231 AM</div>
+            <div class="note-to">Rapport conclusif — Nature et influence de Séraph</div>
+            <div class="note-from">Rédigé par : Lyrien Tau, Maître des Observations Célestes</div>
+            <div class="note-subject">Objet : Séraph — Lumière, résonance et effets rituels</div>
+          </div>
+          <div class="note-body">
+            <p>La première chose que j'ai vérifiée : la couleur. J'ai exposé un prisme de verre ordinaire à la lumière de Séraph à haute altitude — là où l'atmosphère est plus fine et la concentration d'Aetherium en suspension moindre. Le spectre révélé était <span class="chiffre">orangé-rouge, sans trace de rose</span>. La teinte rosée est donc entièrement produite par notre atmosphère chargée de vapeurs d'Ae.</p>
+            <p>La deuxième observation est plus troublante. J'ai comparé des sorts identiques exécutés sous la seule lumière d'Aurys, puis sous la seule lumière de Séraph. Les résultats divergent :</p>
+            <ul class="note-data">
+              <li>Ae+lumière sous Séraph : <span class="val">illusions plus stables, durée +30%</span></li>
+              <li>Ae+vie sous Séraph : <span class="val">effets régressifs, cicatrisation ralentie</span></li>
+              <li>Ae+mental sous Séraph : <span class="val">portée accrue, précision réduite</span></li>
+            </ul>
+            <p>Séraph émet une résonance propre, distincte de celle du Flux principal. Une teinte douce, presque féminine dans sa fréquence. Les rituels d'illusion et de voile qui l'invoquent délibérément ne sont pas de la superstition. Ils reposent sur quelque chose de réel que nous n'avons pas encore entièrement cerné.</p>
+          </div>
+          <div class="note-footer">
+            <svg class="note-seal" viewBox="0 0 60 60"><circle cx="30" cy="30" r="27" fill="none" stroke="rgba(180,120,140,0.4)" stroke-width="1.5"/><circle cx="30" cy="30" r="22" fill="rgba(244,160,192,0.07)" stroke="rgba(180,120,140,0.25)" stroke-width="0.8"/><text x="30" y="34" text-anchor="middle" font-family="Cinzel,serif" font-size="9" fill="rgba(150,80,100,0.5)" letter-spacing="1">ORDRE</text></svg>
+            <div class="note-sig-block">
+              <div class="note-sig-name">Lyrien Tau</div>
+              <div class="note-sig-rank">Maître des Obs. Célestes · An 1231 AM</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VESH -->
+      <div class="note-card" id="card-vesh" style="--note-rot:0.9deg">
+        <div class="note-paper" style="background:linear-gradient(130deg,#ede2ca,#e6d8b8,#ede2ca);">
+          <div class="note-watermark">—</div>
+          <div class="note-header">
+            <div class="note-ref">Rapport d'Observation N°001-D · Corps Interne · An 1238 AM</div>
+            <div class="note-to">Rapport conclusif — Sondage à longue portée de Vesh</div>
+            <div class="note-from">Rédigé par : Terian Malkhed, Classificateur de Rang II</div>
+            <div class="note-subject">Objet : Vesh — Absence de signature aethérique confirmée</div>
+          </div>
+          <div class="note-body">
+            <p>J'ai dirigé pendant trois nuits consécutives un cristal d'Aetherium taillé en pointe vers Vesh, en le maintenant en état de résonance passive — la méthode standard de détection à distance. Le résultat a été <span class="chiffre">un silence complet</span>. Pas la moindre réponse vibratoire. Pas de Flux résiduel. Pas de signature Ae d'aucune nature.</p>
+            <p>J'ai ensuite tenté une projection de scrutation à travers un miroir Ae poli. L'image obtenue : de la roche nue, des plaines calcinées, un horizon sans ombre ni mouvement. La chaleur d'Aurys y est si intense que la projection elle-même s'est instabilisée après quelques secondes.</p>
+            <div class="note-alert">Vesh est aethériquement morte. Tenter d'y ouvrir un lien de scrutation prolongé sans cristal thermique de protection risque d'endommager l'instrument et le praticien. Consigné pour avertissement.</div>
+            <p>Conclusion : aucun intérêt opérationnel. Corps classé Catégorie Nulle dans le registre aethérique de l'Ordre. Dossier clos.</p>
+          </div>
+          <div class="note-footer">
+            <svg class="note-seal" viewBox="0 0 60 60"><circle cx="30" cy="30" r="27" fill="none" stroke="rgba(180,140,30,0.35)" stroke-width="1.5"/><circle cx="30" cy="30" r="22" fill="rgba(200,168,74,0.06)" stroke="rgba(180,140,30,0.2)" stroke-width="0.8"/><text x="30" y="34" text-anchor="middle" font-family="Cinzel,serif" font-size="9" fill="rgba(150,110,20,0.45)" letter-spacing="1">ORDRE</text></svg>
+            <div class="note-sig-block">
+              <div class="note-sig-name">Terian Malkhed</div>
+              <div class="note-sig-rank">Classificateur Rang II · An 1238 AM</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MYTHOLOGIA -->
+      <div class="note-card" id="card-mythologia" style="--note-rot:-0.5deg">
+        <div class="note-paper" style="background:linear-gradient(155deg,#f0e6ce,#e8dabb,#f0e6ce);">
+          <div class="note-watermark">⊕</div>
+          <div class="note-header">
+            <div class="note-ref">Rapport d'Observation N°001-E · Monde Primaire · An 1247 AM</div>
+            <div class="note-to">Rapport conclusif — Caractérisation aethérique de Mythologia</div>
+            <div class="note-from">Rédigé par : Aeldren Voss, Maître Observateur — Tour d'Opale</div>
+            <div class="note-subject">Objet : Notre monde — Gravité, Flux saisonnier et géographie aethérique</div>
+          </div>
+          <div class="note-body">
+            <p>Mythologia se distingue de tout corps observé par sa <span class="chiffre">densité aethérique exceptionnelle</span>. Les veines d'Ae courent en profondeur comme des rivières sous la roche — je les ai cartographiées par résonance passive sur vingt ans. Elles ne sont pas uniformes : certaines zones pulsent, d'autres sont quasi-inertes.</p>
+            <p>L'effet de la gravité sur la magie est documenté mais sous-estimé par les nouveaux praticiens. Un sort d'élévation qui fonctionne sans effort chez les Aevhari coûte ici presque le double d'Ae brut. Le monde retient tout. Les sorts de masse, en revanche, gagnent en puissance — le Flux semble amplifié par la compression que la gravité exerce sur les cristaux actifs.</p>
+            <p>Observation saisonnière clé : pendant les <span class="chiffre">30 jours d'équinoxe</span>, la tension du Flux entre les veines profondes et la surface atteint son maximum mesurable. C'est la raison opérationnelle derrière le Protocole des Saisons. Ce n'est pas une convention administrative. C'est de la physique aethérique.</p>
+          </div>
+          <div class="note-footer">
+            <svg class="note-seal" viewBox="0 0 60 60"><circle cx="30" cy="30" r="27" fill="none" stroke="rgba(96,140,200,0.4)" stroke-width="1.5"/><circle cx="30" cy="30" r="22" fill="rgba(96,160,240,0.07)" stroke="rgba(96,140,200,0.25)" stroke-width="0.8"/><text x="30" y="34" text-anchor="middle" font-family="Cinzel,serif" font-size="9" fill="rgba(60,100,160,0.5)" letter-spacing="1">ORDRE</text></svg>
+            <div class="note-sig-block">
+              <div class="note-sig-name">Aeldren Voss</div>
+              <div class="note-sig-rank">Maître Observateur · An 1247 AM</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VÉRAN -->
+      <div class="note-card" id="card-veran" style="--note-rot:0.7deg">
+        <div class="note-paper" style="background:linear-gradient(145deg,#eee4d0,#e8dcca,#eee4d0);">
+          <div class="note-watermark">☽</div>
+          <div class="note-header">
+            <div class="note-ref">Rapport d'Observation N°001-F · Satellite · An 1041 AM — transcrit An 1044</div>
+            <div class="note-to">Rapport conclusif — Étude de l'influence de Véran sur le Flux</div>
+            <div class="note-from">Rédigé par : Orvaine Selth, Maîtresse des Marées Aethériques</div>
+            <div class="note-subject">Objet : Véran — Cycle de 21 jours et modulation gravitationnelle du Flux</div>
+          </div>
+          <div class="note-body">
+            <p>Méthode employée : j'ai mesuré la puissance de sortie de dix apprentis lors d'un sort standardisé, chaque soir, pendant quarante ans. Je n'ai pas cherché Véran au début. C'est lui qui s'est imposé aux données.</p>
+            <p>Toutes les <span class="chiffre">21 nuits</span>, sans exception, les valeurs culminaient. Puis descendaient. Puis remontaient. L'écart entre pic et creux atteignait <span class="chiffre">8% de la puissance brute</span> chez les praticiens confirmés, davantage chez les sensibles. Les cristaux d'Ae actifs présentaient une luminosité légèrement accrue lors du périgée — observable à l'œil nu dans l'obscurité complète.</p>
+            <ul class="note-data">
+              <li>Périgée de Véran : <span class="val">cristaux plus chauds, résonance plus rapide</span></li>
+              <li>Apogée de Véran : <span class="val">liaisons Ae légèrement instables, précision réduite</span></li>
+              <li>Nuit de plein Véran : <span class="val">certains Lutharin entrent en surrésonance spontanée</span></li>
+            </ul>
+            <p>Je ne prétends pas comprendre le mécanisme complet. Je consigne ce que j'ai vu. Quarante ans de données ne mentent pas, même quand le Conseil préfère ne pas les entendre.</p>
+          </div>
+          <div class="note-footer">
+            <svg class="note-seal" viewBox="0 0 60 60"><circle cx="30" cy="30" r="27" fill="none" stroke="rgba(160,180,200,0.4)" stroke-width="1.5"/><circle cx="30" cy="30" r="22" fill="rgba(160,184,208,0.07)" stroke="rgba(140,165,190,0.25)" stroke-width="0.8"/><text x="30" y="34" text-anchor="middle" font-family="Cinzel,serif" font-size="9" fill="rgba(100,130,160,0.5)" letter-spacing="1">ORDRE</text></svg>
+            <div class="note-sig-block">
+              <div class="note-sig-name">Orvaine Selth</div>
+              <div class="note-sig-rank">Maîtresse des Marées Ae. · An 1041 AM</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GARAN -->
+      <div class="note-card" id="card-garan" style="--note-rot:-0.6deg">
+        <div class="note-paper" style="background:linear-gradient(150deg,#ede0c0,#e8d8b0,#ede0c0);">
+          <div class="note-watermark">♄</div>
+          <div class="note-header">
+            <div class="note-ref">Rapport d'Observation N°001-G · Corps Externe · An 1182 AM</div>
+            <div class="note-to">Rapport conclusif — Étude du courant gravitationnel de Garan</div>
+            <div class="note-from">Rédigé par : Morthane El-Dresh, Archiviste des Corps Extérieurs</div>
+            <div class="note-subject">Objet : Garan — Influence sur les trajectoires des corps errants</div>
+          </div>
+          <div class="note-body">
+            <p>J'ai d'abord utilisé un cristal de scrutation de grand format pour observer Garan de près. Les anneaux sont réels — deux bandes concentriques de poussière et de roche, visibles dans la lumière réfléchie d'Aurys. La surface elle-même est enveloppée de bandes de nuages parallèles, stables, sans perturbation visible. Un monde paisible en apparence.</p>
+            <p>L'observation significative s'est produite lors de la Nuit des Pierres Filantes de l'An 1178. J'ai projeté une scrutation vers un <span class="chiffre">amas de débris orbitaux</span> en approche documentée depuis trois cycles. La projection a montré le amas dévier progressivement — non pas vers Mythologia, mais sur une trajectoire courbe passant largement à l'extérieur. Garan était dans l'axe.</p>
+            <ul class="note-data">
+              <li>Déviation observée : <span class="val">trajectoire modifiée sur 4 cycles sans aucune interaction magique</span></li>
+              <li>Fréquence : <span class="val">corrélation avec 94% des déflections archivées sur 7 siècles</span></li>
+              <li>Signature Ae de Garan : <span class="val">faible mais continue, type gravitationnel pur</span></li>
+            </ul>
+            <p>Garan n'a pas de magie. Il a quelque chose de plus ancien et de plus fiable : une masse suffisante pour que les lois du monde travaillent à notre place. Nous lui devons peut-être notre survie. Il ne le saura jamais.</p>
+          </div>
+          <div class="note-footer">
+            <svg class="note-seal" viewBox="0 0 60 60"><circle cx="30" cy="30" r="27" fill="none" stroke="rgba(200,170,60,0.4)" stroke-width="1.5"/><circle cx="30" cy="30" r="22" fill="rgba(224,192,96,0.07)" stroke="rgba(190,155,50,0.25)" stroke-width="0.8"/><text x="30" y="34" text-anchor="middle" font-family="Cinzel,serif" font-size="9" fill="rgba(160,120,20,0.5)" letter-spacing="1">ORDRE</text></svg>
+            <div class="note-sig-block">
+              <div class="note-sig-name">Morthane El-Dresh</div>
+              <div class="note-sig-rank">Archiviste des Corps Ext. · An 1182 AM</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- fin note-panel -->
+  </div><!-- fin main-layout -->
+
+  <!-- DONNÉES COMPLÉMENTAIRES -->
+  <div class="mythologia-detail">
+    <div class="detail-header">
+      <div class="detail-header-line"></div>
+      <div class="detail-title">Phénomènes Observables — Consignés par les Mages de Terrain</div>
+      <div class="detail-header-line"></div>
+    </div>
+    <div class="detail-grid">
+
+      <div class="detail-card">
+        <div class="detail-card-ref">OM-TERRAIN-001 · §1</div>
+        <div class="detail-card-icon">🌊</div>
+        <div class="detail-card-title">Le Flux selon les Saisons</div>
+        <div class="detail-card-content">Lors des <strong>longs étés</strong>, les cristaux d'Ae actifs restent chauds au toucher même sans utilisation — le Flux ambiante est suffisamment dense pour les maintenir en résonance passive. En <strong>hiver profond</strong>, certains praticiens de rang intermédiaire perdent temporairement leur sensibilité : ils décrivent un "silence intérieur", comme si la connexion dormait. Les sorts de feu et de terre restent fonctionnels. Les sorts de vie et d'illusion, eux, exigent un effort nettement supérieur.</div>
+        <div class="archiviste-note">Observé et consigné par 14 Sites actifs sur 3 continents — corrélation confirmée à 96%. Ilvaen Sorath, An 1244.</div>
+      </div>
+
+      <div class="detail-card">
+        <div class="detail-card-ref">OM-TERRAIN-001 · §2</div>
+        <div class="detail-card-icon">❄️</div>
+        <div class="detail-card-title">La Ceinture de Silence</div>
+        <div class="detail-card-content">La <strong>Ceinture Glaciaire équatoriale</strong> est la seule zone du monde où les cristaux d'Ae perdent leur résonance de façon totale et reproductible. Les mages qui la traversent décrivent une sensation de <strong>vide intérieur progressif</strong> — le lien au Flux s'amenuise sur plusieurs jours de marche, puis se rétablit en s'éloignant. Les cristaux bruts n'y vibrent plus. Une lame forgée en Ae+fer reste fonctionnelle, mais sans recharge possible sur place. Le mécanisme reste non élucidé.</div>
+        <div class="archiviste-note">Expériences conduites par 3 mages volontaires avec retour. Le quatrième a refusé de repartir. Aeldren Voss, An 1241.</div>
+      </div>
+
+      <div class="detail-card">
+        <div class="detail-card-ref">OM-TERRAIN-001 · §3</div>
+        <div class="detail-card-icon">⚖️</div>
+        <div class="detail-card-title">Le Poids sur la Magie</div>
+        <div class="detail-card-content">La <strong>gravité du monde agit directement sur le coût aethérique</strong> des sorts de déplacement et d'élévation. Un sort d'apesanteur qui coûte une charge standard d'Ae en altitude basse en consomme <strong>presque le double</strong> au niveau du sol dans les zones denses. Inversement, les sorts de <strong>compression et d'impact</strong> (Ae+fer, Ae+terre) bénéficient d'un bonus mesurable — la gravité semble amplifier la composante cinétique. Les praticiens Aevhari compensent cette surcharge par leur affinité naturelle Ae+vent.</div>
+        <div class="archiviste-note">Mesuré par comparaison standardisée à 5 altitudes différentes. Terian Malkhed, An 1235.</div>
+      </div>
+
+      <div class="detail-card">
+        <div class="detail-card-ref">OM-TERRAIN-001 · §4</div>
+        <div class="detail-card-icon">🔮</div>
+        <div class="detail-card-title">Les Veines d'Aetherium</div>
+        <div class="detail-card-content">Les <strong>gisements d'Aetherium en profondeur</strong> sont détectables à travers la roche par les praticiens sensibles : ils décrivent une <strong>chaleur sourde montant du sol</strong>, parfois accompagnée d'un léger vertige. Les cristaux d'Ae tenus en main s'orientent vers les poches profondes comme une boussole vers le nord. La nuit, au-dessus des gisements majeurs, on observe une <strong>légère phosphorescence violacée</strong> du sol par temps humide — invisible en lumière directe, nette dans l'obscurité complète. Les zones à forte concentration attirent spontanément les créatures sensibles au Flux.</div>
+        <div class="archiviste-note">Phénomène de phosphorescence documenté indépendamment par 7 praticiens de terrain. Dren Vael, An 1198.</div>
+      </div>
+
+      <div class="detail-card">
+        <div class="detail-card-ref">OM-TERRAIN-001 · §5</div>
+        <div class="detail-card-icon">🌙</div>
+        <div class="detail-card-title">La Marée de Véran</div>
+        <div class="detail-card-content">Lors du <strong>périgée de Véran</strong>, les cristaux d'Ae actifs brillent légèrement plus fort dans l'obscurité — perceptible à l'œil nu après acclimatation. Les praticiens Lutharin décrivent une <strong>surrésonance spontanée incontrôlable</strong> lors des nuits de plein Véran : certains déclenchent des effets non intentionnels dans leur sommeil. Les praticiens standard ressentent une <strong>facilité accrue</strong> à établir les premières liaisons Ae — les sorts habituellement difficiles à initier s'amorcent plus rapidement. L'effet dure environ 3 jours de part et d'autre du pic.</div>
+        <div class="archiviste-note">Quarante ans de données compilées. Corrélation cycle-puissance établie à 97,4%. Orvaine Selth, An 1041.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="doc-footer">
+    <div class="footer-seal">
+      <div class="footer-seal-title">Ordre des Mages — Tour d'Opale</div>
+      <div class="footer-sig">Aeldren Voss, Maître Observateur — An 1247 AM, Cycle Véran 847</div>
+    </div>
+    <div class="footer-stamp">Validé par le Conseil des Sept</div>
+  </div>
+
+</div><!-- fin page -->
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// ÉTOILES EN ARRIÈRE-PLAN
+// ═══════════════════════════════════════════════════════════
+const starCanvas = document.getElementById('starCanvas');
+const sCtx = starCanvas.getContext('2d');
+
+function resizeStars() { starCanvas.width = window.innerWidth; starCanvas.height = window.innerHeight; }
+resizeStars();
+window.addEventListener('resize', resizeStars);
+
+const stars = Array.from({length:240}, () => ({
+  x:Math.random(), y:Math.random(),
+  r:Math.random()*1.4+0.2,
+  a:Math.random()*0.7+0.1,
+  spd:Math.random()*0.003+0.001,
+  ph:Math.random()*Math.PI*2
+}));
+
+setInterval(() => {
+  sCtx.clearRect(0,0,starCanvas.width,starCanvas.height);
+  const now = Date.now()*0.001;
+  stars.forEach(s => {
+    const alpha = s.a*(0.45+0.55*Math.sin(now*s.spd*10+s.ph));
+    sCtx.beginPath();
+    sCtx.arc(s.x*starCanvas.width, s.y*starCanvas.height, s.r, 0, Math.PI*2);
+    sCtx.fillStyle = `rgba(200,210,240,${alpha})`;
+    sCtx.fill();
+  });
+}, 50);
+
+// ═══════════════════════════════════════════════════════════
+// SÉLECTION D'UN ASTRE → AFFICHE LA NOTE
+// ═══════════════════════════════════════════════════════════
+function selectBody(id) {
+  document.getElementById('infoWelcome').style.display = 'none';
+  document.querySelectorAll('.note-card').forEach(c => c.classList.remove('active'));
+  const card = document.getElementById('card-' + id);
+  if (card) card.classList.add('active');
+  // Sync boutons liste
+  document.querySelectorAll('.astre-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.id === id);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// PARCHEMIN — CONFIGURATION
+// ═══════════════════════════════════════════════════════════
+const PW = 1280, PH = 860;
+
+const K = {
+  dark:'#1a0c04', med:'#3d2008', sepia:'#5c3010',
+  light:'#8a5820', gold:'#7a5800', red:'#7a1212',
+  blue:'#18284a', parch:'#f0dfa8', parch2:'#e0cc90',
+};
+
+const CX = 595, CY = 440; // centre orbital Aurys
+const UX = 185, UY = 300; // Umbrath fixe — plus haut pour marquer la distance
+
+const BODIES = {
+  aurys:      {r:20, orbitR:0,   spd:0.00025, a0:0,   type:'star1'},
+  seraph:     {r:12, orbitR:172, spd:0.0007,  a0:1.2, type:'star2'},
+  vesh:       {r: 5, orbitR: 76, spd:0.0026,  a0:0.5, type:'rocky'},
+  mythologia: {r:10, orbitR:125, spd:0.00155, a0:2.5, type:'world'},
+  veran:      {r: 3, orbitR: 30, spd:0.013,   a0:0.8, type:'moon' },
+  garan:      {r:15, orbitR:212, spd:0.00075, a0:4.0, type:'giant'},
+};
+
+const LABELS = {
+  aurys:      ['Aurys',      'G1V · 1,15 M☉'],
+  seraph:     ['Séraph',     'K5V · 0,67 M☉'],
+  vesh:       ['Vesh',       '0,5 UA'],
+  mythologia: ['Mythologia', '10 M⊕ · 1,9 g'],
+  veran:      ['Véran',      '21 jours'],
+  garan:      ['Garan',      '1,8 MJ · 3 UA'],
+};
+
+const HIT = {umbrath:26,aurys:28,seraph:22,vesh:18,mythologia:22,veran:16,garan:24};
+
+// ═══════════════════════════════════════════════════════════
+// CANVAS PARCHEMIN
+// ═══════════════════════════════════════════════════════════
+const viewport = document.getElementById('parchViewport');
+const pCvs = document.getElementById('parchCanvas');
+pCvs.width = PW; pCvs.height = PH;
+const pCtx = pCvs.getContext('2d');
+
+// Offscreen statique
+const ofc = document.createElement('canvas');
+ofc.width = PW; ofc.height = PH;
+const off = ofc.getContext('2d');
+
+// ═══════════════════════════════════════════════════════════
+// UTILITAIRES DESSIN
+// ═══════════════════════════════════════════════════════════
+function hatch(c, x, y, r, deg, spacing, color, alpha) {
+  const rad = deg * Math.PI / 180;
+  c.save();
+  c.beginPath(); c.arc(x, y, r-0.5, 0, Math.PI*2); c.clip();
+  c.strokeStyle = color; c.lineWidth = 0.5; c.globalAlpha = alpha;
+  const L = r*3;
+  for (let d=-L; d<L; d+=spacing) {
+    c.beginPath();
+    c.moveTo(x-L*Math.cos(rad)+d*Math.sin(rad), y-L*Math.sin(rad)-d*Math.cos(rad));
+    c.lineTo(x+L*Math.cos(rad)+d*Math.sin(rad), y+L*Math.sin(rad)-d*Math.cos(rad));
+    c.stroke();
+  }
+  c.restore();
+}
+
+function cav(c, text, x, y, size, color, alpha, weight) {
+  c.save();
+  c.font = `${weight||'400'} ${size}px 'Caveat',cursive`;
+  c.fillStyle = color; c.globalAlpha = alpha??1;
+  c.textAlign='center'; c.textBaseline='middle';
+  c.fillText(text, x, y);
+  c.restore();
+}
+
+function cin(c, text, x, y, size, color, alpha, style) {
+  c.save();
+  c.font = `${style||''} ${size}px 'Cinzel',serif`.trim();
+  c.fillStyle = color; c.globalAlpha = alpha??1;
+  c.textAlign='center'; c.textBaseline='middle';
+  c.fillText(text, x, y);
+  c.restore();
+}
+
+// ═══════════════════════════════════════════════════════════
+// COUCHE STATIQUE
+// ═══════════════════════════════════════════════════════════
+function buildStatic() {
+  drawParchment();
+  drawFolds();
+  drawBorder();
+  drawTitle();
+  drawUmbrath();
+  drawGravLine();
+  drawCompassRose();
+  drawLegend();
+  drawAnnotation();
+}
+
+function drawParchment() {
+  const c = off;
+  const bg = c.createLinearGradient(0,0,PW,PH);
+  bg.addColorStop(0,'#f5e5b2'); bg.addColorStop(.5,'#f0dcaa'); bg.addColorStop(1,'#e2cc90');
+  c.fillStyle=bg; c.fillRect(0,0,PW,PH);
+
+  const cg=c.createRadialGradient(CX,CY,0,CX,CY,600);
+  cg.addColorStop(0,'rgba(255,252,225,0.22)'); cg.addColorStop(1,'rgba(0,0,0,0)');
+  c.fillStyle=cg; c.fillRect(0,0,PW,PH);
+
+  [[100,90,110,.10],[1150,740,120,.08],[55,700,70,.12],[1190,110,90,.09],
+   [640,780,80,.07],[170,810,55,.11],[1060,430,95,.08],[380,25,75,.08],
+   [830,55,65,.06],[510,830,50,.09]].forEach(([sx,sy,sr,sa])=>{
+    const g=c.createRadialGradient(sx,sy,0,sx,sy,sr);
+    g.addColorStop(0,`rgba(100,50,5,${sa})`); g.addColorStop(1,'rgba(100,50,5,0)');
+    c.fillStyle=g; c.fillRect(0,0,PW,PH);
+  });
+
+  const vg=c.createRadialGradient(PW/2,PH/2,200,PW/2,PH/2,950);
+  vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(35,12,0,0.52)');
+  c.fillStyle=vg; c.fillRect(0,0,PW,PH);
+}
+
+function drawFolds() {
+  const c = off;
+  let fl=c.createLinearGradient(PW/2-5,0,PW/2+5,0);
+  fl.addColorStop(0,'transparent'); fl.addColorStop(.4,'rgba(55,20,0,0.14)');
+  fl.addColorStop(.6,'rgba(55,20,0,0.14)'); fl.addColorStop(1,'transparent');
+  c.fillStyle=fl; c.fillRect(PW/2-5,0,10,PH);
+
+  fl=c.createLinearGradient(0,PH/2-4,0,PH/2+4);
+  fl.addColorStop(0,'transparent'); fl.addColorStop(.5,'rgba(55,20,0,0.11)'); fl.addColorStop(1,'transparent');
+  c.fillStyle=fl; c.fillRect(0,PH/2-4,PW,8);
+}
+
+function drawBorder() {
+  const c=off, M=20;
+  c.strokeStyle=K.dark; c.lineWidth=2; c.strokeRect(M,M,PW-M*2,PH-M*2);
+  c.strokeStyle=K.med;  c.lineWidth=0.7; c.strokeRect(M+9,M+9,PW-M*2-18,PH-M*2-18);
+
+  const corners=[[M,M],[PW-M,M],[PW-M,PH-M],[M,PH-M]];
+  const dirs=[[1,1],[-1,1],[-1,-1],[1,-1]];
+  for(let i=0;i<4;i++){
+    const [cx,cy]=corners[i], [fx,fy]=dirs[i];
+    c.save(); c.translate(cx,cy);
+    c.strokeStyle=K.dark; c.lineWidth=1.8;
+    c.beginPath(); c.moveTo(fx*8,0); c.lineTo(fx*32,0); c.moveTo(0,fy*8); c.lineTo(0,fy*32); c.stroke();
+    c.beginPath(); c.moveTo(fx*4.5,0); c.lineTo(fx*9,fy*4.5); c.lineTo(fx*4.5,fy*9); c.lineTo(0,fy*4.5); c.closePath();
+    c.fillStyle=K.dark; c.fill();
+    c.restore();
+  }
+
+  c.save(); c.font="italic 8.5px 'Cinzel',serif"; c.fillStyle=K.sepia; c.globalAlpha=0.35;
+  c.textBaseline='middle'; c.textAlign='center';
+  c.fillText('✦  PER ASPERA AD ASTRA  ✦  OMNIA STELLAE MOVENTUR  ✦  SUB UMBRA LUMEN MANET  ✦  FIAT LUX  ✦',PW/2,M+4.5);
+  c.fillText('✦  EX NIHILO NIHIL FIT  ✦  CAELUM NON ANIMUM MUTANT  ✦  IN UMBRA VERITAS  ✦  ORDO MAGORUM  ✦',PW/2,PH-M-4.5);
+  c.save(); c.translate(M+4.5,PH/2); c.rotate(-Math.PI/2);
+  c.fillText('✦  TURRIS OPALA · AN MCCXLVII · CYCLE VERAN DCCCXLVII  ✦',0,0); c.restore();
+  c.save(); c.translate(PW-M-4.5,PH/2); c.rotate(Math.PI/2);
+  c.fillText('✦  ARCHIVUM COSMOGRAPHICUM · ORDO MAGORUM · OM-ARCH-001  ✦',0,0); c.restore();
+  c.restore();
+}
+
+function drawTitle() {
+  const c=off, tx=PW/2, ty=68, tw=520, th=68;
+  c.strokeStyle=K.dark; c.lineWidth=1.8; c.strokeRect(tx-tw/2,ty-th/2-2,tw,th+4);
+  c.strokeStyle=K.med;  c.lineWidth=0.7; c.strokeRect(tx-tw/2+6,ty-th/2+5,tw-12,th-6);
+  for(const s of[-1,1]){
+    const bx=tx+s*(tw/2); c.strokeStyle=K.dark; c.lineWidth=1.5;
+    c.beginPath(); c.moveTo(bx,ty-10); c.bezierCurveTo(bx+s*18,ty-10,bx+s*18,ty+10,bx,ty+10); c.stroke();
+  }
+  cin(c,"CARTE DU SYSTÈME D'UMBRATH",tx,ty-11,21,K.dark,1,'600');
+  cin(c,"Établie par l'Ordre des Mages · Tour d'Opale · An 1247 AM",tx,ty+14,11.5,K.sepia,0.7,'italic');
+}
+
+function drawUmbrath() {
+  const c=off, x=UX, y=UY, r=18;
+  for(let i=6;i>=1;i--){
+    c.save(); c.strokeStyle=K.dark; c.lineWidth=0.8; c.globalAlpha=0.05+i*.055;
+    c.beginPath(); c.ellipse(x,y,r+i*6,(r+i*6)*.22,.15,0,Math.PI*2); c.stroke(); c.restore();
+  }
+  c.save(); c.strokeStyle=K.dark; c.lineWidth=0.55; c.globalAlpha=0.18;
+  for(let i=0;i<8;i++){
+    const a=i/8*Math.PI*2;
+    c.beginPath(); c.moveTo(x+Math.cos(a)*(r+2),y+Math.sin(a)*(r+2)); c.lineTo(x+Math.cos(a)*(r+32),y+Math.sin(a)*(r+32)); c.stroke();
+  }
+  c.restore();
+  c.beginPath(); c.arc(x,y,r,0,Math.PI*2); c.fillStyle=K.dark; c.fill();
+  c.strokeStyle=K.dark; c.lineWidth=1.2; c.stroke();
+  cav(c,'Umbrath',x,y+r+16,17,K.dark,1,'700');
+  cav(c,'Singularité · Source du Flux',x,y+r+33,13,K.red,.75);
+}
+
+function drawGravLine() {
+  const c=off;
+  const gr=c.createLinearGradient(UX+22,UY,CX-14,CY);
+  gr.addColorStop(0,'rgba(40,15,0,0.32)'); gr.addColorStop(.6,'rgba(40,15,0,0.1)'); gr.addColorStop(1,'rgba(40,15,0,0.03)');
+  c.save(); c.strokeStyle=gr; c.lineWidth=0.9; c.setLineDash([5,11]);
+  c.beginPath(); c.moveTo(UX+22,UY); c.lineTo(CX-14,CY); c.stroke(); c.setLineDash([]); c.restore();
+  c.save(); c.font="italic 11px 'Caveat',cursive"; c.fillStyle=K.sepia; c.globalAlpha=0.42;
+  c.textAlign='center'; c.textBaseline='bottom';
+  c.fillText('attraction gravitationnelle (~480 UA)',(UX+CX)/2,UY-8); c.restore();
+}
+
+function drawCompassRose() {
+  const c=off, cx=1108, cy=735, r=48;
+  c.save(); c.translate(cx,cy);
+  c.strokeStyle=K.dark; c.lineWidth=1;
+  c.beginPath(); c.arc(0,0,r,0,Math.PI*2); c.stroke();
+  c.lineWidth=0.5; c.beginPath(); c.arc(0,0,r*.58,0,Math.PI*2); c.stroke();
+  for(let i=0;i<8;i++){
+    const a=i/8*Math.PI*2-Math.PI/2, cardinal=i%2===0;
+    const len=cardinal?r*.93:r*.63, w=cardinal?r*.11:r*.07;
+    c.save(); c.rotate(a);
+    c.beginPath(); c.moveTo(0,-len); c.lineTo(-w,-r*.18); c.lineTo(0,0); c.lineTo(w,-r*.18); c.closePath();
+    c.fillStyle=i===0?K.dark:(cardinal?K.med:K.light); c.fill();
+    c.restore();
+  }
+  c.beginPath(); c.arc(0,0,r*.11,0,Math.PI*2); c.fillStyle=K.parch2; c.fill();
+  c.strokeStyle=K.dark; c.lineWidth=1; c.stroke();
+  c.font="bold 12px 'Cinzel',serif"; c.textAlign='center'; c.textBaseline='middle';
+  [['N',0,-(r+13)],['S',0,r+13],['E',r+13,0],['O',-(r+13),0]].forEach(([l,lx,ly])=>{c.fillStyle=K.dark;c.fillText(l,lx,ly);});
+  c.font="italic 8px 'Cinzel',serif"; c.fillStyle=K.sepia; c.globalAlpha=0.5;
+  c.fillText('ROSA VENTORUM',0,r+28);
+  c.restore();
+}
+
+function drawLegend() {
+  const c=off, lx=55, ly=620, lw=168, lh=154;
+  c.strokeStyle=K.med; c.lineWidth=0.9; c.strokeRect(lx-8,ly-18,lw,lh);
+  c.strokeStyle=K.light; c.lineWidth=0.4; c.strokeRect(lx-3,ly-13,lw-10,lh-10);
+  cin(c,'LÉGENDE',lx+lw/2-8,ly,11.5,K.dark,1,'600');
+  [['●',K.dark,'Singularité'],['☀',K.gold,'Étoile principale'],['✦',K.sepia,'Étoile secondaire'],
+   ['◎',K.blue,'Monde habité'],['○',K.med,'Planète'],['·',K.med,'Satellite']
+  ].forEach(([sym,col,lab],i)=>{
+    const iy=ly+21+i*22;
+    c.save(); c.font="15px 'Caveat',cursive"; c.fillStyle=col; c.textAlign='center'; c.textBaseline='middle'; c.fillText(sym,lx+8,iy);
+    c.font="14px 'Caveat',cursive"; c.fillStyle=K.med; c.textAlign='left'; c.fillText(lab,lx+22,iy); c.restore();
+  });
+}
+
+function drawAnnotation() {
+  const c=off, ax=680, ay=700;
+  c.save(); c.strokeStyle=K.light; c.lineWidth=0.8; c.globalAlpha=0.45; c.strokeRect(ax-8,ay-16,320,110); c.restore();
+  c.save(); c.font="italic 600 12.5px 'Cinzel',serif"; c.fillStyle=K.sepia; c.globalAlpha=0.62; c.textAlign='left'; c.textBaseline='middle';
+  c.fillText('Nota Bene :',ax,ay); c.restore();
+  ["Le Flux d'Ombrath irrigue les filons d'Aetherium","dans la croûte de Mythologia par rayonnement X/γ.",
+   "Sans la singularité Umbrath — pas de Flux.","Sans le Flux — pas de magie.",
+   "                              — A. Voss, An 1247"
+  ].forEach((line,i)=>{
+    c.save(); c.font=i===4?"italic 13px 'Caveat',cursive":"14px 'Caveat',cursive";
+    c.fillStyle=K.med; c.globalAlpha=0.72; c.textAlign='left'; c.textBaseline='middle';
+    c.fillText(line,ax,ay+19+i*18); c.restore();
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// CORPS CÉLESTES ANIMÉS
+// ═══════════════════════════════════════════════════════════
+const pos = {};
+
+function computePos(t) {
+  const aa=BODIES.aurys.a0+t*BODIES.aurys.spd;
+  pos.aurys={x:CX+Math.cos(aa)*14, y:CY+Math.sin(aa)*8};
+  for(const id of ['seraph','vesh','mythologia','garan']){
+    const b=BODIES[id], a=b.a0+t*b.spd;
+    pos[id]={x:pos.aurys.x+Math.cos(a)*b.orbitR, y:pos.aurys.y+Math.sin(a)*(b.orbitR*.38)};
+  }
+  const va=BODIES.veran.a0+t*BODIES.veran.spd;
+  pos.veran={x:pos.mythologia.x+Math.cos(va)*BODIES.veran.orbitR, y:pos.mythologia.y+Math.sin(va)*(BODIES.veran.orbitR*.5)};
+}
+
+function drawOrbits() {
+  const c=pCtx, au=pos.aurys, my=pos.mythologia;
+  c.save(); c.strokeStyle=K.med; c.globalAlpha=.20;
+  function ell(cx,cy,rx,ry,dash){
+    c.setLineDash(dash||[3.5,8]); c.lineWidth=0.75;
+    c.beginPath(); c.ellipse(cx,cy,rx,ry,0,0,Math.PI*2); c.stroke();
+  }
+  ell(au.x,au.y,BODIES.seraph.orbitR,BODIES.seraph.orbitR*.38,[4,9]);
+  ell(au.x,au.y,BODIES.vesh.orbitR,BODIES.vesh.orbitR*.38);
+  ell(au.x,au.y,BODIES.mythologia.orbitR,BODIES.mythologia.orbitR*.38);
+  ell(au.x,au.y,BODIES.garan.orbitR,BODIES.garan.orbitR*.38,[5,12]);
+  c.globalAlpha=.13; c.setLineDash([2,5]);
+  ell(my.x,my.y,BODIES.veran.orbitR,BODIES.veran.orbitR*.5);
+  c.setLineDash([]); c.restore();
+}
+
+function drawAurys(x,y,t){
+  const r=BODIES.aurys.r, p=1+.02*Math.sin(t*.02);
+  hatch(pCtx,x,y,r*p,45,4,K.gold,.38);
+  const c=pCtx; c.save();
+  c.beginPath(); c.arc(x,y,r*p,0,Math.PI*2); c.fillStyle=K.gold; c.globalAlpha=.88; c.fill();
+  c.strokeStyle=K.dark; c.lineWidth=1.3; c.globalAlpha=1; c.stroke();
+  c.beginPath(); c.arc(x,y,r*p+4,0,Math.PI*2); c.strokeStyle=K.gold; c.lineWidth=0.45; c.globalAlpha=.38; c.stroke();
+  c.strokeStyle=K.gold; c.globalAlpha=.55;
+  for(let i=0;i<12;i++){
+    const a=i/12*Math.PI*2+t*.001, len=(i%3===0)?18:(i%3===1)?11:6;
+    c.lineWidth=(i%3===0)?.9:.6;
+    c.beginPath(); c.moveTo(x+Math.cos(a)*(r*p+5),y+Math.sin(a)*(r*p+5)); c.lineTo(x+Math.cos(a)*(r*p+5+len),y+Math.sin(a)*(r*p+5+len)); c.stroke();
+  }
+  c.restore();
+}
+
+function drawSeraph(x,y){
+  const r=BODIES.seraph.r;
+  hatch(pCtx,x,y,r,30,4.5,K.sepia,.28);
+  const c=pCtx; c.save();
+  c.beginPath(); c.arc(x,y,r,0,Math.PI*2); c.fillStyle=K.sepia; c.globalAlpha=.78; c.fill();
+  c.strokeStyle=K.dark; c.lineWidth=1; c.globalAlpha=1; c.stroke();
+  c.strokeStyle=K.sepia; c.globalAlpha=.42; c.lineWidth=0.65;
+  for(let i=0;i<8;i++){const a=i/8*Math.PI*2,len=(i%2===0)?11:6; c.beginPath(); c.moveTo(x+Math.cos(a)*(r+3),y+Math.sin(a)*(r+3)); c.lineTo(x+Math.cos(a)*(r+3+len),y+Math.sin(a)*(r+3+len)); c.stroke();}
+  c.restore();
+}
+
+function drawVesh(x,y){
+  const r=BODIES.vesh.r;
+  hatch(pCtx,x,y,r,60,3,K.med,.24);
+  const c=pCtx; c.save();
+  c.beginPath(); c.arc(x,y,r,0,Math.PI*2); c.fillStyle=K.med; c.globalAlpha=.88; c.fill();
+  c.strokeStyle=K.dark; c.lineWidth=0.9; c.globalAlpha=1; c.stroke(); c.restore();
+}
+
+function drawMythologia(x,y){
+  const r=BODIES.mythologia.r;
+  hatch(pCtx,x,y,r,0,4,K.blue,.22); hatch(pCtx,x,y,r,90,6,K.dark,.08);
+  const c=pCtx; c.save();
+  c.beginPath(); c.arc(x,y,r,0,Math.PI*2); c.fillStyle=K.blue; c.globalAlpha=.18; c.fill();
+  c.strokeStyle=K.dark; c.lineWidth=1.2; c.globalAlpha=1; c.stroke();
+  c.beginPath(); c.arc(x,y,r+4,0,Math.PI*2); c.strokeStyle=K.blue; c.lineWidth=0.5; c.globalAlpha=.28; c.stroke(); c.restore();
+}
+
+function drawVeran(x,y){
+  const r=BODIES.veran.r, c=pCtx; c.save();
+  c.beginPath(); c.arc(x,y,r,0,Math.PI*2); c.fillStyle=K.parch2; c.fill();
+  c.strokeStyle=K.dark; c.lineWidth=0.8; c.stroke();
+  c.beginPath(); c.arc(x+r*.38,y,r*.82,0,Math.PI*2); c.fillStyle=K.light; c.globalAlpha=.5; c.fill(); c.restore();
+}
+
+function drawGaran(x,y){
+  const r=BODIES.garan.r;
+  hatch(pCtx,x,y,r,0,5,K.med,.28);
+  const c=pCtx; c.save();
+  c.strokeStyle=K.gold; c.lineWidth=2; c.globalAlpha=.28; c.beginPath(); c.ellipse(x,y,r*2.1,r*.38,.2,0,Math.PI*2); c.stroke();
+  c.strokeStyle=K.med;  c.lineWidth=0.7; c.globalAlpha=.14; c.beginPath(); c.ellipse(x,y,r*1.65,r*.28,.2,0,Math.PI*2); c.stroke();
+  c.beginPath(); c.arc(x,y,r,0,Math.PI*2); c.fillStyle=K.gold; c.globalAlpha=.45; c.fill();
+  c.strokeStyle=K.dark; c.lineWidth=1.2; c.globalAlpha=1; c.stroke(); c.restore();
+}
+
+function lbl(x,y,r,name,sub,col){
+  cav(pCtx,name,x,y+r+15,16,col||K.dark,1,'700');
+  if(sub) cav(pCtx,sub,x,y+r+31,12.5,K.sepia,.62);
+}
+
+// ═══════════════════════════════════════════════════════════
+// BOUCLE ANIMATION
+// ═══════════════════════════════════════════════════════════
+let t=0;
+function frame(){
+  t++;
+  pCtx.drawImage(ofc,0,0);
+  computePos(t);
+  drawOrbits();
+  drawGaran(pos.garan.x,pos.garan.y);      lbl(pos.garan.x,pos.garan.y,BODIES.garan.r,...LABELS.garan,K.gold);
+  drawSeraph(pos.seraph.x,pos.seraph.y);    lbl(pos.seraph.x,pos.seraph.y,BODIES.seraph.r,...LABELS.seraph);
+  drawVesh(pos.vesh.x,pos.vesh.y);          lbl(pos.vesh.x,pos.vesh.y,BODIES.vesh.r,...LABELS.vesh);
+  drawMythologia(pos.mythologia.x,pos.mythologia.y); lbl(pos.mythologia.x,pos.mythologia.y,BODIES.mythologia.r,...LABELS.mythologia,K.blue);
+  drawVeran(pos.veran.x,pos.veran.y);
+  drawAurys(pos.aurys.x,pos.aurys.y,t);     lbl(pos.aurys.x,pos.aurys.y,BODIES.aurys.r,...LABELS.aurys,K.gold);
+  requestAnimationFrame(frame);
+}
+
+// ═══════════════════════════════════════════════════════════
+// MISE À L'ÉCHELLE — parchemin ajusté à la largeur disponible
+// ═══════════════════════════════════════════════════════════
+let scale = 1;
+
+function fitParchment() {
+  const vw = viewport.clientWidth;
+  scale = vw / PW;
+  pCvs.style.transform = `scale(${scale})`;
+  viewport.style.height = Math.round(PH * scale) + 'px';
+}
+fitParchment();
+window.addEventListener('resize', fitParchment);
+
+// ═══════════════════════════════════════════════════════════
+// CLIC SUR LE CANVAS → OUVRE LA NOTE
+// ═══════════════════════════════════════════════════════════
+pCvs.addEventListener('click', e => {
+  const rect = pCvs.getBoundingClientRect();
+  const cx = (e.clientX - rect.left) / scale;
+  const cy = (e.clientY - rect.top)  / scale;
+
+  function dist(ax,ay,bx,by){ return Math.sqrt((ax-bx)**2+(ay-by)**2); }
+
+  if (dist(cx,cy,UX,UY) < HIT.umbrath / scale * 1.4) { selectBody('umbrath'); return; }
+  for (const id of ['aurys','seraph','mythologia','veran','vesh','garan']) {
+    if (pos[id] && dist(cx,cy,pos[id].x,pos[id].y) < HIT[id] / scale * 1.4) {
+      selectBody(id); return;
+    }
+  }
+});
+pCvs.style.cursor = 'pointer';
+
+// ═══════════════════════════════════════════════════════════
+// LISTE CLIQUABLE SOUS LA CARTE
+// ═══════════════════════════════════════════════════════════
+document.querySelectorAll('.astre-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.astre-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectBody(btn.dataset.id);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════
+// LANCEMENT
+// ═══════════════════════════════════════════════════════════
+function start(){ buildStatic(); frame(); }
+const fallback = setTimeout(start, 1500);
+document.fonts.ready.then(()=>{ clearTimeout(fallback); start(); });
+</script>
+</body>
+</html>
